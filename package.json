@@ -1,0 +1,37 @@
+{
+  "name": "slack-app",
+  "version": "1.0.0",
+  "description": "Data.World Slack application",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "loadash": "^1.0.0",
+    "mongoose": "^5.0.6",
+    "morgan": "^1.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datadotworld/slack-app.git"
+  },
+  "keywords": [
+    "data.world",
+    "slack",
+    "bot",
+    "data",
+    "science",
+    "analysis"
+  ],
+  "author": "data.world",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/datadotworld/slack-app/issues"
+  },
+  "homepage": "https://github.com/datadotworld/slack-app#readme"
+}
