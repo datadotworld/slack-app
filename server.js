@@ -28,7 +28,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use('/api/v1/command', require('./routes/slack')());
+app.use('/api/v1', require('./routes/slack')());
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
