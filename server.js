@@ -1,5 +1,5 @@
 //sever imports
-const config = require('./.env/config');
+const config = require('./configs/config');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const express = require('express');
