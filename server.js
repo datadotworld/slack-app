@@ -45,6 +45,10 @@ if (app.get('env') === 'development') {
   });
 }
 
+process.on('uncaughtException', (err) => {
+    console.error(err);
+});
+
 app.listen(port, () => {
   console.log("Listening on port : " + port);
 }).on('error', (err) => {

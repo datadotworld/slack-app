@@ -4,6 +4,7 @@
   "description": "Data.World Slack application",
   "main": "server.js",
   "dependencies": {
+    "@slack/client": "^3.16.0",
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.3",
     "express": "^4.16.2",
