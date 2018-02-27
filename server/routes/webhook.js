@@ -1,6 +1,8 @@
 const { IncomingWebhook } = require('@slack/client');
+const express = require('express');
 const url = process.env.SLACK_WEBHOOK_URL;
 const incomingWebhook = new IncomingWebhook(url);
+const router = express.Router();
 
 /* Slack incomming webhook. */
 router.post('/', function(req, res, next) {
