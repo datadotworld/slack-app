@@ -2,6 +2,16 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
     slackid: {
+      allowNull: false,
+      type: DataTypes.STRING,
+    },
+    responseurl: {
+      type: DataTypes.STRING,
+    },
+    teamid: {
+      type: DataTypes.STRING,
+    },
+    teamdomain: {
       type: DataTypes.STRING,
     },
     email: {
@@ -15,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
     },
     nonce: {
-      type: DataTypes.STRING,
       allowNull: false,
+      type: DataTypes.STRING,
     },
     dwtoken: {
       type: DataTypes.STRING,

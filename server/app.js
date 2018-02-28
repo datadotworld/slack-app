@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const users = require('./routes/users');
 const command = require('./routes/command');
 const webhook = require('./routes/webhook');
+const auth = require('./routes/auth');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, '../client/build')));
 app.use('/api/v1/users', users);
 app.use('/api/v1/command', command);
 app.use('/api/v1/webhook', webhook);
+app.use('/oauth', auth);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

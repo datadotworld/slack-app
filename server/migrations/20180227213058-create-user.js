@@ -9,7 +9,17 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       slackid: {
+        allowNull: false,
         type: Sequelize.STRING
+      },
+      responseurl: {
+        type: Sequelize.STRING,
+      },
+      teamid: {
+        type: Sequelize.STRING,
+      },
+      teamdomain: {
+        type: Sequelize.STRING,
       },
       email: {
         type: Sequelize.STRING
@@ -21,7 +31,8 @@ module.exports = {
         type: Sequelize.STRING
       },
       nonce: {
-        type: Sequelize.STRING
+        allowNull: false,
+        type: Sequelize.STRING,
       },
       dwtoken: {
         type: Sequelize.STRING
