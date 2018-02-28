@@ -1,16 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+const { user } = require('../controllers/user');
+
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  // return mocked user list
-  res.json([{
-    id: 1,
-    username: "samsepi0l"
-  }, {
-    id: 2,
-    username: "D0loresH4ze"
-  }]);
-});
+router.get('/', user.all);
 
 module.exports = router;

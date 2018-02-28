@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { command } = require('../controllers/command');
 
 /* Slack command. */
-router.post('/', function(req, res, next) {
-  console.log(req.body);
-  res.send('Success');
-});
+router.post('/', command.process);
 
 module.exports = router;
