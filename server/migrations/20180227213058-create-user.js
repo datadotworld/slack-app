@@ -18,24 +18,15 @@ module.exports = {
       teamDomain: {
         type: Sequelize.STRING,
       },
-      email: {
-        type: Sequelize.STRING
-      },
-      firstname: {
-        type: Sequelize.STRING
-      },
-      lastname: {
-        type: Sequelize.STRING
-      },
       nonce: {
         allowNull: false,
         type: Sequelize.STRING,
       },
       dwAccessToken: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       dwRefreshToken: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       dwTokenExpiresAt: {
         type: Sequelize.DATE

@@ -11,25 +11,15 @@ module.exports = (sequelize, DataTypes) => {
     teamDomain: {
       type: DataTypes.STRING,
     },
-    email: {
-      type: DataTypes.STRING,
-      isEmail: true,
-    },
-    firstname: {
-      type: DataTypes.STRING,
-    },
-    lastname: {
-      type: DataTypes.STRING,
-    },
     nonce: {
       allowNull: false,
       type: DataTypes.STRING,
     },
     dwAccessToken: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     dwRefreshToken: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     dwTokenExpiresAt: {
       type: DataTypes.DATE
