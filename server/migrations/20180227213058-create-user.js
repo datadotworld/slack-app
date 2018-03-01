@@ -8,17 +8,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      slackid: {
+      slackId: {
         allowNull: false,
         type: Sequelize.STRING
       },
-      responseurl: {
+      teamId: {
         type: Sequelize.STRING,
       },
-      teamid: {
-        type: Sequelize.STRING,
-      },
-      teamdomain: {
+      teamDomain: {
         type: Sequelize.STRING,
       },
       email: {
@@ -34,8 +31,14 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      dwtoken: {
+      dwAccessToken: {
         type: Sequelize.STRING
+      },
+      dwRefreshToken: {
+        type: Sequelize.STRING
+      },
+      dwTokenExpiresAt: {
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

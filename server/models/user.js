@@ -1,17 +1,14 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
-    slackid: {
+    slackId: {
       allowNull: false,
       type: DataTypes.STRING,
     },
-    responseurl: {
+    teamId: {
       type: DataTypes.STRING,
     },
-    teamid: {
-      type: DataTypes.STRING,
-    },
-    teamdomain: {
+    teamDomain: {
       type: DataTypes.STRING,
     },
     email: {
@@ -28,8 +25,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING,
     },
-    dwtoken: {
-      type: DataTypes.STRING,
+    dwAccessToken: {
+      type: DataTypes.STRING
+    },
+    dwRefreshToken: {
+      type: DataTypes.STRING
+    },
+    dwTokenExpiresAt: {
+      type: DataTypes.DATE
     },
   }, {});
   User.associate = function(models) {

@@ -26,14 +26,13 @@ var server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-
-models.sequelize.sync().then(function () {
+//by setting force to true all existing models will be droped and recreated.
+models.sequelize.sync({force: true}).then(function () {
   console.log('sequelize sync completed.');
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
 });
-
 
 /**
  * Normalize a port into a number, string, or false.

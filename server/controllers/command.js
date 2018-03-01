@@ -1,4 +1,6 @@
 const User = require('../models').User;
+const slack = require('../api/slack');
+
 const unirest = require('unirest');
 
 const url = require('url');
@@ -8,30 +10,30 @@ const uuidv1 = require('uuid/v1');
 
 const slackVerificationToken = process.env.SLACK_VERIFICATION_TOKEN;
 const authUrl = process.env.AUTH_URL;
-const slack = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
+const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 
 const commands = {
   '/test': "Test message received successfully"
 };
 
-const beginSlackAssociation = (slackUserId) => {
+const beginSlackAssociation = (slackUserId, slackUsername) => {
   console.log('Starting association');
   const nonce = uuidv1();
 
-  return slack.im.open(slackUserId)
+  return slackBot.im.open(slackUserId)
     .then((res) => {
 
       const dmChannelId = res.channel.id;
       const associationUrl = `${authUrl}${nonce}`
 
-      const slackMessage = slack.chat.postMessage(dmChannelId,
-        'Hello, new friend! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources.', {
+      const slackMessage = slackBot.chat.postMessage(dmChannelId,
+        `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`, {
           attachments: [{
             text: `<${associationUrl}|Click here> to introduce yourself to me by authenticating.`,
           }, ],
         }
       );
-      // create user with nonce 
+      // create user with nonce and the slackdata
       return Promise.all([slackMessage]);
     }).then(() => nonce);
 }
@@ -39,7 +41,7 @@ const beginSlackAssociation = (slackUserId) => {
 const command = {
 
   verifySlack(req, res, next) {
-    // Assumes this application is is not distributed and can only be installed on one team.
+    // Assumes this application is not distributed and can only be installed on one team.
     // If this assumption does not hold true, then we would modify this code as well as
     // the data model to store individual team IDs, verification tokens, and access tokens.
     if (req.body.token === slackVerificationToken) {
@@ -51,7 +53,7 @@ const command = {
 
   process(req, res) {
     console.log(req.body);
-
+    // respond to request immediately no need to wait.
     res.json({ response_type: 'in_channel' });
 
     // Authenticate the Slack user
@@ -62,7 +64,7 @@ const command = {
         if (!user) {
           // Start user association
           console.log('User not found');
-          return beginSlackAssociation(req.body.user_id)
+          return beginSlackAssociation(req.body.user_id, req.body.user_name)
             .then(() => `Sorry <@${req.body.user_id}>, you cannot run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`);
         } else {
           // Execution of command
@@ -75,23 +77,16 @@ const command = {
         }
       })
       .catch((error) => {
-        // For all other errors, the in-channel response will be the error's message
-        console.log('Error finding user');
-        return error.message;
+        // log error message and send useful response to user
+        console.log('Error finding user', error.message);
+        return `Sorry <@${req.body.user_id}>, we're unable to process command \`${req.body.command}\` right now. Kindly, try again later.`;
       })
       .then(response => {
-        console.log('Using unirest');
-        unirest.post(req.body.response_url)
-          .headers({ 'Accept': 'application/json', 'Content-Type': 'application/json' })
-          .send({
-            response_type: 'in_channel',
-            text: response,
-          })
-          .end(function(response) {
-            console.log(response.body);
-          });
+        if (response) {
+        	const data = {response_type: 'in_channel', text: response};
+        	slack.sendResponse(req.body.response_url, data);
+        }
       });
   },
-
 }
 module.exports = { command };

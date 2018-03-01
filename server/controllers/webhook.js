@@ -16,6 +16,5 @@ const webhook = {
 
     });
   },
-
 }
 module.exports = { webhook };
