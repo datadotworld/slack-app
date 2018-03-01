@@ -14,6 +14,7 @@ const auth = {
           .then((user) => {
             user.update({ dwAccessToken: token }, { fields: ['dwAccessToken'] }).then(() => {
               console.log('Updated user dw token');
+              //inform user via slack that authentication was successful
               res.send('success');
             })
           }).catch((error) => {
