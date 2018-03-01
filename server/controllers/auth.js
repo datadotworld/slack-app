@@ -10,13 +10,19 @@ const auth = {
         // use nonce to retrieve user 
         // Add returned token and expiry date to user model
         // redirect to success / homepage 
-        User.findOne({ where: { nonce: nonce} })
+        User.findOne({ where: { nonce: nonce } })
           .then((user) => {
             user.update({ dwAccessToken: token }, { fields: ['dwAccessToken'] }).then(() => {
               console.log('Updated user dw token');
-              //inform user via slack that authentication was successful
               res.send('success');
-            })
+              //inform user via slack that authentication was successful
+              slackBot.im.open(user.slackId)
+                .then((res) => {
+                  const dmChannelId = res.channel.id;
+                  const slackMessage = slackBot.chat.postMessage(dmChannelId, 'Well, it\'s nice to meet you! Thanks for completing authentication.');
+                  return Promise.all([slackMessage]);
+                });
+            });
           }).catch((error) => {
             console.log('Error updating user dw token');
             //redirect to failed auth page.

@@ -19,7 +19,7 @@ const beginSlackAssociation = (slackUserId, slackUsername, slackTeamId, slackTea
 
   return slackBot.im.open(slackUserId)
     .then((res) => {
-
+    	
       const dmChannelId = res.channel.id;
       const associationUrl = `${authUrl}${nonce}`
 
