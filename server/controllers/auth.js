@@ -2,6 +2,7 @@ const User = require('../models').User;
 const uuidv1 = require('uuid/v1');
 const { dw } = require('../api/dw');
 
+const SlackWebClient = require('@slack/client').WebClient;
 const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 
 const auth = {
