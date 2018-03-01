@@ -1,9 +1,5 @@
 const User = require('../models').User;
-const {slack} = require('../api/slack');
-
-const unirest = require('unirest');
-
-const url = require('url');
+const { slack } = require('../api/slack');
 
 const SlackWebClient = require('@slack/client').WebClient;
 const uuidv1 = require('uuid/v1');
@@ -16,7 +12,8 @@ const commands = {
   '/test': "Test message received successfully"
 };
 
-const beginSlackAssociation = (slackUserId, slackUsername) => {
+//move to auth controller, and make this accessible to other controllers.
+const beginSlackAssociation = (slackUserId, slackUsername, slackTeamId, slackTeamDomain) => {
   console.log('Starting association');
   const nonce = uuidv1();
 
@@ -34,7 +31,18 @@ const beginSlackAssociation = (slackUserId, slackUsername) => {
         }
       );
       // create user with nonce and the slackdata
-      return Promise.all([slackMessage]);
+      const newUser = User.create({
+        slackId: slackUserId,
+        teamId: slackTeamId,
+        teamDomain: slackTeamDomain,
+        nonce: nonce
+      }).catch(error => {
+        // error creating user
+        console.log("Failed to create new user : " + error.message);
+        return;
+      })
+
+      return Promise.all([slackMessage, newUser]);
     }).then(() => nonce);
 }
 
@@ -64,8 +72,8 @@ const command = {
         if (!user) {
           // Start user association
           console.log('User not found');
-          return beginSlackAssociation(req.body.user_id, req.body.user_name)
-            .then(() => `Sorry <@${req.body.user_id}>, you cannot run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`);
+          return beginSlackAssociation(req.body.user_id, req.body.user_name, req.body.team_id, req.body.team_domain)
+          .then(() => `Sorry <@${req.body.user_id}>, you cannot run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`);
         } else {
           // Execution of command
           console.log('Found user');
@@ -83,8 +91,8 @@ const command = {
       })
       .then(response => {
         if (response) {
-        	const data = {response_type: 'in_channel', text: response};
-        	slack.sendResponse(req.body.response_url, data);
+          const data = { response_type: 'in_channel', text: response };
+          slack.sendResponse(req.body.response_url, data);
         }
       });
   },
