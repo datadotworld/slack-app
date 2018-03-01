@@ -1,6 +1,6 @@
 const User = require('../models').User;
 const uuidv1 = require('uuid/v1');
-const dw = require('../api/dw');
+const {dw} = require('../api/dw');
 
 const auth = {
   complete(req, res) {

@@ -1,5 +1,5 @@
 const User = require('../models').User;
-const slack = require('../api/slack');
+const {slack} = require('../api/slack');
 
 const unirest = require('unirest');
 
@@ -58,7 +58,7 @@ const command = {
 
     // Authenticate the Slack user
     // An assumption is being made: all commands require authentication
-    User.findOne({ where: { slackid: req.body.user_id } })
+    User.findOne({ where: { slackId: req.body.user_id } })
       .then((user) => {
         // A helpful message for commands that will not complete because of failed user auth
         if (!user) {
