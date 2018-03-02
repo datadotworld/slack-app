@@ -1,0 +1,18 @@
+{
+  "test": {
+    "PORT": 3000,
+    "MONGODB_URI": "mongodb://localhost:27017/slack-app-test"
+  },
+  "development": {
+    "PORT": 5000,
+    "MONGODB_URI": "mongodb://localhost:27017/slack-app-dev",
+    "REDIS_HOST":"127.0.0.1:6379",
+    "JWT_SECRET":"62e89304-09eb-4390-a2ed-5f607b7f3cf3",
+    "SLACK_WEBHOOK_URL":"https://hooks.slack.com/services/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",
+    "SLACK_BOT_TOKEN":"xoxb-321943797444-0Yc1ozAUaFuCgZZDeAguyVFz",
+    "SLACK_VERIFICATION_TOKEN":"4ld7Y3ZjWp5gRhi0EcMnqYEV",
+    "DATABASE_URL":"postgres://localhost:5432/slackapp",
+    "AUTH_URL":"https://data.world/embed/oauth-authorize?client_id=dw-slack-app&redirect_uri=https://shrouded-brook-94096.herokuapp.com/oauth/code_callback?nonce=",
+    "ACCESS_TOKEN_URL":"https://data.world/oauth/access_token?client_id=dw-slack-app&client_secret=Plr1tKjEpd4Y5J3622&grant_type=authorization_code&code="
+  }
+}

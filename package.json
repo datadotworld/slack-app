@@ -1,26 +1,19 @@
 {
   "name": "slack-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "start": "node ./bin/www",
-    "heroku-postbuild": "cd client && npm install --only=dev && npm install && npm run build"
-  },
   "dependencies": {
-    "@slack/client": "^3.16.0",
-    "axios": "^0.18.0",
-    "body-parser": "~1.18.2",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "express": "~4.15.5",
-    "jade": "~1.11.0",
-    "morgan": "~1.9.0",
-    "pg": "^6.4.2",
-    "pg-hstore": "^2.3.2",
-    "sequelize": "^4.34.1",
-    "serve-favicon": "~2.4.5",
-    "unirest": "^0.5.1",
-    "url": "^0.11.0",
-    "uuid": "^3.2.1"
-  }
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2",
+    "react-scripts": "1.1.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://localhost:5000"
 }
