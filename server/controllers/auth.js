@@ -17,7 +17,7 @@ const auth = {
           .then((user) => {
             user.update({ dwAccessToken: token }, { fields: ['dwAccessToken'] }).then(() => {
               console.log('Updated user dw token');
-              res.send('success');
+              res.status(201).send('success');
               //inform user via slack that authentication was successful
               slackBot.im.open(user.slackId)
                 .then((res) => {
@@ -29,11 +29,11 @@ const auth = {
           }).catch((error) => {
             console.log('Error updating user dw token');
             //redirect to failed auth page.
-            res.send('failed');
+            res.status(400).send('failed');
           });
       } else {
         //redirect to failed auth page.
-        res.send('failed');
+        res.status(400).send('failed');
       }
     });
   },

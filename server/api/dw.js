@@ -8,7 +8,7 @@ const dw = {
     unirest.post(requestUrl)
       .headers({ 'Accept': 'application/json', 'Content-Type': 'application/json' })
       .end(function(response) {
-        console.log(response.body);
+        console.log("DW response : ", response.body);
         cb(response.body.access_token);
       });
   },

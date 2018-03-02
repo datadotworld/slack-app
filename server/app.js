@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, '../client/build')));
 app.use('/api/v1/users', users);
 app.use('/api/v1/command', command);
 app.use('/api/v1/webhook', webhook);
-app.use('/oauth', auth);
+app.use('/api/v1/auth', auth);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
