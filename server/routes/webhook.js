@@ -1,6 +1,8 @@
 const express = require('express');
-const router = express.Router();
+
 const { webhook } = require('../controllers/webhook');
+
+const router = express.Router();
 
 /* Slack incomming webhook. */
 router.get('/', webhook.send);

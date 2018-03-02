@@ -1,8 +1,11 @@
 const express = require('express');
-const router = express.Router();
+
+const { auth } = require('../controllers/auth');
 const { command } = require('../controllers/command');
 
+const router = express.Router();
+
 /* Slack command. */
-router.post('/', command.verifySlack, command.process);
+router.post('/', auth.verifySlackClient, command.test);
 
 module.exports = router;

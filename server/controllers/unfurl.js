@@ -1,0 +1,200 @@
+const array = require('lodash/array');
+const lang = require('lodash/lang');
+const collection = require('lodash/collection');
+const object = require('lodash/object');
+
+const SlackWebClient = require('@slack/client').WebClient;
+const { auth } = require("./auth");
+const { dataworld } = require('../api/dataworld');
+
+const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
+
+const DATASET = "dataset";
+const INSIGHT = "insight";
+const datasetLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+)$/;
+const insightLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+
+const messageAttachmentFromLink = (token, link) => {
+  let url = link.url;
+  let type = getType(url);
+  let params = {};
+
+  switch (type) {
+    case DATASET:
+      params = extractDatasetOrProjectParams(url);
+      params.token = token;
+      return unfurlDatasetOrProject(params);
+      break;
+    case INSIGHT:
+      params = extractInsightParams(url);
+      params.token = token;
+      return unfurlInsight(params);
+      break;
+    default:
+      //Link type is not supported.
+      console.warn("Can't unfold unsupported link type : ", url);
+      throw new Error("Unsupported link type ");
+      break;
+  }
+};
+
+const getType = (link) => {
+// determine type of link
+    if (datasetLinkFormat.test(link)){
+      return DATASET;
+    } else if(insightLinkFormat.test(link)) {
+      return INSIGHT;
+    } 
+    return;
+};
+
+const extractDatasetOrProjectParams = (link) => {
+   let params = {};
+   let parts = link.split("/");
+
+   params.datasetId = parts[parts.length - 1];
+   params.owner = parts[parts.length - 2];
+   params.link = link;
+
+   return params;
+};
+
+const extractInsightParams = (link) => {
+  let params = {};
+  let parts = link.split("/");
+
+  params.insightId = parts[parts.length - 1];
+  params.projectId = parts[parts.length - 3];
+  params.owner = parts[parts.length - 4];
+  params.link = link;
+
+  return params;
+};
+
+const unfurlDatasetOrProject = params => {
+  // Fetch resource info from DW
+  return dataworld
+    .getDataset(params.datasetId, params.owner, params.token)
+    .then(dataset => {
+      let owner = dataset.owner;
+      const attachment = {
+        fallback: dataset.title,
+        color: "#79B8FB",
+        pretext: dataset.title,
+        author_name: owner,
+        author_link: `http://data.world/${owner}`,
+        title: dataset.description,
+        title_link: params.link,
+        text: dataset.summary,
+        footer: "Data.World",
+        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+        url: params.link
+      };
+      const fields = [];
+
+      if (dataset.files.length > 0) {
+        fields.push({
+          title: "Total files",
+          value: dataset.files.length,
+          short: true
+        });
+      }
+
+      if (dataset.tags.length > 0) {
+        fields.push({
+          title: "Tags",
+          value: lang.toString(dataset.tags),
+          short: true
+        });
+      }
+
+      if (fields.length > 0) {
+        attachment.fields = fields;
+      }
+
+      console.log("dataset attachment : ", attachment);
+
+      return attachment;
+    })
+    .catch(error => {
+      console.error("failed to get dataset attachment : ", error.message);
+      throw error;
+    });
+};
+
+const unfurlInsight = params => {
+  // Fetch resource info from DW
+  return dataworld
+    .getInsight(params.insightId, params.projectId, params.owner, params.token)
+    .then(insight => {
+      let author = insight.author;
+      const attachment = {
+        fallback: insight.title,
+        color: "#79B8FB",
+        author_name: author,
+        author_link: `http://data.world/${author}`,
+        title: insight.title,
+        title_link: params.link,
+        text: insight.description,
+        thumb_url: insight.thumbnail,
+        footer: "Data.World",
+        footer_icon:
+          "https://platform.slack-edge.com/img/default_application_icon.png"
+      };
+      if (insight.body.imageUrl) {
+        attachment.imageUrl = insight.body.imageUrl;
+      }
+
+      console.log("insight attachment : ", attachment);
+
+      return attachment;
+    })
+    .catch(error => {
+      console.error("failed to fetch insight : ", error.message);
+      throw error;
+    });
+};
+
+const unfurl = {
+
+  processRequest(req, res) {
+    if(req.body.challenge) {
+      // Respond to slack challenge.
+      res.status(200).send({"challenge": req.body.challenge});
+    } else {
+      // respond to request immediately no need to wait.
+      res.json({ response_type: "in_channel" });
+      console.log("Starting unfurl");
+      // verify slack associaton
+      auth.checkSlackAssociationStatus(
+        req.body.event.user,
+        (error, isAssociated, user) => {
+          if (error) {
+            // An internal error has occured.
+            console.log("Unfurl: Failed to check slack association status.");
+            return;
+          } else {
+            if (isAssociated) {
+              // User is associated, carry on and unfold url
+              // retrieve user dw access token
+              let token = user.dwAccessToken;
+              let event = req.body.event;
+              Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
+              // Transform the array of attachments to an unfurls object keyed by URL
+              .then(attachments => collection.keyBy(attachments, 'url')) // group by url
+              .then(unfurls => object.mapValues(unfurls, attachment => object.omit(attachment, 'url'))) // remove url from attachment object
+              // Invoke the Slack Web API to append the attachment
+              .then(unfurls => slack.chat.unfurl(event.message_ts, event.channel, unfurls))
+              .catch(console.error);
+              
+            } else {
+              // User is not associated, begin association for unfurl
+              console.log("User not found, initiating slack association...");
+            }
+          }
+        }
+      );
+    }
+  }
+};
+module.exports = { unfurl };

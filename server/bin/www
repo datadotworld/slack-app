@@ -4,10 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../server/app');
+var app = require('../app');
 var debug = require('debug')('slack-app:server');
 var http = require('http');
-var models = require("../server/models");
+var models = require("../models");
 
 
 /**
@@ -27,8 +27,7 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 //by setting force to true all existing models will be droped and recreated.
-models.sequelize.sync({force: true}).then(function () {
-  console.log('sequelize sync completed.');
+models.sequelize.sync({force: false}).then(function () {
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);

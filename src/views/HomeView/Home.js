@@ -1,27 +1,10 @@
 import React, { Component } from 'react';
 import { Route, Switch } from 'react-router-dom';
-import logo from './logo.svg';
-import './App.css';
+import logo from './assests/logo.svg';
+import './Home.css';
 
 class Home extends Component {
-  state = { users: [] }
-
-  // Fetch passwords after first mount
-  componentDidMount() {
-    this.getUsers();
-  }
-
-  getUsers = () => {
-    // Get the passwords and store them in state
-    console.log("get users was called.");
-    return fetch('/api/v1/users')
-      .then(res => res.json())
-      .then(users => this.setState({ users }));
-  }
-
   render() {
-    const { users } = this.state;
-    console.log("users : " + users);
     return (
       <div className="App">
         <header className="App-header">
