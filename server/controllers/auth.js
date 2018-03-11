@@ -5,6 +5,7 @@ const User = require('../models').User;
 const { dataworld } = require('../api/dataworld');
 
 const authUrl = process.env.AUTH_URL;
+const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
 const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 const slackVerificationToken = process.env.SLACK_VERIFICATION_TOKEN;
 
@@ -22,22 +23,24 @@ const auth = {
   },
 
   checkSlackAssociationStatus(slackId, cb) {
-    User.findOne({ where: { slackId: slackId , dwAccessToken :{$ne: null}} })
-      .then((user) => {
-        if (!user) {
-          // Check user association 
-          console.warn('User not found, no slack association...');
-          return cb(null, false, null);
-        }  
-        return cb(null, true, user);
-      })
+    User.findOne({ where: { slackId: slackId, dwAccessToken: { $ne: null } } })
       .catch((error) => {
         // log error message and send useful response to user
         console.error("checkSlackAssociationStatus error : ", error);
         console.log('Error finding user', error.message);
-        return cb(error, false, null);
+        throw error;
       }
-    );
+      ).then((user) => {
+        if (!user) {
+          // Check user association 
+          console.warn('User not found, no slack association...');
+          cb(null, false, null);
+          return;
+        }
+
+        cb(null, true, user);
+        return;
+      });
   },
 
   beginSlackAssociation(slackUserId, slackUsername, slackTeamId) {
@@ -68,11 +71,42 @@ const auth = {
         }).catch((error) => {
           // error creating user
           console.log("Failed to create new user : " + error.message);
-          return;
+          throw error;
         });
 
         return Promise.all([slackMessage]);        
       }).then(() => nonce);
+  },
+
+  beginUnfurlSlackAssociation(event, teamId) {
+    let nonce = uuidv1();
+    let associationUrl = `${authUrl}${nonce}`;    
+    let message = `Hello, I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world. <${associationUrl}|Click here> to introduce yourself to me by authenticating.`
+    let opts = {};
+    let unfurls = {};
+
+    opts.user_auth_required = true;
+    opts.user_auth_url = associationUrl;
+    // opts.user_auth_message = message;
+
+    return slack.chat.unfurl(event.message_ts, event.channel, unfurls, opts)
+    .then(() => {
+      // create user with nonce and the slackdata        
+      User.findOrCreate({
+        where: { slackId: event.user },
+        defaults: { teamId: teamId, nonce: nonce }
+      }).spread((user, created) => {
+        console.log(user.get({
+          plain: true
+        }));
+        if (!created) {
+          // User record already exits.
+          console.log("Found exsiting user record for slack user : ", event.user);
+        }
+      });
+    }).catch(error => {
+       console.log("Begin unfurl slack association error : " + error.message);
+    });
   },
 
   completeSlackAssociation(req, res) {

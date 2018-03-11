@@ -174,11 +174,11 @@ const unfurl = {
             console.log("Unfurl: Failed to check slack association status.");
             return;
           } else {
+            let event = req.body.event;
             if (isAssociated) {
+              let token = user.dwAccessToken;
               // User is associated, carry on and unfold url
               // retrieve user dw access token
-              let token = user.dwAccessToken;
-              let event = req.body.event;
               Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
               // Transform the array of attachments to an unfurls object keyed by URL
               .then(attachments => collection.keyBy(attachments, 'url')) // group by url
@@ -190,6 +190,7 @@ const unfurl = {
             } else {
               // User is not associated, begin association for unfurl
               console.log("User not found, initiating slack association...");
+              auth.beginUnfurlSlackAssociation(event, req.body.team_id);
             }
           }
         }
@@ -197,4 +198,5 @@ const unfurl = {
     }
   }
 };
+
 module.exports = { unfurl };
