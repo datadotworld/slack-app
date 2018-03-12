@@ -33,7 +33,7 @@ const dataworld = {
 
   exchangeAuthCode(code, cb) {
     let requestUrl = `${accessTokenUrl}${code}`;
-    post(requestUrl, {}, (res) => {
+    post(requestUrl, {}, null, (res) => {
       if (res.error) {
         cb(res.error, null);
       } else {
@@ -45,7 +45,7 @@ const dataworld = {
   verifyDwToken(token) {
     let requestUrl = `${baseUrl}/user`;
     return new Promise((resolve, reject) => {
-      get(requestUrl, token, null, (res) => {
+      get(requestUrl, token, (res) => {
         if (res.error) {
           if (res.code === 401) {
             resolve(false);
