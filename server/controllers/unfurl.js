@@ -11,7 +11,7 @@ const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
 
 const DATASET = "dataset";
 const INSIGHT = "insight";
-const datasetLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+)$/;
+const datasetLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+)$/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = (token, link) => {
