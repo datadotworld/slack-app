@@ -1,9 +1,6 @@
 import React from 'react';
 import { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import './Auth.css';
-
-
 class Auth extends Component {
     // Fetch passwords after first mount
     componentDidMount() {
@@ -39,9 +36,9 @@ class Auth extends Component {
 
     render() {
         return (
-            <div className="Auth-loader">
-                <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-                <span class="sr-only">Loading...</span>
+            <div className="Auth-loader-div">
+                <i className="fa fa-spinner fa-spin fa-3x fa-fw Auth-loader-icon"></i>
+                <span className="sr-only">Loading...</span>
             </div>
         );
     }

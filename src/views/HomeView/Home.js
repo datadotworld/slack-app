@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
-import { Route, Switch } from 'react-router-dom';
 import logo from './assests/logo.svg';
 import './Home.css';
-
 class Home extends Component {
   render() {
     return (

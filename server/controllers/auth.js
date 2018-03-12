@@ -81,13 +81,11 @@ const auth = {
   beginUnfurlSlackAssociation(event, teamId) {
     let nonce = uuidv1();
     let associationUrl = `${authUrl}${nonce}`;    
-    let message = `Hello, I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world. <${associationUrl}|Click here> to introduce yourself to me by authenticating.`
     let opts = {};
     let unfurls = {};
 
     opts.user_auth_required = true;
     opts.user_auth_url = associationUrl;
-    // opts.user_auth_message = message;
 
     return slack.chat.unfurl(event.message_ts, event.channel, unfurls, opts)
     .then(() => {

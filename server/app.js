@@ -23,6 +23,10 @@ app.use('/api/v1/webhook', webhook);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/unfurl', unfurl);
 
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

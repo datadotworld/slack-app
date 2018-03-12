@@ -1,4 +1,4 @@
-.Auth-loader-div {
+.Failed-icon-div {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -6,7 +6,12 @@
     -ms-transform: translate(-50%, -50%); /* IE 9 */
     -webkit-transform: translate(-50%, -50%); /* Chrome, Safari, Opera */	    
 }
-.Auth-loader-icon {
-    font-size: 7em;
-    color: lightblue;
+
+.Failed-icon {
+    font-size: 9em;
+    color: Red;
+}
+
+.Failed-icon-text {
+    text-align : center;
 }
