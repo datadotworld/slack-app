@@ -11,8 +11,8 @@ const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
 
 const DATASET = "dataset";
 const INSIGHT = "insight";
-const datasetLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+)$/i;
-const insightLinkFormat = /^(https:\/\/data.world\/[\w]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+const datasetLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+)$/i;
+const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = (token, link) => {
   let url = link.url;
@@ -24,16 +24,13 @@ const messageAttachmentFromLink = (token, link) => {
       params = extractDatasetOrProjectParams(url);
       params.token = token;
       return unfurlDataset(params);
-      break;
     case INSIGHT:
       params = extractInsightParams(url);
       params.token = token;
       return unfurlInsight(params);
-      break;
     default:
       //Link type is not supported.
       console.warn("Can't unfold unsupported link type : ", url);
-      throw new Error("Unsupported link type ");
       break;
   }
 };
