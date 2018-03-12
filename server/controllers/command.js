@@ -16,15 +16,12 @@ const command = {
     auth.checkSlackAssociationStatus(req.body.user_id, (error, isAssociated) => {
         let message;
         if (error) { // An internal error has occured send a descriptive message
-          console.log("Command: error checking slack association status");          
           message = `Sorry <@${req.body.user_id}>, we're unable to process command \`${req.body.command}\` right now. Kindly, try again later.`;
         } else {
           if (isAssociated) { // User is associated, carry on and process command
             // Execution of command
-            console.log("Command: found slack association");          
             message = commands[req.body.command] || `Cannot understand the command: \`${req.body.command}\``;
           } else {
-            console.log("User not found, initiating slack association...");
             // User is not associated begin association process.
             message = `Sorry <@${req.body.user_id}>, you cannot run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`; 
             auth.beginSlackAssociation(req.body.user_id, req.body.user_name, req.body.team_id);

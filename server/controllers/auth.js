@@ -26,20 +26,22 @@ const auth = {
     User.findOne({ where: { slackId: slackId, dwAccessToken: { $ne: null } } })
       .catch((error) => {
         // log error message and send useful response to user
-        console.error("checkSlackAssociationStatus error : ", error);
-        console.log('Error finding user', error.message);
+        console.error('Error finding user', error.message);
         throw error;
-      }
-      ).then((user) => {
-        if (!user) {
-          // Check user association 
-          console.warn('User not found, no slack association...');
-          cb(null, false, null);
-          return;
-        }
-
-        cb(null, true, user);
-        return;
+      })
+      .then((user) => {
+        if (user) { // Check user association
+          //user found, now verify token is active.
+          dataworld.verifyDwToken(user.dwAccessToken).then(isValid => {
+            if (isValid) {
+              return cb(null, true, user);
+            } else {
+              return cb(null, false, null);
+            }
+          });
+        } else {
+          return cb(null, false, null);  
+        }      
       });
   },
 
@@ -61,16 +63,13 @@ const auth = {
           where: { slackId: slackUserId },
           defaults: { teamId: slackTeamId, nonce : nonce}
         }).spread((user, created) => {
-          console.log(user.get({
-            plain: true
-          }));
           if (!created) {
             // User record already exits.
-            console.log("Found exsiting user record for slack user : ", slackUserId);
+            user.update({ nonce: nonce }, { fields: ['nonce'] });
           }
         }).catch((error) => {
           // error creating user
-          console.log("Failed to create new user : " + error.message);
+          console.error("Failed to create new user : " + error.message);
           throw error;
         });
 
@@ -78,7 +77,7 @@ const auth = {
       }).then(() => nonce);
   },
 
-  beginUnfurlSlackAssociation(event, teamId) {
+  beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
     let nonce = uuidv1();
     let associationUrl = `${authUrl}${nonce}`;    
     let opts = {};
@@ -87,23 +86,21 @@ const auth = {
     opts.user_auth_required = true;
     opts.user_auth_url = associationUrl;
 
-    return slack.chat.unfurl(event.message_ts, event.channel, unfurls, opts)
+    return slack.chat.unfurl(messageTs, channel, unfurls, opts)
     .then(() => {
       // create user with nonce and the slackdata        
       User.findOrCreate({
-        where: { slackId: event.user },
+        where: { slackId: userId },
         defaults: { teamId: teamId, nonce: nonce }
       }).spread((user, created) => {
-        console.log(user.get({
-          plain: true
-        }));
         if (!created) {
           // User record already exits.
-          console.log("Found exsiting user record for slack user : ", event.user);
+          //update nonce, reauthenticating existing user.
+          user.update({ nonce: nonce }, { fields: ['nonce'] });
         }
       });
     }).catch(error => {
-       console.log("Begin unfurl slack association error : " + error.message);
+       console.error("Begin unfurl slack association error : ", error.message);
     });
   },
 
@@ -112,7 +109,7 @@ const auth = {
       let nonce = req.query.state;
       if (token) {
         // use nonce to retrieve user 
-        // Add returned token and expiry date to user model
+        // Add returned token
         // redirect to success / homepage 
         User.findOne({ where: { nonce: nonce } })
           .then((user) => {
@@ -127,6 +124,7 @@ const auth = {
                 });
             });
           }).catch((error) => {
+            console.error(error);
             res.status(400).send('failed');
           });
       } else {

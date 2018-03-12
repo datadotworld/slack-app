@@ -23,7 +23,7 @@ const messageAttachmentFromLink = (token, link) => {
     case DATASET:
       params = extractDatasetOrProjectParams(url);
       params.token = token;
-      return unfurlDatasetOrProject(params);
+      return unfurlDataset(params);
       break;
     case INSIGHT:
       params = extractInsightParams(url);
@@ -71,11 +71,16 @@ const extractInsightParams = (link) => {
   return params;
 };
 
-const unfurlDatasetOrProject = params => {
+const unfurlDataset = params => {
   // Fetch resource info from DW
   return dataworld
     .getDataset(params.datasetId, params.owner, params.token)
     .then(dataset => {
+      //Check if it's a project object.
+      if (dataset.isProject) {
+        return unfurlProject(params);
+      }
+
       let owner = dataset.owner;
       const attachment = {
         fallback: dataset.title,
@@ -108,16 +113,85 @@ const unfurlDatasetOrProject = params => {
         });
       }
 
+      if (dataset.license) {
+        fields.push({
+          title: "License",
+          value: lang.toString(dataset.license),
+          short: true
+        });
+      }
+
       if (fields.length > 0) {
         attachment.fields = fields;
       }
-
-      console.log("dataset attachment : ", attachment);
 
       return attachment;
     })
     .catch(error => {
       console.error("failed to get dataset attachment : ", error.message);
+      if(error.status == 401) { //user dw token expired or was revoked
+
+      }
+      throw error;
+    });
+};
+
+const unfurlProject = params => {
+  // Fetch resource info from DW
+  return dataworld
+    .getProject(params.datasetId, params.owner, params.token)
+    .then(project => {
+      
+      let owner = project.owner;
+      const attachment = {
+        fallback: project.title,
+        color: "#79B8FB",
+        pretext: project.title,
+        author_name: owner,
+        author_link: `http://data.world/${owner}`,
+        title: project.objective,
+        title_link: params.link,
+        text: project.summary,
+        footer: "Data.World",
+        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+        url: params.link
+      };
+      const fields = [];
+
+      if (project.files.length > 0) {
+        fields.push({
+          title: "Total files",
+          value: project.files.length,
+          short: true
+        });
+      }
+
+      if (project.tags.length > 0) {
+        fields.push({
+          title: "Tags",
+          value: lang.toString(project.tags),
+          short: true
+        });
+      }
+
+      if (project.license) {
+        fields.push({
+          title: "License",
+          value: lang.toString(project.license),
+          short: true
+        });
+      }
+
+      if (fields.length > 0) {
+        attachment.fields = fields;
+      }
+
+      console.log("project attachment : ", attachment);
+
+      return attachment;
+    })
+    .catch(error => {
+      console.error("failed to get project attachment : ", error.message);
       throw error;
     });
 };
@@ -145,8 +219,6 @@ const unfurlInsight = params => {
         attachment.imageUrl = insight.body.imageUrl;
       }
 
-      console.log("insight attachment : ", attachment);
-
       return attachment;
     })
     .catch(error => {
@@ -164,14 +236,12 @@ const unfurl = {
     } else {
       // respond to request immediately no need to wait.
       res.json({ response_type: "in_channel" });
-      console.log("Starting unfurl");
       // verify slack associaton
       auth.checkSlackAssociationStatus(
         req.body.event.user,
         (error, isAssociated, user) => {
           if (error) {
             // An internal error has occured.
-            console.log("Unfurl: Failed to check slack association status.");
             return;
           } else {
             let event = req.body.event;
@@ -189,8 +259,7 @@ const unfurl = {
               
             } else {
               // User is not associated, begin association for unfurl
-              console.log("User not found, initiating slack association...");
-              auth.beginUnfurlSlackAssociation(event, req.body.team_id);
+              auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, req.body.team_id);
             }
           }
         }

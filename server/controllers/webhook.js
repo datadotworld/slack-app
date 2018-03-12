@@ -10,7 +10,6 @@ const webhook = {
         console.error('Error:', err);
         res.status(500).send(err.message);
       } else {
-        console.log('Message sent: ', res);
         res.status(200).send("Success");
       }
     });
