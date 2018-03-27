@@ -26,7 +26,7 @@ var server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-//by setting force to true all existing models will be droped and recreated.
+// By setting force to true all existing models will be dropped and recreated.
 models.sequelize.sync({force: true}).then(function () {
   server.listen(port);
   server.on('error', onError);

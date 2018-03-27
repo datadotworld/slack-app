@@ -49,8 +49,8 @@ const auth = {
     let nonce = uuidv1();
     return slackBot.im.open(slackUserId)
       .then((res) => {
-        let dmChannelId = res.channel.id;
-        let associationUrl = `${authUrl}${nonce}`;
+        const dmChannelId = res.channel.id;
+        const associationUrl = `${authUrl}${nonce}`;
         let slackMessage = slackBot.chat.postMessage(dmChannelId,
           `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`, {
             attachments: [{
@@ -73,13 +73,13 @@ const auth = {
           throw error;
         });
 
-        return Promise.all([slackMessage]);        
+        return new Promise(slackMessage);        
       }).then(() => nonce);
   },
 
   beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
-    let nonce = uuidv1();
-    let associationUrl = `${authUrl}${nonce}`;    
+    const nonce = uuidv1();
+    const associationUrl = `${authUrl}${nonce}`;    
     let opts = {};
     let unfurls = {};
 
@@ -116,11 +116,13 @@ const auth = {
             user.update({ dwAccessToken: token }, { fields: ['dwAccessToken'] }).then(() => {
               res.status(201).send('success');
               //inform user via slack that authentication was successful
-              slackBot.im.open(user.slackId)
+              const slackUserId = user.slackId;
+              slackBot.im.open(slackUserId)
                 .then((res) => {
-                  let dmChannelId = res.channel.id;
-                  let slackMessage = slackBot.chat.postMessage(dmChannelId, 'Well, it\'s nice to meet you! Thanks for completing authentication.');
-                  return Promise.all([slackMessage]);
+                  const dmChannelId = res.channel.id;
+                  let slackMessage = slackBot.chat.postMessage(dmChannelId, 
+                    `Well, it\'s nice to meet you, ${slackUserId}!. Thanks for completing authentication.`);
+                  return new Promise(slackMessage);
                 });
             });
           }).catch((error) => {

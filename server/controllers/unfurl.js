@@ -56,6 +56,7 @@ const extractDatasetOrProjectParams = (link) => {
    return params;
 };
 
+//TODO : This needs to be refactored.
 const extractInsightParams = (link) => {
   let params = {};
   let parts = link.split("/");
@@ -89,10 +90,19 @@ const unfurlDataset = params => {
         title_link: params.link,
         text: dataset.summary,
         footer: "Data.World",
+        // we should change this to data.world logo
         footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
         url: params.link
       };
       const fields = [];
+
+      if (dataset.visibility){
+        fields.push({
+          title: "Visibility",
+          value: lang.toString(dataset.visibility),
+          short: true
+        });
+      }
 
       if (dataset.files.length > 0) {
         fields.push({
@@ -126,9 +136,6 @@ const unfurlDataset = params => {
     })
     .catch(error => {
       console.error("failed to get dataset attachment : ", error.message);
-      if(error.status == 401) { //user dw token expired or was revoked
-
-      }
       throw error;
     });
 };

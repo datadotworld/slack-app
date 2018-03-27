@@ -1,8 +1,8 @@
 const unirest = require('unirest');
 
 const slack = {
-  sendResponse (respoonseUrl, data) {
-    unirest.post(respoonseUrl)
+  sendResponse (responseUrl, data) {
+    unirest.post(responseUrl)
       .headers({ 'Accept': 'application/json', 'Content-Type': 'application/json' })
       .send(data)
       .end(function(response) {

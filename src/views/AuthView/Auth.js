@@ -6,8 +6,6 @@ class Auth extends Component {
     componentDidMount() {
         let code = this.getUrlParameter("code");
         let state = this.getUrlParameter("state");
-        console.log("code=", code);
-        console.log("state=", state);
         this.exchangeCode(code, state);
     }
 
