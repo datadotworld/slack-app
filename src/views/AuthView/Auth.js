@@ -1,24 +1,16 @@
 import React from 'react';
+import QueryString from 'query-string';
 import { Component } from 'react';
 import './Auth.css';
 class Auth extends Component {
     // Fetch passwords after first mount
     componentDidMount() {
-        let code = this.getUrlParameter("code");
-        let state = this.getUrlParameter("state");
-        this.exchangeCode(code, state);
-    }
-
-    getUrlParameter = (name) => {
-        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-        let regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-        let results = regex.exec(window.location.search);
-        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        const parsed = QueryString.parse(window.location.search);
+        this.exchangeCode(parsed.code, parsed.state);
     }
 
     exchangeCode = (code, state) => {
         // Get the passwords and store them in state
-        console.log("exchangeCode was called.");
         return fetch('/api/v1/auth/exchange?code=' + code + '&state=' + state)
             .then(res => res.ok)
             .then((success) => success ? this.redirectSuccess() : this.redirectFailed());
