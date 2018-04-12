@@ -1,38 +1,20 @@
 {
   "name": "slack-app",
-  "version": "1.0.0",
-  "description": "Data.World Slack application",
-  "main": "server.js",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
-    "@slack/client": "^3.16.0",
-    "body-parser": "^1.18.2",
-    "cookie-parser": "^1.4.3",
-    "express": "^4.16.2",
-    "loadash": "^1.0.0",
-    "mongoose": "^5.0.6",
-    "morgan": "^1.9.0"
+    "query-string": "5.1.1",
+    "react": "16.2.0",
+    "react-dom": "16.2.0",
+    "react-router": "4.2.0",
+    "react-router-dom": "4.2.2",
+    "react-scripts": "1.1.1"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/datadotworld/slack-app.git"
-  },
-  "keywords": [
-    "data.world",
-    "slack",
-    "bot",
-    "data",
-    "science",
-    "analysis"
-  ],
-  "author": "data.world",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/datadotworld/slack-app/issues"
-  },
-  "homepage": "https://github.com/datadotworld/slack-app#readme"
+    "start": "cd server && npm install && node ./bin/www",
+    "heroku-prebuild": "npm install && npm run build",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
 }
