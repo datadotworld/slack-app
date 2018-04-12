@@ -5,9 +5,7 @@ const slack = {
     unirest.post(responseUrl)
       .headers({ 'Accept': 'application/json', 'Content-Type': 'application/json' })
       .send(data)
-      .end(function(response) {
-        console.log(response.body);
-      });
+      .end();
   }
 };
 

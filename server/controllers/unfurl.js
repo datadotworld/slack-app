@@ -189,9 +189,7 @@ const unfurlProject = params => {
       if (fields.length > 0) {
         attachment.fields = fields;
       }
-
-      console.log("project attachment : ", attachment);
-
+      
       return attachment;
     })
     .catch(error => {
