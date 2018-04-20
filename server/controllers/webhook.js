@@ -14,5 +14,9 @@ const webhook = {
       }
     });
   },
+
+  process(req, res) {
+    console.log('Incoming DW webhook event : ', req.body);
+  }
 };
 module.exports = { webhook };
