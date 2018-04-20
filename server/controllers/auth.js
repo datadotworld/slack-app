@@ -122,7 +122,6 @@ const auth = {
                   const dmChannelId = res.channel.id;
                   let slackMessage = slackBot.chat.postMessage(dmChannelId, 
                     `Well, it\'s nice to meet you, <@${slackUserId}>!. Thanks for completing authentication.`);
-                  return new Promise(slackMessage);
                 });
             });
           }).catch((error) => {

@@ -203,6 +203,7 @@ const unfurlInsight = params => {
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
     .then(insight => {
+
       let author = insight.author;
       const attachment = {
         fallback: insight.title,
@@ -214,8 +215,8 @@ const unfurlInsight = params => {
         text: insight.description,
         thumb_url: insight.thumbnail,
         footer: "Data.World",
-        footer_icon:
-          "https://platform.slack-edge.com/img/default_application_icon.png"
+        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+        url: params.link
       };
       if (insight.body.imageUrl) {
         attachment.imageUrl = insight.body.imageUrl;
