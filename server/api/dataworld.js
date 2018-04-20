@@ -97,6 +97,19 @@ const dataworld = {
       });
     });
   },
+
+  getInsights(projectId, owner, token) {
+    let requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
+    return new Promise((resolve, reject) => {
+      get(requestUrl, token, (res) => {
+        if (res.error) {
+          reject(res.error);
+        } else {
+          resolve(res.body);
+        }
+      });
+    });
+  },
 };
 
 module.exports = { dataworld };

@@ -2,7 +2,7 @@
   "development": {
     "username": "Shittu",
     "password": null,
-    "database": "slackapp-dev",
+    "database": "slackapp",
     "host": "127.0.0.1",
     "dialect": "postgres",
     "operatorsAliases": "Op"

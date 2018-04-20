@@ -12,6 +12,7 @@ const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
 const DATASET = "dataset";
 const INSIGHT = "insight";
 const datasetLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+)$/i;
+const insightsLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights)$/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = (token, link) => {
@@ -28,6 +29,10 @@ const messageAttachmentFromLink = (token, link) => {
       params = extractInsightParams(url);
       params.token = token;
       return unfurlInsight(params);
+    case INSIGHTS:
+      params = extractInsightsParams(url);
+      params.token = token;
+      return unfurlInsights(params);
     default:
       //Link type is not supported.
       console.warn("Can't unfold unsupported link type : ", url);
@@ -41,6 +46,8 @@ const getType = (link) => {
       return DATASET;
     } else if(insightLinkFormat.test(link)) {
       return INSIGHT;
+    } else if(insightsLinkFormat.test(link)) {
+      return INSIGHTS;
     } 
     return;
 };
@@ -64,6 +71,19 @@ const extractInsightParams = (link) => {
   params.insightId = parts[parts.length - 1];
   params.projectId = parts[parts.length - 3];
   params.owner = parts[parts.length - 4];
+  params.link = link;
+
+  return params;
+};
+
+
+//TODO : This needs to be refactored.
+const extractInsightsParams = (link) => {
+  let params = {};
+  let parts = link.split("/");
+
+  params.projectId = parts[parts.length - 2];
+  params.owner = parts[parts.length - 3];
   params.link = link;
 
   return params;
@@ -198,37 +218,59 @@ const unfurlProject = params => {
     });
 };
 
+const unfurlInsights = params => {
+  // Fetch resource info from DW
+  return dataworld
+    .getInsights(params.projectId, params.owner, params.token)
+    .then(insights => {
+      if (insights.count > 0) {
+        let insight = insights.records[0];
+        return getInsightAttachment(insight);
+      }
+      return;
+    })
+    .catch(error => {
+      console.error("failed to fetch insights : ", error.message);
+      throw error;
+    });
+};
+
 const unfurlInsight = params => {
   // Fetch resource info from DW
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
     .then(insight => {
-
-      let author = insight.author;
-      const attachment = {
-        fallback: insight.title,
-        color: "#79B8FB",
-        author_name: author,
-        author_link: `http://data.world/${author}`,
-        title: insight.title,
-        title_link: params.link,
-        text: insight.description,
-        thumb_url: insight.thumbnail,
-        footer: "Data.World",
-        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
-        url: params.link
-      };
-      if (insight.body.imageUrl) {
-        attachment.imageUrl = insight.body.imageUrl;
-      }
-
-      return attachment;
+      return getInsightAttachment(insight);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
       throw error;
     });
 };
+
+const getInsightAttachment = insight => {
+  let author = insight.author;
+  let thumbUrl = insight.thumbnail || insight.body.imageUrl
+  const attachment = {
+    fallback: insight.title,
+    color: "#79B8FB",
+    author_name: author,
+    author_link: `http://data.world/${author}`,
+    title: insight.title,
+    title_link: params.link,
+    text: insight.description,
+    thumb_url: thumbUrl,
+    footer: "Data.World",
+    footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+    url: params.link
+  };
+  if (insight.body.imageUrl) {
+    attachment.imageUrl = insight.body.imageUrl;
+  }
+
+  return attachment;
+}
+
 
 const unfurl = {
 
