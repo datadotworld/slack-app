@@ -225,7 +225,7 @@ const unfurlInsights = params => {
     .then(insights => {
       if (insights.count > 0) {
         let insight = insights.records[0];
-        return getInsightAttachment(insight);
+        return getInsightAttachment(insight, params.link);
       }
       return;
     })
@@ -240,7 +240,7 @@ const unfurlInsight = params => {
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
     .then(insight => {
-      return getInsightAttachment(insight);
+      return getInsightAttachment(insight, params.link);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -248,7 +248,7 @@ const unfurlInsight = params => {
     });
 };
 
-const getInsightAttachment = insight => {
+const getInsightAttachment = (insight, link) => {
   let author = insight.author;
   let thumbUrl = insight.thumbnail || insight.body.imageUrl
   const attachment = {
@@ -257,12 +257,12 @@ const getInsightAttachment = insight => {
     author_name: author,
     author_link: `http://data.world/${author}`,
     title: insight.title,
-    title_link: params.link,
+    title_link: link,
     text: insight.description,
     thumb_url: thumbUrl,
     footer: "Data.World",
     footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
-    url: params.link
+    url: link
   };
   if (insight.body.imageUrl) {
     attachment.imageUrl = insight.body.imageUrl;
