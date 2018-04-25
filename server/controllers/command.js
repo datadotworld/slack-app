@@ -145,6 +145,38 @@ const getType = (command) => {
   return;
 };
 
+const process = (req, token) => {
+  //Invalid / Unrecognized command is not expected to make it here.
+  let command = req.body.command + req.body.text;
+  let commandType = getType(command);
+  let slackId = req.body.user_id;
+  let responseUrl = req.body.response_url;
+
+  switch (commandType) {
+    case SUBSCRIBE_DATASET:
+      subscribeToDataset(slackId, command, responseUrl, token);
+      break;
+    case SUBSCRIBE_PROJECT:
+      subscribeToProject(slackId, command, responseUrl, token);
+      break;
+    case SUBSCRIBE_ACCOUNT:
+      subscribeToAccount(slackId, command, responseUrl, token);
+      break;
+    case UNSUBSCRIBE_DATASET:
+      unSubscribeFromDataset(slackId, command, responseUrl, token);
+      break;
+    case UNSUBSCRIBE_PROJECT:
+      unSubscribeFromProject(slackId, command, responseUrl, token);
+      break;
+    case UNSUBSCRIBE_ACCOUNT:
+      unSubscribeFromAccount(slackId, command, responseUrl, token);
+      break;
+    default:
+      console.error("Attempt to process unknown command.", command);
+      break;
+  }
+};
+
 const command = {
   validate(req, res, next) {
     // respond to request immediately no need to wait.
@@ -160,8 +192,7 @@ const command = {
         if (isAssociated) { // User is associated, carry on and validate command
           if (dataworldCommandFormat.test(req.body.command + req.body.text)) { // Process command
             // add dw access token for request obj.
-            req.token = user.dwAccessToken;
-            next();
+            process(req, user.dwAccessToken);
           } else {
             message = `Cannot understand the command: \`${req.body.command}\` . Please, Ensure command options and specified id are valid.`
           }
@@ -177,39 +208,6 @@ const command = {
       }
     });
   },
-
-  process(req, res) {
-    //Invalid / Unrecognized command is not expected to make it here.
-    let command = req.body.command + req.body.text;
-    let commandType = getType(command);
-    let slackId = req.body.user_id;
-    let token = req.token;
-    let responseUrl = req.body.response_url;
-
-    switch (commandType) {
-      case SUBSCRIBE_DATASET:
-        subscribeToDataset(slackId, command, responseUrl, token);
-        break;
-      case SUBSCRIBE_PROJECT:
-        subscribeToProject(slackId, command, responseUrl, token);
-        break;
-      case SUBSCRIBE_ACCOUNT:
-        subscribeToAccount(slackId, command, responseUrl, token);
-        break;
-      case UNSUBSCRIBE_DATASET:
-        unSubscribeFromDataset(slackId, command, responseUrl, token);
-        break;
-      case UNSUBSCRIBE_PROJECT:
-        unSubscribeFromProject(slackId, command, responseUrl, token);
-        break;
-      case UNSUBSCRIBE_ACCOUNT:
-        unSubscribeFromAccount(slackId, command, responseUrl, token);
-        break;
-      default:
-        console.error("Attempt to process unknown command.", command);
-        break;
-    }
-  }
 };
 
 module.exports = { command };
