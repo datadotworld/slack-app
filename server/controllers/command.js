@@ -111,7 +111,7 @@ const unSubscribeFromAccount = (slackId, command, responseUrl, token) => {
 //TODO : This needs to be refactored.
 const extractParamsFromCommand = (command, isAccountCommand) => {
   let params = {};
-  let parts = link.split(" ");
+  let parts = command.split(" ");
   let datasetInfo = parts[parts.length - 1];
   let data = datasetInfo.split("/");
 
