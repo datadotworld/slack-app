@@ -31,10 +31,10 @@ const subscribeToDataset = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW subscribe to dataset response : ", response);
       // send successful subscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error subscribing to dataset : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to subscribe to dataset : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to subscribe to dataset : " + commandParams.id);
     });
 }
 
@@ -45,10 +45,10 @@ const subscribeToProject = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW subscribe to project response : ", response);
       // send successful subscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error subscribing to project : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to subscribe to project : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to subscribe to project : " + commandParams.id);
     });
 }
 
@@ -59,10 +59,10 @@ const subscribeToAccount = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW subscribe to account response : ", response);
       // send successful subscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error subscribing to account : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to subscribe to account : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to subscribe to account : " + commandParams.id);
     });
 }
 
@@ -73,10 +73,10 @@ const unSubscribeFromDataset = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW unsubscribe from dataset response : ", response);
       // send successful unsubscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error unsubscribing from dataset : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to unsubscribe from dataset : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to unsubscribe from dataset : " + commandParams.id);
     });
 }
 
@@ -87,10 +87,10 @@ const unSubscribeFromProject = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW unsubscribe from project response : ", response);
       // send successful unsubscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error unsubscribing from project : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to unsubscribe from project : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to unsubscribe from project : " + commandParams.id);
     });
 }
 
@@ -101,10 +101,10 @@ const unSubscribeFromAccount = (slackId, command, responseUrl, token) => {
     .then((response) => {
       console.log("DW unsubscribe from account response : ", response);
       // send successful unsubscription message to Slack
-      sendSlackMessage(req.body.response_url, response.message);
+      sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error unsubscribing from account : ", error.message);
-      sendSlackMessage(req.body.response_url, "Failed to unsubscribe from account : " + commandParams.id);
+      sendSlackMessage(responseUrl, "Failed to unsubscribe from account : " + commandParams.id);
     });
 }
 
