@@ -13,7 +13,7 @@ const post = (url, data, token, cb) => {
     .post(url)
     .headers(headers)
     .send(data)
-    .end(function (response) {
+    .end(function(response) {
       cb(response);
     });
 };
@@ -26,7 +26,7 @@ const put = (url, data, token, cb) => {
     .put(url)
     .headers(headers)
     .send(data)
-    .end(function (response) {
+    .end(function(response) {
       cb(response);
     });
 };
@@ -38,7 +38,7 @@ const get = (url, token, cb) => {
   unirest
     .get(url)
     .headers(headers)
-    .end(function (response) {
+    .end(function(response) {
       cb(response);
     });
 };
@@ -50,7 +50,7 @@ const del = (url, token, cb) => {
   unirest
     .delete(url)
     .headers(headers)
-    .end(function (response) {
+    .end(function(response) {
       cb(response);
     });
 };
@@ -176,7 +176,7 @@ const dataworld = {
     });
   },
 
-  unSubscribeFromDataset(owner, id, token) {
+  unsubscribeFromDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
     return new Promise((resolve, reject) => {
       del(requestUrl, token, (res) => {
@@ -189,7 +189,7 @@ const dataworld = {
     });
   },
 
-  unSubscribeFromProject(owner, id, token) {
+  unsubscribeFromProject(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
     return new Promise((resolve, reject) => {
       del(requestUrl, token, (res) => {
@@ -202,10 +202,23 @@ const dataworld = {
     });
   },
 
-  unSubscribeFromAccount(id, token) {
+  unsubscribeFromAccount(id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
     return new Promise((resolve, reject) => {
       del(requestUrl, token, (res) => {
+        if (res.error) {
+          reject(res.error);
+        } else {
+          resolve(res.body);
+        }
+      });
+    });
+  },
+
+  listSubscription(token) {
+    let requestUrl = `${baseUrl}/user/webhooks`;
+    return new Promise((resolve, reject) => {
+      get(requestUrl, token, (res) => {
         if (res.error) {
           reject(res.error);
         } else {
