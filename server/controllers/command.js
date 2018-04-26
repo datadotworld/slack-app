@@ -121,11 +121,11 @@ const listSubscription = (req, token) => {
 
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
-        message + `Datasets :\n`;
+        message += `Datasets :\n`;
         let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(datasetObjs, (value) => {
           if (value) {
-            message + `${count}. ${value.owner}/${value.id}\n`;
+            message += `${count}. ${value.owner}/${value.id}\n`;
             count++;
           }
         });
@@ -133,11 +133,11 @@ const listSubscription = (req, token) => {
 
       let projectsObjs = collection.map(response.records, 'project');
       if (!lang.isEmpty(projectsObjs)) {
-        message + `Projects :\n`;
+        message += `Projects :\n`;
         let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(projectsObjs, (value) => {
           if (value) {
-            message + `${count}. ${value.owner}/${value.id}\n`;
+            message += `${count}. ${value.owner}/${value.id}\n`;
             count++;
           }
         });
@@ -145,11 +145,11 @@ const listSubscription = (req, token) => {
 
       let accountsObjs = collection.map(response.records, 'user');
       if (!lang.isEmpty(accountsObjs)) {
-        message + `Accounts :\n`;
+        message += `Accounts :\n`;
         let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(accountsObjs, (value) => {
           if (value) {
-            message + `${count}. ${value.id}\n`;
+            message += `${count}. ${value.id}\n`;
             count++;
           }
         });
