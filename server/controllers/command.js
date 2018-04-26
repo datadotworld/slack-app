@@ -130,7 +130,7 @@ const listSubscription = (req, token) => {
       }
 
       let projectsObjs = collection.map(response.records, 'project');
-      if (!lang.isEmpty(datasetObjs)) {
+      if (!lang.isEmpty(projectsObjs)) {
         message + `Projects :\n`;
         collection.forEach(projectsObjs, (value, index) => {
           index++;
@@ -139,9 +139,9 @@ const listSubscription = (req, token) => {
       }
 
       let accountsObjs = collection.map(response.records, 'user');
-      if (!lang.isEmpty(datasetObjs)) {
+      if (!lang.isEmpty(accountsObjs)) {
         message + `Accounts :\n`;
-        collection.forEach(projectsObjs, (value, index) => {
+        collection.forEach(accountsObjs, (value, index) => {
           index++;
           message + `${index} ${value.id}\n`
         });
@@ -213,12 +213,12 @@ const subscribeOrUnsubscribe = (req, token) => {
 
 const showHelp = responseUrl => {
   let message = `*Commands*
-  \`\/data.world subscribe [owner/datasetid] or [dataset url]\` : _Subscribe to a data.world dataset._\n
-  \`\/data.world subscribe [owner/projectid] or [project url]\` : _Subscribe to a data.world project._\n
-  \`\/data.world subscribe [account] or [account url]\` : _Subscribe to a data.world account._\n
-  \`\/data.world unsubscribe [owner/datasetid] or [dataset url]\` : _Unsubscribe to a data.world dataset._\n
-  \`\/data.world unsubscribe [owner/projectid] or [project url]\` : _Unsubscribe to a data.world project._\n
-  \`\/data.world unsubscribe [account] or [account url]\` : _Unsubscribe to a data.world account._\n
+  \`\/data.world subscribe [owner/datasetid]\` : _Subscribe to a data.world dataset._\n
+  \`\/data.world subscribe [owner/projectid]\` : _Subscribe to a data.world project._\n
+  \`\/data.world subscribe [account]\` : _Subscribe to a data.world account._\n
+  \`\/data.world unsubscribe [owner/datasetid]\` : _Unsubscribe to a data.world dataset._\n
+  \`\/data.world unsubscribe [owner/projectid]\` : _Unsubscribe to a data.world project._\n
+  \`\/data.world unsubscribe [account]\` : _Unsubscribe to a data.world account._\n
   \`\/data.world list\` : _List active subscriptions._\n
   \`\/data.world help\` : _Show data.world sub command and usage._\n`;
 
