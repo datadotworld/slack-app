@@ -122,28 +122,32 @@ const listSubscription = (req, token) => {
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
         message + `Datasets :\n`;
-        collection.forEach(datasetObjs, (value, index) => {
-          index++;
-          message + `${index} ${value.owner}/${value.id}\n`
-
+        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
+        collection.forEach(datasetObjs, (value) => {
+          if (value) {
+            message + `${count}. ${value.owner}/${value.id}\n`;
+            count++;
+          }
         });
       }
 
       let projectsObjs = collection.map(response.records, 'project');
       if (!lang.isEmpty(projectsObjs)) {
         message + `Projects :\n`;
-        collection.forEach(projectsObjs, (value, index) => {
-          index++;
-          message + `${index} ${value.owner}/${value.id}\n`
+        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
+        collection.forEach(projectsObjs, (value) => {
+          message + `${count}. ${value.owner}/${value.id}\n`;
+          count++;
         });
       }
 
       let accountsObjs = collection.map(response.records, 'user');
       if (!lang.isEmpty(accountsObjs)) {
         message + `Accounts :\n`;
-        collection.forEach(accountsObjs, (value, index) => {
-          index++;
-          message + `${index} ${value.id}\n`
+        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
+        collection.forEach(accountsObjs, (value) => {
+          message + `${count}. ${value.id}\n`;
+          count++;
         });
       }
     } else {
@@ -216,9 +220,9 @@ const showHelp = responseUrl => {
   \`\/data.world subscribe [owner/datasetid]\` : _Subscribe to a data.world dataset._\n
   \`\/data.world subscribe [owner/projectid]\` : _Subscribe to a data.world project._\n
   \`\/data.world subscribe [account]\` : _Subscribe to a data.world account._\n
-  \`\/data.world unsubscribe [owner/datasetid]\` : _Unsubscribe to a data.world dataset._\n
-  \`\/data.world unsubscribe [owner/projectid]\` : _Unsubscribe to a data.world project._\n
-  \`\/data.world unsubscribe [account]\` : _Unsubscribe to a data.world account._\n
+  \`\/data.world unsubscribe [owner/datasetid]\` : _Unsubscribe from a data.world dataset._\n
+  \`\/data.world unsubscribe [owner/projectid]\` : _Unsubscribe from a data.world project._\n
+  \`\/data.world unsubscribe [account]\` : _Unsubscribe from a data.world account._\n
   \`\/data.world list\` : _List active subscriptions._\n
   \`\/data.world help\` : _Show data.world sub command and usage._\n`;
 
