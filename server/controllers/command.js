@@ -109,11 +109,12 @@ const unsubscribeFromAccount = (command, responseUrl, token) => {
 const listSubscription = (req, token) => {
   let command = req.body.command + req.body.text;
   let responseUrl = req.body.response_url;
-  return dataworld.listSubscriptions(token).then((response) => {
+  return dataworld.getSubscriptions(token).then((response) => {
     // extract datasets list from response
     // extract projects list from response 
     // extract accounts list from response
     // Construst subscriptions list message
+    console.log("DW Subscriptions response : ", response);
     let message;
     if (response.count > 0) {
       message = `*Data.World Subscriptions*\n`;
@@ -177,9 +178,9 @@ const sendSlackMessage = (responseUrl, message) => {
 const getType = (command, option) => {
   // determine type of command
   if (subscribeFormat.test(command)) {
-    return option.indexof("/") > 0 ? SUBSCRIBE_DATASET_OR_PROJECT : SUBSCRIBE_ACCOUNT;
+    return option.indexOf("/") > 0 ? SUBSCRIBE_DATASET_OR_PROJECT : SUBSCRIBE_ACCOUNT;
   } else if (unsubscribeFormat.test(command)) {
-    return option.indexof("/") > 0 ? UNSUBSCRIBE_DATASET_OR_PROJECT : UNSUBSCRIBE_ACCOUNT;
+    return option.indexOf("/") > 0 ? UNSUBSCRIBE_DATASET_OR_PROJECT : UNSUBSCRIBE_ACCOUNT;
   }
   console.error("Unknown command type : ", command);
   return;
@@ -211,10 +212,13 @@ const subscribeOrUnsubscribe = (req, token) => {
 };
 
 const showHelp = responseUrl => {
-  let message = `*Data.World Commands*\n 
+  let message = `*Commands*
   \`\/data.world subscribe [owner/datasetid] or [dataset url]\` : _Subscribe to a data.world dataset._\n
   \`\/data.world subscribe [owner/projectid] or [project url]\` : _Subscribe to a data.world project._\n
   \`\/data.world subscribe [account] or [account url]\` : _Subscribe to a data.world account._\n
+  \`\/data.world unsubscribe [owner/datasetid] or [dataset url]\` : _Unsubscribe to a data.world dataset._\n
+  \`\/data.world unsubscribe [owner/projectid] or [project url]\` : _Unsubscribe to a data.world project._\n
+  \`\/data.world unsubscribe [account] or [account url]\` : _Unsubscribe to a data.world account._\n
   \`\/data.world list\` : _List active subscriptions._\n
   \`\/data.world help\` : _Show data.world sub command and usage._\n`;
 

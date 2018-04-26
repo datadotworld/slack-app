@@ -215,7 +215,7 @@ const dataworld = {
     });
   },
 
-  listSubscription(token) {
+  getSubscriptions(token) {
     let requestUrl = `${baseUrl}/user/webhooks`;
     return new Promise((resolve, reject) => {
       get(requestUrl, token, (res) => {
