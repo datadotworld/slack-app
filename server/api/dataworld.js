@@ -3,7 +3,7 @@ const unirest = require("unirest");
 const accessTokenUrl = process.env.ACCESS_TOKEN_URL;
 const baseUrl = process.env.DW_BASE_URL;
 const headers = { Accept: "application/json", "Content-Type": "application/json" };
-const events = { "events": ["ALL"] };
+const events = { events: ["ALL"] };
 
 const post = (url, data, token, cb) => {
   if (token) {

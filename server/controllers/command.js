@@ -1,4 +1,6 @@
 const User = require("../models").User;
+const Channel = require('../models').Channel;
+const Subscription = require('../models').Subscription;
 const collection = require('lodash/collection');
 const lang = require('lodash/lang');
 const { slack } = require("../api/slack");
@@ -20,42 +22,45 @@ const SUBSCRIBE_ACCOUNT = "SUBSCRIBE_ACCOUNT";
 const UNSUBSCRIBE_DATASET_OR_PROJECT = "UNSUBSCRIBE_DATASET_OR_PROJECT";
 const UNSUBSCRIBE_ACCOUNT = "UNSUBSCRIBE_ACCOUNT";
 
-const subscribeToDatasetOrProject = (command, responseUrl, token) => {
+const subscribeToDatasetOrProject = (userid, channelid, command, responseUrl, token) => {
+  // use dataworld wrapper to subscribe to dataset
+  let commandParams = extractParamsFromCommand(command, false);
+  return dataworld.subscribeToProject(commandParams.owner, commandParams.id, token)
+    .then((response) => {
+      console.log("DW subscribe to project / dataset response : ", response);
+      addSubscriptionRecord(commandParams.id, userid, channelid);
+      // send successful subscription message to Slack
+      sendSlackMessage(responseUrl, response.message);
+    }).catch(error => {
+      console.warn("Failed to subscribe to project : ", error.message);
+      // Handle as dataset 
+      subscribeToDataset(command, responseUrl, token);
+    });
+}
+
+const subscribeToDataset = (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to subscribe to dataset
   let commandParams = extractParamsFromCommand(command, false);
   return dataworld.subscribeToDataset(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW subscribe to dataset response : ", response);
-      // send successful subscription message to Slack
+      addSubscriptionRecord(commandParams.id, userid, channelid)
+        // send successful subscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.warn("Failed to subscribe to dataset : ", error.message);
-      // Handle as project 
-      subscribeToProject(command, responseUrl, token);
+      sendSlackMessage(responseUrl, "Failed to subscribe to dataset : " + commandParams.id);
     });
 }
 
-const subscribeToProject = (command, responseUrl, token) => {
-  // use dataworld wrapper to subscribe to project
-  let commandParams = extractParamsFromCommand(command, false);
-  return dataworld.subscribeToProject(commandParams.owner, commandParams.id, token)
-    .then((response) => {
-      console.log("DW subscribe to project response : ", response);
-      // send successful subscription message to Slack
-      sendSlackMessage(responseUrl, response.message);
-    }).catch(error => {
-      console.error("Error subscribing to project : ", error.message);
-      sendSlackMessage(responseUrl, "Failed to subscribe to : " + commandParams.id);
-    });
-}
-
-const subscribeToAccount = (command, responseUrl, token) => {
+const subscribeToAccount = (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to subscribe to account
   let commandParams = extractParamsFromCommand(command, true);
   return dataworld.subscribeToAccount(commandParams.id, token)
     .then((response) => {
       console.log("DW subscribe to account response : ", response);
-      // send successful subscription message to Slack
+      addSubscriptionRecord(commandParams.id, userid, channelid)
+        // send successful subscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
       console.error("Error subscribing to account : ", error.message);
@@ -63,12 +68,13 @@ const subscribeToAccount = (command, responseUrl, token) => {
     });
 }
 
-const unsubscribeFromDatasetOrProject = (command, responseUrl, token) => {
+const unsubscribeFromDatasetOrProject = (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to unsubscribe to dataset
   let commandParams = extractParamsFromCommand(command, false);
   return dataworld.unsubscribeFromDataset(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from dataset response : ", response);
+      removeSubscriptionRecord(commandParams.id);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -78,12 +84,13 @@ const unsubscribeFromDatasetOrProject = (command, responseUrl, token) => {
     });
 }
 
-const unsubscribeFromProject = (command, responseUrl, token) => {
+const unsubscribeFromProject = (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to unsubscribe to project
   let commandParams = extractParamsFromCommand(command, false);
   return dataworld.unsubscribeFromProject(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from project response : ", response);
+      removeSubscriptionRecord(commandParams.id);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -92,12 +99,13 @@ const unsubscribeFromProject = (command, responseUrl, token) => {
     });
 }
 
-const unsubscribeFromAccount = (command, responseUrl, token) => {
+const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to unsubscribe to account
   let commandParams = extractParamsFromCommand(command, true);
   return dataworld.unsubscribeFromAccount(commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from account response : ", response);
+      removeSubscriptionRecord(commandParams.id);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -165,6 +173,30 @@ const listSubscription = (req, token) => {
   });
 }
 
+const addSubscriptionRecord = (id, userId, channelId) => {
+  // create subscription 
+  Subscription.findOrCreate({
+    where: { resourceId: id },
+    defaults: { slackUserId: channelId, channelId: channelId }
+  }).spread((channel, created) => {
+    if (!created) {
+      // Channel record already exits.
+      console.warn("Subscription record already exists : ", event);
+    }
+  }).catch((error) => {
+    // error creating channel
+    console.error("Failed to create new Subscription record : ", error);
+  });
+}
+
+const removeSubscriptionRecord = (id) => {
+  // delete subscription 
+  Subscription.findAndDelete({ where: { resourceId: id } }).catch((error) => {
+    // error deleting Subscription
+    console.error("Failed to create new Subscription record : ", error);
+  });
+}
+
 //TODO : This needs to be refactored.
 const extractParamsFromCommand = (command, isAccountCommand) => {
   let params = {};
@@ -178,6 +210,7 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
   return params;
 };
 
+//TODO: Add sending of ephemeral messsage see chat.postEphemaralMessage
 const sendSlackMessage = (responseUrl, message) => {
   let data = { response_type: "in_channel", text: message };
   slack.sendResponse(responseUrl, data);
@@ -202,16 +235,16 @@ const subscribeOrUnsubscribe = (req, token) => {
 
   switch (commandType) {
     case SUBSCRIBE_DATASET_OR_PROJECT:
-      subscribeToDatasetOrProject(command, responseUrl, token);
+      subscribeToDatasetOrProject(req.body.user_id, req.body.channel_id, command, responseUrl, token);
       break;
     case SUBSCRIBE_ACCOUNT:
-      subscribeToAccount(command, responseUrl, token);
+      subscribeToAccount(req.body.user_id, req.body.channel_id, command, responseUrl, token);
       break;
     case UNSUBSCRIBE_DATASET_OR_PROJECT:
-      unsubscribeFromDatasetOrProject(command, responseUrl, token);
+      unsubscribeFromDatasetOrProject(req.body.user_id, req.body.channel_id, command, responseUrl, token);
       break;
     case UNSUBSCRIBE_ACCOUNT:
-      unsubscribeFromAccount(command, responseUrl, token);
+      unsubscribeFromAccount(req.body.user_id, req.body.channel_id, command, responseUrl, token);
       break;
     default:
       console.error("Attempt to process unknown command.", command);
@@ -230,6 +263,7 @@ const showHelp = responseUrl => {
   \`\/data.world list\` : _List active subscriptions._\n
   \`\/data.world help\` : _Show data.world sub command and usage._\n`;
 
+  // we should replace this with ephemeral messsage see chat.postEphemaralMessage
   sendSlackMessage(responseUrl, message);
 }
 
@@ -237,34 +271,52 @@ const command = {
   validate(req, res, next) {
     // respond to request immediately no need to wait.
     res.json({ response_type: "in_channel" });
-    // Authenticate the Slack user
-    // An assumption is being made: all commands require authentication
-    // check association status
-    auth.checkSlackAssociationStatus(req.body.user_id, (error, isAssociated, user) => {
-      let message;
-      if (error) { // An internal error has occured send a descriptive message
-        message = `Sorry <@${req.body.user_id}>, we're unable to process command \`${req.body.command}\` right now. Kindly, try again later.`;
-      } else {
-        if (isAssociated) { // User is associated, carry on and validate command
-          let option = req.body.text;
-          if (dwWebhookCommandFormat.test(req.body.command + option)) { // Process command
-            subscribeOrUnsubscribe(req, user.dwAccessToken);
-          } else if (dwSupportCommandFormat.test(req.body.command + option)) {
-            option === 'list' ? listSubscription(req, user.dwAccessToken) : showHelp(req.body.response_url);
-          } else {
-            message = `Cannot understand the command: \`${req.body.command} ${req.body.text}\` . Please, Ensure command options and specified id are valid.`
-          }
+    Channel.findOne({ where: { channelId: req.body.channel_id } })
+      .catch((error) => {
+        console.error('Error finding Channel', error);
+        // we should replace this with ephemeral messsage see chat.postEphemaralMessage
+        sendSlackMessage(req.body.response_url, `Somehting went wrong, kindly try again.`);
+      })
+      .then((channel) => {
+        if (channel) { // Check if bot was invited to slack
+          //channel found, continue and process command
+          // Authenticate the Slack user
+          // An assumption is being made: all commands require authentication
+          // check association status
+          auth.checkSlackAssociationStatus(req.body.user_id, (error, isAssociated, user) => {
+            let message;
+            if (error) { // An internal error has occured send a descriptive message
+              message = `Sorry <@${req.body.user_id}>, we're unable to process command \`${req.body.command}\` right now. Kindly, try again later.`;
+            } else {
+              if (isAssociated) { // User is associated, carry on and validate command
+                let option = req.body.text;
+                if (dwWebhookCommandFormat.test(req.body.command + option)) { // Process command
+                  subscribeOrUnsubscribe(req, user.dwAccessToken);
+                } else if (dwSupportCommandFormat.test(req.body.command + option)) {
+                  option === 'list' ? listSubscription(req, user.dwAccessToken) : showHelp(req.body.response_url);
+                } else {
+                  message = `Cannot understand the command: \`${req.body.command} ${req.body.text}\` . Please, Ensure command options and specified id are valid.`
+                }
+              } else {
+                // User is not associated begin association process.
+                message = `Sorry <@${req.body.user_id}>, you can't run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`;
+                auth.beginSlackAssociation(req.body.user_id, req.body.user_name, req.body.team_id);
+              }
+            }
+            if (message) {
+              // we should replace this with ephemeral messsage see chat.postEphemaralMessage
+              sendSlackMessage(req.body.response_url, message);
+            }
+          });
         } else {
-          // User is not associated begin association process.
-          message = `Sorry <@${req.body.user_id}>, you cannot run \`${req.body.command}\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`;
-          auth.beginSlackAssociation(req.body.user_id, req.body.user_name, req.body.team_id);
+          // inform user that bot user must be invited to channel 
+          // we should replace this with ephemeral messsage see chat.postEphemaralMessage
+          sendSlackMessage(req.body.response_url, `Sorry <@${req.body.user_id}>, you can't run \`${req.body.command}\` until you've invited @dataworld to this channel.`);
+          return;
         }
-      }
-      if (message) {
-        sendSlackMessage(req.body.response_url, message);
-        next(new Error('Validation failed.'));
-      }
-    });
+      });
+
+
   },
 };
 

@@ -3,6 +3,8 @@ const lang = require('lodash/lang');
 const collection = require('lodash/collection');
 const object = require('lodash/object');
 
+const Channel = require('../models').Channel;
+
 const SlackWebClient = require('@slack/client').WebClient;
 const { auth } = require("./auth");
 const { dataworld } = require('../api/dataworld');
@@ -42,26 +44,26 @@ const messageAttachmentFromLink = (token, link) => {
 };
 
 const getType = (link) => {
-// determine type of link
-    if (datasetLinkFormat.test(link)){
-      return DATASET;
-    } else if(insightLinkFormat.test(link)) {
-      return INSIGHT;
-    } else if(insightsLinkFormat.test(link)) {
-      return INSIGHTS;
-    } 
-    return;
+  // determine type of link
+  if (datasetLinkFormat.test(link)) {
+    return DATASET;
+  } else if (insightLinkFormat.test(link)) {
+    return INSIGHT;
+  } else if (insightsLinkFormat.test(link)) {
+    return INSIGHTS;
+  }
+  return;
 };
 
 const extractDatasetOrProjectParams = (link) => {
-   let params = {};
-   let parts = link.split("/");
+  let params = {};
+  let parts = link.split("/");
 
-   params.datasetId = parts[parts.length - 1];
-   params.owner = parts[parts.length - 2];
-   params.link = link;
+  params.datasetId = parts[parts.length - 1];
+  params.owner = parts[parts.length - 2];
+  params.link = link;
 
-   return params;
+  return params;
 };
 
 //TODO : This needs to be refactored.
@@ -117,7 +119,7 @@ const unfurlDataset = params => {
       };
       const fields = [];
 
-      if (dataset.visibility){
+      if (dataset.visibility) {
         fields.push({
           title: "Visibility",
           value: lang.toString(dataset.visibility),
@@ -166,7 +168,7 @@ const unfurlProject = params => {
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
     .then(project => {
-      
+
       let owner = project.owner;
       const attachment = {
         fallback: project.title,
@@ -210,7 +212,7 @@ const unfurlProject = params => {
       if (fields.length > 0) {
         attachment.fields = fields;
       }
-      
+
       return attachment;
     })
     .catch(error => {
@@ -272,44 +274,77 @@ const getInsightAttachment = (insight, link) => {
   return attachment;
 }
 
+const handleLinkSharedEvent = (event) => {
+  // verify slack associaton
+  auth.checkSlackAssociationStatus(
+    event.user,
+    (error, isAssociated, user) => {
+      if (error) {
+        // An internal error has occured.
+        return;
+      } else {
+        if (isAssociated) {
+          let token = user.dwAccessToken;
+          // User is associated, carry on and unfold url
+          // retrieve user dw access token
+          Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
+            // Transform the array of attachments to an unfurls object keyed by URL
+            .then(attachments => collection.keyBy(attachments, 'url')) // group by url
+            .then(unfurls => object.mapValues(unfurls, attachment => object.omit(attachment, 'url'))) // remove url from attachment object
+            // Invoke the Slack Web API to append the attachment
+            .then(unfurls => slack.chat.unfurl(event.message_ts, event.channel, unfurls))
+            .catch(console.error);
+        } else {
+          // User is not associated, begin association for unfurl
+          auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, req.body.team_id);
+        }
+      }
+    }
+  );
+}
+
+const handleJoinedChannelEvent = (event) => {
+  // Update known channel 
+  //add channel if not existing 
+  // create user with nonce and the slackdata        
+  Channel.findOrCreate({
+    where: { channelId: event.channel },
+    defaults: { teamId: event.team, slackUserId: event.inviter }
+  }).spread((channel, created) => {
+    if (!created) {
+      // Channel record already exits.
+      console.warn("Channel record already exists : ", event);
+    }
+  }).catch((error) => {
+    // error creating user
+    console.error("Failed to create new channel record : " + error.message);
+    throw error;
+  });
+
+}
 
 const unfurl = {
 
   processRequest(req, res) {
-    if(req.body.challenge) {
+    if (req.body.challenge) {
       // Respond to slack challenge.
-      res.status(200).send({"challenge": req.body.challenge});
+      res.status(200).send({ "challenge": req.body.challenge });
     } else {
       // respond to request immediately no need to wait.
       res.json({ response_type: "in_channel" });
-      // verify slack associaton
-      auth.checkSlackAssociationStatus(
-        req.body.event.user,
-        (error, isAssociated, user) => {
-          if (error) {
-            // An internal error has occured.
-            return;
-          } else {
-            let event = req.body.event;
-            if (isAssociated) {
-              let token = user.dwAccessToken;
-              // User is associated, carry on and unfold url
-              // retrieve user dw access token
-              Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
-              // Transform the array of attachments to an unfurls object keyed by URL
-              .then(attachments => collection.keyBy(attachments, 'url')) // group by url
-              .then(unfurls => object.mapValues(unfurls, attachment => object.omit(attachment, 'url'))) // remove url from attachment object
-              // Invoke the Slack Web API to append the attachment
-              .then(unfurls => slack.chat.unfurl(event.message_ts, event.channel, unfurls))
-              .catch(console.error);
-              
-            } else {
-              // User is not associated, begin association for unfurl
-              auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, req.body.team_id);
-            }
-          }
-        }
-      );
+
+      let event = req.body.event;
+      console.log("Recieved new event from slack : ", event);
+      switch (event.type) {
+        case 'link_shared':
+          handleLinkSharedEvent(event);
+          break;
+        case 'member_joined_channel':
+          handleJoinedChannelEvent(event);
+          break;
+        default:
+          break;
+      }
     }
   }
 };
