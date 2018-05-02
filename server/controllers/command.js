@@ -114,59 +114,91 @@ const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) 
     });
 }
 
+const belongsToChannel = (resourceid, channelid) => {
+  return Subscription.findOne({ where: { resourceId: resourceid, channelId: channelid } })
+    .then((subscription) => {
+      if (Subscription) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+}
+
 const listSubscription = (req, token) => {
   let command = req.body.command + req.body.text;
   let responseUrl = req.body.response_url;
+  let channelid = req.body.channel_id;
+
   return dataworld.getSubscriptions(token).then((response) => {
-    // extract datasets list from response
-    // extract projects list from response 
-    // extract accounts list from response
     // Construst subscriptions list message
     console.log("DW Subscriptions response : ", response);
     let message;
-    if (response.count > 0) {
-      message = `*Active Subscriptions*\n`;
+    let attachments;
+    let baseUrl = 'https://data.world/kennyshittu';
 
+    if (response.count > 0) {
+      message = `*Active Subscriptions*`;
+      let attachment;
+
+      // extract datasets list from response
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
-        message += `Datasets :\n`;
-        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(datasetObjs, (value) => {
           if (value) {
-            message += `${count}. ${value.owner}/${value.id}\n`;
-            count++;
+            belongsToChannel(value.id, channelid).then((isValid) => {
+                if (isValid) {
+                  attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+                }
+              })
+              .catch(console.error);
           }
         });
       }
 
+      // extract accounts list from response
       let projectsObjs = collection.map(response.records, 'project');
       if (!lang.isEmpty(projectsObjs)) {
-        message += `Projects :\n`;
-        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(projectsObjs, (value) => {
           if (value) {
-            message += `${count}. ${value.owner}/${value.id}\n`;
-            count++;
+            belongsToChannel(value.id, channelid).then((isValid) => {
+                if (isValid) {
+                  attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+                }
+              })
+              .catch(console.error);
           }
         });
       }
 
+      // extract projects list from response 
       let accountsObjs = collection.map(response.records, 'user');
       if (!lang.isEmpty(accountsObjs)) {
-        message += `Accounts :\n`;
-        let count = 1; // we could have used index inplace of count, but index is not reliable cos not all objects in this collection are datasets.
         collection.forEach(accountsObjs, (value) => {
           if (value) {
-            message += `${count}. ${value.id}\n`;
-            count++;
+            belongsToChannel(value.id, channelid).then((isValid) => {
+                if (isValid) {
+                  attachment += `${baseUrl}/${value.id}\n`;
+                }
+              })
+              .catch(console.error);
           }
         });
+      }
+
+      if (attachment) {
+        attachments = [{
+          color: "#79B8FB",
+          text: attachment,
+        }];
+      } else {
+        message = `No subscription found in this channel.`
       }
     } else {
       message = `No subscription found. Use \`\/data.world help\` to see how to subscribe.`
     }
 
-    sendSlackMessage(responseUrl, message);
+    sendSlackMessage(responseUrl, message, attachments);
   }).catch(error => {
     console.error("Error getting subscriptions : ", error.message);
     sendSlackMessage(responseUrl, "Failed to get subscription list.");
@@ -210,9 +242,11 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
   return params;
 };
 
-//TODO: Add sending of ephemeral messsage see chat.postEphemaralMessage
-const sendSlackMessage = (responseUrl, message) => {
-  let data = { response_type: "in_channel", text: message };
+const sendSlackMessage = (responseUrl, message, attachments) => {
+  let data = { text: message };
+  if (attachments && !lang.isEmpty(attachments)) {
+    data.attachments = attachments;
+  }
   slack.sendResponse(responseUrl, data);
 }
 
@@ -253,18 +287,28 @@ const subscribeOrUnsubscribe = (req, token) => {
 };
 
 const showHelp = responseUrl => {
-  let message = `*Commands*
-  \`\/data.world subscribe [owner/datasetid]\` : _Subscribe to a data.world dataset._\n
-  \`\/data.world subscribe [owner/projectid]\` : _Subscribe to a data.world project._\n
-  \`\/data.world subscribe [account]\` : _Subscribe to a data.world account._\n
-  \`\/data.world unsubscribe [owner/datasetid]\` : _Unsubscribe from a data.world dataset._\n
-  \`\/data.world unsubscribe [owner/projectid]\` : _Unsubscribe from a data.world project._\n
-  \`\/data.world unsubscribe [account]\` : _Unsubscribe from a data.world account._\n
-  \`\/data.world list\` : _List active subscriptions._\n
-  \`\/data.world help\` : _Show data.world sub command and usage._\n`;
+  let message = `*Commands*`;
+  let attachments = [];
+
+  let commandsInfo = ["_Subscribe to a data.world dataset :_ \n \`\/data.world subscribe [owner/datasetid]\`",
+    "_Subscribe to a data.world project._ : \n \`\/data.world subscribe [owner/projectid]\`",
+    "_Subscribe to a data.world account._ : \n \`\/data.world subscribe [account]\`"
+    "_Unsubscribe from a data.world dataset._ : \n \`\/data.world unsubscribe [owner/datasetid]\`"
+    "_Unsubscribe from a data.world project._ : \n \`\/data.world unsubscribe [owner/projectid]\`"
+    "_Unsubscribe from a data.world account._ : \n \`\/data.world unsubscribe [account]\`"
+    "_List active subscriptions._ : \n \`\/data.world list\`"
+    "_Show this help message_ : \n \`\/data.world help\`"
+  ];
+
+  collection.forEach(commandsInfo, (value) => {
+    attachments.push({
+      color: "#79B8FB",
+      text: value,
+    });
+  });
 
   // we should replace this with ephemeral messsage see chat.postEphemaralMessage
-  sendSlackMessage(responseUrl, message);
+  sendSlackMessage(responseUrl, message, attachments);
 }
 
 const command = {
@@ -315,8 +359,6 @@ const command = {
           return;
         }
       });
-
-
   },
 };
 
