@@ -143,7 +143,7 @@ const listSubscription = async(req, token) => {
       // extract datasets list from response
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
-        for (var value in datasetObjs) {
+        for (let value of datasetObjs) {
           if (value) {
             const isValid = await belongsToChannel(value.id, channelid);
 
@@ -157,7 +157,7 @@ const listSubscription = async(req, token) => {
       // extract accounts list from response
       let projectsObjs = collection.map(response.records, 'project');
       if (!lang.isEmpty(projectsObjs)) {
-        for (var value in projectsObjs) {
+        for (let value of projectsObjs) {
           if (value) {
             const isValid = await belongsToChannel(value.id, channelid);
 
@@ -171,7 +171,7 @@ const listSubscription = async(req, token) => {
       // extract projects list from response 
       let accountsObjs = collection.map(response.records, 'user');
       if (!lang.isEmpty(accountsObjs)) {
-        for (var value in accountsObjs) {
+        for (let value of accountsObjs) {
           if (value) {
             const isValid = await belongsToChannel(value.id, channelid);
 
