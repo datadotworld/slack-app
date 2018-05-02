@@ -191,7 +191,7 @@ const addSubscriptionRecord = (id, userId, channelId) => {
 
 const removeSubscriptionRecord = (id) => {
   // delete subscription 
-  Subscription.findAndDelete({ where: { resourceId: id } }).catch((error) => {
+  Subscription.destroy({ where: { resourceId: id } }).catch((error) => {
     // error deleting Subscription
     console.error("Failed to create new Subscription record : ", error);
   });
@@ -311,7 +311,7 @@ const command = {
         } else {
           // inform user that bot user must be invited to channel 
           // we should replace this with ephemeral messsage see chat.postEphemaralMessage
-          sendSlackMessage(req.body.response_url, `Sorry <@${req.body.user_id}>, you can't run \`${req.body.command}\` until you've invited @dataworld to this channel.`);
+          sendSlackMessage(req.body.response_url, `Sorry <@${req.body.user_id}>, you can't run \`${req.body.command}\` until you've invited <@dataworld> to this channel.`);
           return;
         }
       });
