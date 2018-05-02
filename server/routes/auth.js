@@ -6,4 +6,6 @@ const router = express.Router();
 
 router.get('/exchange', auth.completeSlackAssociation);
 
+router.get('/oauth', auth.slackOauth);
+
 module.exports = router;

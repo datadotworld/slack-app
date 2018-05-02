@@ -117,7 +117,7 @@ const listSubscription = (req, token) => {
     console.log("DW Subscriptions response : ", response);
     let message;
     if (response.count > 0) {
-      message = `*Data.World Subscriptions*\n`;
+      message = `*Active Subscriptions*\n`;
 
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
