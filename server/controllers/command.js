@@ -114,24 +114,23 @@ const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) 
     });
 }
 
-const belongsToChannel = (resourceid, channelid) => {
-  return Subscription.findOne({ where: { resourceId: resourceid, channelId: channelid } })
-    .then((subscription) => {
-      if (Subscription) {
-        return true;
-      } else {
-        return false;
-      }
-    });
+const belongsToChannel = async(resourceid, channelid) => {
+  const subscription = await Subscription.findOne({ where: { resourceId: resourceid, channelId: channelid } });
+  if (Subscription) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
-const listSubscription = (req, token) => {
+const listSubscription = async(req, token) => {
   let command = req.body.command + req.body.text;
   let responseUrl = req.body.response_url;
   let channelid = req.body.channel_id;
 
-  return dataworld.getSubscriptions(token).then((response) => {
-    // Construst subscriptions list message
+  try {
+    let response = await dataworld.getSubscriptions(token)
+      // Construst subscriptions list message
     console.log("DW Subscriptions response : ", response);
     let message;
     let attachments;
@@ -144,46 +143,43 @@ const listSubscription = (req, token) => {
       // extract datasets list from response
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
-        collection.forEach(datasetObjs, (value) => {
+        for (var value in datasetObjs) {
           if (value) {
-            belongsToChannel(value.id, channelid).then((isValid) => {
-                if (isValid) {
-                  attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
-                }
-              })
-              .catch(console.error);
+            const isValid = await belongsToChannel(value.id, channelid);
+
+            if (isValid) {
+              attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+            }
           }
-        });
+        };
       }
 
       // extract accounts list from response
       let projectsObjs = collection.map(response.records, 'project');
       if (!lang.isEmpty(projectsObjs)) {
-        collection.forEach(projectsObjs, (value) => {
+        for (var value in projectsObjs) {
           if (value) {
-            belongsToChannel(value.id, channelid).then((isValid) => {
-                if (isValid) {
-                  attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
-                }
-              })
-              .catch(console.error);
+            const isValid = await belongsToChannel(value.id, channelid);
+
+            if (isValid) {
+              attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+            }
           }
-        });
+        };
       }
 
       // extract projects list from response 
       let accountsObjs = collection.map(response.records, 'user');
       if (!lang.isEmpty(accountsObjs)) {
-        collection.forEach(accountsObjs, (value) => {
+        for (var value in accountsObjs) {
           if (value) {
-            belongsToChannel(value.id, channelid).then((isValid) => {
-                if (isValid) {
-                  attachment += `${baseUrl}/${value.id}\n`;
-                }
-              })
-              .catch(console.error);
+            const isValid = await belongsToChannel(value.id, channelid);
+
+            if (isValid) {
+              attachment += `${baseUrl}/${value.id}\n`;
+            }
           }
-        });
+        };
       }
 
       if (attachment) {
@@ -199,10 +195,11 @@ const listSubscription = (req, token) => {
     }
 
     sendSlackMessage(responseUrl, message, attachments);
-  }).catch(error => {
+
+  } catch (error) {
     console.error("Error getting subscriptions : ", error.message);
     sendSlackMessage(responseUrl, "Failed to get subscription list.");
-  });
+  };
 }
 
 const addSubscriptionRecord = (id, userId, channelId) => {
