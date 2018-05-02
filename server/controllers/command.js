@@ -292,11 +292,11 @@ const showHelp = responseUrl => {
 
   let commandsInfo = ["_Subscribe to a data.world dataset :_ \n \`\/data.world subscribe [owner/datasetid]\`",
     "_Subscribe to a data.world project._ : \n \`\/data.world subscribe [owner/projectid]\`",
-    "_Subscribe to a data.world account._ : \n \`\/data.world subscribe [account]\`"
-    "_Unsubscribe from a data.world dataset._ : \n \`\/data.world unsubscribe [owner/datasetid]\`"
-    "_Unsubscribe from a data.world project._ : \n \`\/data.world unsubscribe [owner/projectid]\`"
-    "_Unsubscribe from a data.world account._ : \n \`\/data.world unsubscribe [account]\`"
-    "_List active subscriptions._ : \n \`\/data.world list\`"
+    "_Subscribe to a data.world account._ : \n \`\/data.world subscribe [account]\`",
+    "_Unsubscribe from a data.world dataset._ : \n \`\/data.world unsubscribe [owner/datasetid]\`",
+    "_Unsubscribe from a data.world project._ : \n \`\/data.world unsubscribe [owner/projectid]\`",
+    "_Unsubscribe from a data.world account._ : \n \`\/data.world unsubscribe [account]\`",
+    "_List active subscriptions._ : \n \`\/data.world list\`",
     "_Show this help message_ : \n \`\/data.world help\`"
   ];
 
