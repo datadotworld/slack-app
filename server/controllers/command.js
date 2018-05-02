@@ -116,7 +116,7 @@ const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) 
 
 const belongsToChannel = async(resourceid, channelid) => {
   const subscription = await Subscription.findOne({ where: { resourceId: resourceid, channelId: channelid } });
-  if (Subscription) {
+  if (subscription) {
     return true;
   } else {
     return false;
@@ -133,7 +133,7 @@ const listSubscription = async(req, token) => {
       // Construst subscriptions list message
     console.log("DW Subscriptions response : ", response);
     let message;
-    let attachments;
+    let attachments = "";
     let baseUrl = 'https://data.world/kennyshittu';
 
     if (response.count > 0) {
