@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/exchange', auth.completeSlackAssociation);
 
+// endpoint for handling slack app installation
 router.get('/oauth', auth.slackOauth);
 
 module.exports = router;
