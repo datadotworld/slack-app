@@ -34,7 +34,7 @@ const subscribeToDatasetOrProject = (userid, channelid, command, responseUrl, to
     }).catch(error => {
       console.warn("Failed to subscribe to project : ", error);
       // Handle as dataset 
-      subscribeToDataset(command, responseUrl, token);
+      subscribeToDataset(userid, channelid, command, responseUrl, token);
     });
 }
 
