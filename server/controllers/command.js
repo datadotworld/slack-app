@@ -207,7 +207,7 @@ const addSubscriptionRecord = (id, userId, channelId) => {
   // create subscription 
   Subscription.findOrCreate({
     where: { resourceId: id },
-    defaults: { slackUserId: channelId, channelId: channelId }
+    defaults: { slackUserId: userId, channelId: channelId }
   }).spread((channel, created) => {
     if (!created) {
       // Channel record already exits.
