@@ -28,7 +28,7 @@ const subscribeToDatasetOrProject = (userid, channelid, command, responseUrl, to
   return dataworld.subscribeToProject(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW subscribe to project / dataset response : ", response);
-      addSubscriptionRecord(commandParams.id, userid, channelid);
+      addSubscriptionRecord(commandParams.owner, commandParams.id, userid, channelid);
       // send successful subscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -44,7 +44,7 @@ const subscribeToDataset = (userid, channelid, command, responseUrl, token) => {
   return dataworld.subscribeToDataset(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW subscribe to dataset response : ", response);
-      addSubscriptionRecord(commandParams.id, userid, channelid)
+      addSubscriptionRecord(commandParams.owner, commandParams.id, userid, channelid)
       // send successful subscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -59,7 +59,7 @@ const subscribeToAccount = (userid, channelid, command, responseUrl, token) => {
   return dataworld.subscribeToAccount(commandParams.id, token)
     .then((response) => {
       console.log("DW subscribe to account response : ", response);
-      addSubscriptionRecord(commandParams.id, userid, channelid)
+      addSubscriptionRecord(commandParams.owner, commandParams.id, userid, channelid)
         // send successful subscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -74,7 +74,7 @@ const unsubscribeFromDatasetOrProject = (userid, channelid, command, responseUrl
   return dataworld.unsubscribeFromDataset(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from dataset response : ", response);
-      removeSubscriptionRecord(commandParams.id, channelid, userid);
+      removeSubscriptionRecord(commandParams.owner, commandParams.id, channelid, userid);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -90,7 +90,7 @@ const unsubscribeFromProject = (userid, channelid, command, responseUrl, token) 
   return dataworld.unsubscribeFromProject(commandParams.owner, commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from project response : ", response);
-      removeSubscriptionRecord(commandParams.id, channelid, userid);
+      removeSubscriptionRecord(commandParams.owner, commandParams.id, channelid, userid);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -105,7 +105,7 @@ const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) 
   return dataworld.unsubscribeFromAccount(commandParams.id, token)
     .then((response) => {
       console.log("DW unsubscribe from account response : ", response);
-      removeSubscriptionRecord(commandParams.id, channelid, userid);
+      removeSubscriptionRecord(commandParams.owner, commandParams.id, channelid, userid);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.message);
     }).catch(error => {
@@ -140,16 +140,15 @@ const listSubscription = async (req, token) => {
     if (response.count > 0) {
       message = `*Active Subscriptions*`;
       let attachment = "";
-
       // extract datasets list from response
       let datasetObjs = collection.map(response.records, 'dataset');
       if (!lang.isEmpty(datasetObjs)) {
         for (let value of datasetObjs) {
           if (value) {
-            const isValid = await belongsToChannel(value.id, channelid, userId);
-
+            let resourceId = `${value.owner}/${value.id}`;
+            const isValid = await belongsToChannel(resourceId, channelid, userId);
             if (isValid) {
-              attachment += `${baseUrl}/${value.owner}/${value.id} \n`;
+              attachment += `${baseUrl}/${resourceId} \n`;
             }
           }
         };
@@ -160,10 +159,10 @@ const listSubscription = async (req, token) => {
       if (!lang.isEmpty(projectsObjs)) {
         for (let value of projectsObjs) {
           if (value) {
-            const isValid = await belongsToChannel(value.id, channelid, userId);
-
+            let resourceId = `${value.owner}/${value.id}`;
+            const isValid = await belongsToChannel(resourceId, channelid, userId);
             if (isValid) {
-              attachment += `${baseUrl}/${value.owner}/${value.id} \n`;
+              attachment += `${baseUrl}/${resourceId} \n`;
             }
           }
         };
@@ -175,7 +174,6 @@ const listSubscription = async (req, token) => {
         for (let value of accountsObjs) {
           if (value) {
             const isValid = await belongsToChannel(value.id, channelid, userId);
-
             if (isValid) {
               attachment += `${baseUrl}/${value.id} \n`;
             }
@@ -203,10 +201,11 @@ const listSubscription = async (req, token) => {
   };
 }
 
-const addSubscriptionRecord = (id, userId, channelId) => {
+const addSubscriptionRecord = (owner, id, userId, channelId) => {
   // create subscription 
+  let resourceId = owner ? `${owner}/${id}` : `${id}`
   Subscription.findOrCreate({
-    where: { resourceId: id },
+    where: { resourceId: resourceId },
     defaults: { slackUserId: userId, channelId: channelId }
   }).spread((subscription, created) => {
     if (!created) {
@@ -219,8 +218,9 @@ const addSubscriptionRecord = (id, userId, channelId) => {
   });
 }
 
-const removeSubscriptionRecord = (resourceid, channelid, userid) => {
+const removeSubscriptionRecord = (owner, id, channelid, userid) => {
   // delete subscription 
+  let resourceId = owner ? `${owner}/${id}` : `${id}`
   Subscription.destroy({ where: { resourceId: resourceid, channelId: channelid , slackUserId: userid } }).catch((error) => {
     // error deleting Subscription
     console.error("Failed to create new Subscription record : ", error);

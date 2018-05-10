@@ -38,8 +38,7 @@ const getAttachment = (author, authorLink, owner, ownerLink, text) => {
 const getDatasetEventAttachmentText = (event) => {
   // "Successfully updated <http://data.world|2016 Uber customers>"
   let action = string.capitalize(event.action);
-  return `Successfully ${action}d <${event.links.web.project || event.links.web.dataset}
-  |${event.project || event.dataset}>`;
+  return `Successfully ${action}d <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`;
 }
 
 const getInsightEventAttachmentText = (event) => {
@@ -87,6 +86,7 @@ const extractResouceIdFromWebLink = (webLink) => {
 
 const getEventSubscribedChannels = async (resourceId) => {
   const subscriptions = await Subscription.find({ where: { resourceId: resourceId } })
+  console.log("Found subsciptions : ", subscriptions);
   return collection.map(subscriptions, 'channelId')
 }
 
@@ -130,7 +130,10 @@ const sendEventToSlack = (event, attachment) => {
   const resourceId = extractResouceIdFromWebLink(event.links.web.project || event.links.web.dataset)
   const channelIds = getEventSubscribedChannels(resourceId)
   //send attachment to all subscribed channels
+  console.log("Sending attachment : ", attachment);
+  console.log("Found channelIds : ", channelIds);
   collection.forEach(channelIds, (channelId) => {
+    console.log("Sending attachment to channel : " + channelId);
     sendSlackMessage(channelId, attachment);
   });
 }
@@ -138,8 +141,7 @@ const sendEventToSlack = (event, attachment) => {
 const sendSlackMessage = (channelId, attachment) => {
   slackBot.chat.postMessage(channelId, "", {
     attachments: [attachment]
-  }
-  );
+  });
 }
 
 const webhook = {
