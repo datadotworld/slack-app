@@ -208,10 +208,10 @@ const addSubscriptionRecord = (id, userId, channelId) => {
   Subscription.findOrCreate({
     where: { resourceId: id },
     defaults: { slackUserId: userId, channelId: channelId }
-  }).spread((channel, created) => {
+  }).spread((subscription, created) => {
     if (!created) {
-      // Channel record already exits.
-      console.warn("Subscription record already exists : ", event);
+      // Subscription record already exits.
+      console.warn("Subscription record already exists : ", subscription);
     }
   }).catch((error) => {
     // error creating channel
@@ -219,7 +219,7 @@ const addSubscriptionRecord = (id, userId, channelId) => {
   });
 }
 
-const removeSubscriptionRecord = (id, channelid, userid) => {
+const removeSubscriptionRecord = (resourceid, channelid, userid) => {
   // delete subscription 
   Subscription.destroy({ where: { resourceId: resourceid, channelId: channelid , slackUserId: userid } }).catch((error) => {
     // error deleting Subscription
