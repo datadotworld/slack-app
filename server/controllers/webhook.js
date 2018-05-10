@@ -85,7 +85,9 @@ const extractResouceIdFromWebLink = (webLink) => {
 };
 
 const getEventSubscribedChannels = async (resourceId) => {
-  const subscriptions = await Subscription.find({ where: { resourceId: resourceId } })
+  const subscriptions = await Subscription.findAll({ where: { resourceId: resourceId }}).then(subscriptions => {
+    return subscriptions;
+  });
   console.log("Found subsciptions : ", subscriptions);
   return collection.map(subscriptions, 'channelId')
 }
