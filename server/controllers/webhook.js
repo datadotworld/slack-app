@@ -2,6 +2,8 @@
 const string = require('lodash/string');
 const collection = require('lodash/collection');
 const lang = require('lodash/lang');
+const Subscription = require('../models').Subscription;
+const SlackWebClient = require('@slack/client').WebClient;
 const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 
 // Possible event actions
