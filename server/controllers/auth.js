@@ -75,7 +75,7 @@ const auth = {
       .then((res) => {
         const dmChannelId = res.channel.id;
         const associationUrl = `${authUrl}${nonce}`;
-        let slackMessage = slackBot.chat.postMessage(dmChannelId,
+        slackBot.chat.postMessage(dmChannelId,
           `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`, {
             attachments: [{
               text: `<${associationUrl}|Click here> to introduce yourself to me by authenticating.`,
@@ -96,9 +96,7 @@ const auth = {
           console.error("Failed to create new user : " + error.message);
           throw error;
         });
-
-        return new Promise(slackMessage);
-      }).then(() => nonce);
+      });
   },
 
   beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {

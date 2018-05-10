@@ -134,12 +134,12 @@ const listSubscription = async(req, token) => {
       // Construst subscriptions list message
     console.log("DW Subscriptions response : ", response);
     let message;
-    let attachments = "";
-    let baseUrl = 'https://data.world/kennyshittu';
+    let attachments;
+    let baseUrl = 'https://data.world';
 
     if (response.count > 0) {
       message = `*Active Subscriptions*`;
-      let attachment;
+      let attachment = "";
 
       // extract datasets list from response
       let datasetObjs = collection.map(response.records, 'dataset');
@@ -149,7 +149,7 @@ const listSubscription = async(req, token) => {
             const isValid = await belongsToChannel(value.id, channelid, userId);
 
             if (isValid) {
-              attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+              attachment += `${baseUrl}/${value.owner}/${value.id} \n`;
             }
           }
         };
@@ -163,7 +163,7 @@ const listSubscription = async(req, token) => {
             const isValid = await belongsToChannel(value.id, channelid, userId);
 
             if (isValid) {
-              attachment += `${baseUrl}/${value.owner}/${value.id}\n`;
+              attachment += `${baseUrl}/${value.owner}/${value.id} \n`;
             }
           }
         };
@@ -177,7 +177,7 @@ const listSubscription = async(req, token) => {
             const isValid = await belongsToChannel(value.id, channelid, userId);
 
             if (isValid) {
-              attachment += `${baseUrl}/${value.id}\n`;
+              attachment += `${baseUrl}/${value.id} \n`;
             }
           }
         };
