@@ -84,11 +84,9 @@ const extractResouceIdFromWebLink = (webLink) => {
   return `${owner}/${id}`;
 };
 
-const getEventSubscribedChannels = async (resourceId) => {
-  const subscriptions = await Subscription.findAll({ where: { resourceId: resourceId }}).then(subscriptions => {
-    return subscriptions;
-  });
-  console.log("Found subsciptions : ", subscriptions);
+const getEventSubscribedChannels =  async (resourceId) => {
+  const subscriptions = await Subscription.findAll({ where: { resourceId: resourceId }});
+  console.log("Found subsciptions : ", JSON.stringify(subscriptions));
   return collection.map(subscriptions, 'channelId')
 }
 
@@ -128,9 +126,9 @@ const handleFileEvents = (events) => {
   sendEventToSlack(event, attachment);
 }
 
-const sendEventToSlack = (event, attachment) => {
+const sendEventToSlack = async (event, attachment) => {
   const resourceId = extractResouceIdFromWebLink(event.links.web.project || event.links.web.dataset)
-  const channelIds = getEventSubscribedChannels(resourceId)
+  const channelIds = await getEventSubscribedChannels(resourceId)
   //send attachment to all subscribed channels
   console.log("Sending attachment : ", attachment);
   console.log("Found channelIds : ", channelIds);
