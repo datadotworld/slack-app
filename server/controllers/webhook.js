@@ -44,14 +44,11 @@ const getDatasetEventAttachmentText = (event) => {
 const getInsightEventAttachmentText = (event) => {
   switch (event.action) {
     case CREATE:
-      return `Added new insight <${event.links.web.insight}|${event.insight}> to
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Added new insight <${event.links.web.insight}|${event.insight}> to <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     case UPDATE:
-      return `Updated insight <${event.links.web.insight}|${event.insight}> in
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Updated insight <${event.links.web.insight}|${event.insight}> in <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     case DELETE:
-      return `Removed insight <${event.links.web.insight}|${event.insight}> from
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Removed insight <${event.links.web.insight}|${event.insight}> from <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     default:
       console.warn("Unrecognized Insight event action : ", event);
       return "";
@@ -61,14 +58,11 @@ const getInsightEventAttachmentText = (event) => {
 const getFileEventAttachmentText = (event) => {
   switch (event.action) {
     case UPLOAD:
-      return `Added new file(s) to
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Added new file(s) to <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     case UPDATE:
-      return `Updated file <${event.links.web.file}|${event.file}> in
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Updated file <${event.links.web.file}|${event.file}> in <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     case DELETE:
-      return `Removed file <${event.links.web.file}|${event.file}> from
-      <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
+      return `Removed file <${event.links.web.file}|${event.file}> from <${event.links.web.project || event.links.web.dataset}|${event.project || event.dataset}>`
     default:
       console.warn("Unrecognized Insight event action : ", event);
       return "";
