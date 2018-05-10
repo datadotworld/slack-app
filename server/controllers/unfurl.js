@@ -274,7 +274,7 @@ const getInsightAttachment = (insight, link) => {
   return attachment;
 }
 
-const handleLinkSharedEvent = (event) => {
+const handleLinkSharedEvent = (event, teamId) => {
   // verify slack associaton
   auth.checkSlackAssociationStatus(
     event.user,
@@ -296,7 +296,7 @@ const handleLinkSharedEvent = (event) => {
             .catch(console.error);
         } else {
           // User is not associated, begin association for unfurl
-          auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, req.body.team_id);
+          auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, teamId);
         }
       }
     }
@@ -337,7 +337,7 @@ const unfurl = {
       console.log("Recieved new event from slack : ", event);
       switch (event.type) {
         case 'link_shared':
-          handleLinkSharedEvent(event);
+          handleLinkSharedEvent(event, req.body.team_id);
           break;
         case 'member_joined_channel':
           handleJoinedChannelEvent(event);

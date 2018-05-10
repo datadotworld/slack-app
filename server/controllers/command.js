@@ -114,7 +114,7 @@ const unsubscribeFromAccount = (userid, channelid, command, responseUrl, token) 
     });
 }
 
-const belongsToChannel = async(resourceid, channelid, userid) => {
+const belongsToChannel = async (resourceid, channelid, userid) => {
   const subscription = await Subscription.findOne({ where: { resourceId: resourceid, channelId: channelid , slackUserId: userid} });
   if (subscription) {
     return true;
@@ -123,7 +123,7 @@ const belongsToChannel = async(resourceid, channelid, userid) => {
   }
 }
 
-const listSubscription = async(req, token) => {
+const listSubscription = async (req, token) => {
   let command = req.body.command + req.body.text;
   let responseUrl = req.body.response_url;
   let channelid = req.body.channel_id;
@@ -305,7 +305,6 @@ const showHelp = responseUrl => {
     });
   });
 
-  // we should replace this with ephemeral messsage see chat.postEphemaralMessage
   sendSlackMessage(responseUrl, message, attachments);
 }
 
@@ -316,7 +315,6 @@ const command = {
     Channel.findOne({ where: { channelId: req.body.channel_id } })
       .catch((error) => {
         console.error('Error finding Channel', error);
-        // we should replace this with ephemeral messsage see chat.postEphemaralMessage
         sendSlackMessage(req.body.response_url, `Somehting went wrong, kindly try again.`);
       })
       .then((channel) => {
@@ -346,13 +344,11 @@ const command = {
               }
             }
             if (message) {
-              // we should replace this with ephemeral messsage see chat.postEphemaralMessage
               sendSlackMessage(req.body.response_url, message);
             }
           });
         } else {
           // inform user that bot user must be invited to channel 
-          // we should replace this with ephemeral messsage see chat.postEphemaralMessage
           sendSlackMessage(req.body.response_url, `Sorry <@${req.body.user_id}>, you can't run \`${req.body.command}\` until you've invited <@dataworld> to this channel.`);
           return;
         }
