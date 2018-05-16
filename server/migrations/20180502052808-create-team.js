@@ -14,10 +14,13 @@ module.exports = {
       teamDomain: {
         type: Sequelize.STRING
       },
-      verificationToken: {
+      accessToken: {
         type: Sequelize.TEXT
       },
-      accessToken: {
+      botUserId: {
+        type: Sequelize.TEXT
+      },
+      botAccessToken: {
         type: Sequelize.TEXT
       },
       createdAt: {

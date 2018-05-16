@@ -1,13 +1,13 @@
-const array = require('lodash/array');
-const lang = require('lodash/lang');
-const collection = require('lodash/collection');
-const object = require('lodash/object');
+const array = require("lodash/array");
+const lang = require("lodash/lang");
+const collection = require("lodash/collection");
+const object = require("lodash/object");
 
-const Channel = require('../models').Channel;
+const Channel = require("../models").Channel;
 
-const SlackWebClient = require('@slack/client').WebClient;
+const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
-const { dataworld } = require('../api/dataworld');
+const { dataworld } = require("../api/dataworld");
 
 const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
 
@@ -43,7 +43,7 @@ const messageAttachmentFromLink = (token, link) => {
   }
 };
 
-const getType = (link) => {
+const getType = link => {
   // determine type of link
   if (datasetLinkFormat.test(link)) {
     return DATASET;
@@ -55,7 +55,7 @@ const getType = (link) => {
   return;
 };
 
-const extractDatasetOrProjectParams = (link) => {
+const extractDatasetOrProjectParams = link => {
   let params = {};
   let parts = link.split("/");
 
@@ -67,7 +67,7 @@ const extractDatasetOrProjectParams = (link) => {
 };
 
 //TODO : This needs to be refactored.
-const extractInsightParams = (link) => {
+const extractInsightParams = link => {
   let params = {};
   let parts = link.split("/");
 
@@ -79,9 +79,8 @@ const extractInsightParams = (link) => {
   return params;
 };
 
-
 //TODO : This needs to be refactored.
-const extractInsightsParams = (link) => {
+const extractInsightsParams = link => {
   let params = {};
   let parts = link.split("/");
 
@@ -114,7 +113,8 @@ const unfurlDataset = params => {
         text: dataset.summary,
         footer: "Data.World",
         // we should change this to data.world logo
-        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+        footer_icon:
+          "https://platform.slack-edge.com/img/default_application_icon.png",
         url: params.link
       };
       const fields = [];
@@ -168,7 +168,6 @@ const unfurlProject = params => {
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
     .then(project => {
-
       let owner = project.owner;
       const attachment = {
         fallback: project.title,
@@ -180,7 +179,8 @@ const unfurlProject = params => {
         title_link: params.link,
         text: project.summary,
         footer: "Data.World",
-        footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+        footer_icon:
+          "https://platform.slack-edge.com/img/default_application_icon.png",
         url: params.link
       };
       const fields = [];
@@ -253,7 +253,7 @@ const unfurlInsight = params => {
 
 const getInsightAttachment = (insight, link) => {
   let author = insight.author;
-  let thumbUrl = insight.thumbnail || insight.body.imageUrl
+  let thumbUrl = insight.thumbnail || insight.body.imageUrl;
   const attachment = {
     fallback: insight.title,
     color: "#79B8FB",
@@ -264,7 +264,8 @@ const getInsightAttachment = (insight, link) => {
     text: insight.description,
     thumb_url: thumbUrl,
     footer: "Data.World",
-    footer_icon: "https://platform.slack-edge.com/img/default_application_icon.png",
+    footer_icon:
+      "https://platform.slack-edge.com/img/default_application_icon.png",
     url: link
   };
   if (insight.body.imageUrl) {
@@ -272,63 +273,75 @@ const getInsightAttachment = (insight, link) => {
   }
 
   return attachment;
-}
+};
 
 const handleLinkSharedEvent = (event, teamId) => {
   // verify slack associaton
-  auth.checkSlackAssociationStatus(
-    event.user,
-    (error, isAssociated, user) => {
-      if (error) {
-        // An internal error has occured.
-        return;
+  try {
+    auth.checkSlackAssociationStatus(event.user).then((isAssociated, user) => {
+      if (isAssociated) {
+        let token = user.dwAccessToken;
+        // User is associated, carry on and unfold url
+        // retrieve user dw access token
+        Promise.all(
+          event.links.map(messageAttachmentFromLink.bind(null, token))
+        )
+          // Transform the array of attachments to an unfurls object keyed by URL
+          .then(attachments => collection.keyBy(attachments, "url")) // group by url
+          .then(unfurls =>
+            object.mapValues(unfurls, attachment =>
+              object.omit(attachment, "url")
+            )
+          ) // remove url from attachment object
+          // Invoke the Slack Web API to append the attachment
+          .then(unfurls =>
+            slack.chat.unfurl(event.message_ts, event.channel, unfurls)
+          )
+          .catch(console.error);
       } else {
-        if (isAssociated) {
-          let token = user.dwAccessToken;
-          // User is associated, carry on and unfold url
-          // retrieve user dw access token
-          Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
-            // Transform the array of attachments to an unfurls object keyed by URL
-            .then(attachments => collection.keyBy(attachments, 'url')) // group by url
-            .then(unfurls => object.mapValues(unfurls, attachment => object.omit(attachment, 'url'))) // remove url from attachment object
-            // Invoke the Slack Web API to append the attachment
-            .then(unfurls => slack.chat.unfurl(event.message_ts, event.channel, unfurls))
-            .catch(console.error);
-        } else {
-          // User is not associated, begin association for unfurl
-          auth.beginUnfurlSlackAssociation(event.user, event.message_ts, event.channel, teamId);
-        }
+        // User is not associated, begin association for unfurl
+        auth.beginUnfurlSlackAssociation(
+          event.user,
+          event.message_ts,
+          event.channel,
+          teamId
+        );
       }
-    }
-  );
-}
+    });
+  } catch (error) {
+    console.error(
+      "Failed to verify slack association status during link unfurl : ",
+      error
+    );
+  }
+};
 
-const handleJoinedChannelEvent = (event) => {
-  // Update known channel 
-  //add channel if not existing 
-  // create user with nonce and the slackdata        
+const handleJoinedChannelEvent = event => {
+  // Update known channel
+  //add channel if not existing
+  // create user with nonce and the slackdata
   Channel.findOrCreate({
     where: { channelId: event.channel },
     defaults: { teamId: event.team, slackUserId: event.inviter }
-  }).spread((channel, created) => {
-    if (!created) {
-      // Channel record already exits.
-      console.warn("Channel record already exists : ", event);
-    }
-  }).catch((error) => {
-    // error creating user
-    console.error("Failed to create new channel record : " + error.message);
-    throw error;
-  });
-
-}
+  })
+    .spread((channel, created) => {
+      if (!created) {
+        // Channel record already exits.
+        console.warn("Channel record already exists : ", event);
+      }
+    })
+    .catch(error => {
+      // error creating user
+      console.error("Failed to create new channel record : " + error.message);
+      throw error;
+    });
+};
 
 const unfurl = {
-
   processRequest(req, res) {
     if (req.body.challenge) {
       // Respond to slack challenge.
-      res.status(200).send({ "challenge": req.body.challenge });
+      res.status(200).send({ challenge: req.body.challenge });
     } else {
       // respond to request immediately no need to wait.
       res.json({ response_type: "in_channel" });
@@ -336,10 +349,10 @@ const unfurl = {
       let event = req.body.event;
       console.log("Recieved new event from slack : ", event);
       switch (event.type) {
-        case 'link_shared':
+        case "link_shared":
           handleLinkSharedEvent(event, req.body.team_id);
           break;
-        case 'member_joined_channel':
+        case "member_joined_channel":
           handleJoinedChannelEvent(event);
           break;
         default:

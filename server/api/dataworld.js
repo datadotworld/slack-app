@@ -1,232 +1,167 @@
-const unirest = require("unirest");
+const axios = require("axios");
 
 const accessTokenUrl = process.env.ACCESS_TOKEN_URL;
 const baseUrl = process.env.DW_BASE_URL;
-const headers = { Accept: "application/json", "Content-Type": "application/json" };
+const headers = {
+  "Accept": "application/json",
+  "Content-Type": "application/json"
+};
 const events = { events: ["ALL"] };
 
-const post = (url, data, token, cb) => {
+const post = (url, data, token) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  unirest
-    .post(url)
-    .headers(headers)
-    .send(data)
-    .end(function(response) {
-      cb(response);
-    });
+  return axios.post(url, data, { headers: headers });
 };
 
-const put = (url, data, token, cb) => {
+const put = (url, data, token) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  unirest
-    .put(url)
-    .headers(headers)
-    .send(data)
-    .end(function(response) {
-      cb(response);
-    });
+  return axios.put(url, data, { headers: headers });
 };
 
-const get = (url, token, cb) => {
+const get = (url, token) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  unirest
-    .get(url)
-    .headers(headers)
-    .end(function(response) {
-      cb(response);
-    });
+  return axios.get(url, { headers: headers });
 };
 
-const del = (url, token, cb) => {
+const del = (url, token) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  unirest
-    .delete(url)
-    .headers(headers)
-    .end(function(response) {
-      cb(response);
-    });
+  return axios.delete(url, { headers: headers });
 };
 
 const dataworld = {
 
-  exchangeAuthCode(code, cb) {
+  exchangeAuthCode(code) {
     let requestUrl = `${accessTokenUrl}${code}`;
-    post(requestUrl, {}, null, (res) => {
-      if (res.error) {
-        cb(res.error, null);
-      } else {
-        cb(null, res.body.access_token);
-      }
-    });
+    return post(requestUrl, {}, null);
   },
 
-  verifyDwToken(token) {
+  async verifyDwToken(token) {
     let requestUrl = `${baseUrl}/user`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          if (res.code === 401) {
-            resolve(false);
-          } else {
-            reject(res.error);
-          }
-        } else {
-          resolve(true);
-        }
-      });
-    });
+    try {
+      let res = await get(requestUrl, token);
+      return res.data ? Promise.resolve(true) : Promise.resolve(false);
+    } catch(error) {
+      return error.response.status === 401 ? Promise.resolve(false) : Promise.reject(error);
+    }
   },
 
-  getDataset(id, owner, token) {
+  async getDataset(id, owner, token) {
     let requestUrl = `${baseUrl}/datasets/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await get(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  getProject(id, owner, token) {
+  async getProject(id, owner, token) {
     let requestUrl = `${baseUrl}/projects/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await get(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  getInsight(id, projectId, owner, token) {
+  async getInsight(id, projectId, owner, token) {
     let requestUrl = `${baseUrl}/insights/${owner}/${projectId}/${id}`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await get(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  getInsights(projectId, owner, token) {
+  async getInsights(projectId, owner, token) {
     let requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await get(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  subscribeToDataset(owner, id, token) {
+  async subscribeToDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      put(requestUrl, events, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await put(requestUrl, events, token);
+      return Promise.resolve(res.body);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  subscribeToProject(owner, id, token) {
+  async subscribeToProject(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      put(requestUrl, events, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await put(requestUrl, events, token);
+      return Promise.resolve(res.body);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  subscribeToAccount(id, token) {
+  async subscribeToAccount(id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    return new Promise((resolve, reject) => {
-      put(requestUrl, events, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await put(requestUrl, events, token);
+      return Promise.resolve(res.body);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  unsubscribeFromDataset(owner, id, token) {
+  async unsubscribeFromDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      del(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await del(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  unsubscribeFromProject(owner, id, token) {
+  async unsubscribeFromProject(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    return new Promise((resolve, reject) => {
-      del(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await del(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  unsubscribeFromAccount(id, token) {
+  async unsubscribeFromAccount(id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    return new Promise((resolve, reject) => {
-      del(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
+    try {
+      let res = await del(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
   },
 
-  getSubscriptions(token) {
+  async getSubscriptions(token) {
     let requestUrl = `${baseUrl}/user/webhooks`;
-    return new Promise((resolve, reject) => {
-      get(requestUrl, token, (res) => {
-        if (res.error) {
-          reject(res.error);
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
-  },
+    try {
+      let res = await get(requestUrl, token);
+      return Promise.resolve(res.data);
+    } catch(error) {
+      return Promise.reject(error);
+    }
+  }
 };
 
 module.exports = { dataworld };
