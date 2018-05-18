@@ -36,8 +36,8 @@ const auth = {
             defaults: {
               teamDomain: response.data.team_name,
               accessToken: response.data.access_token,
-              botUserId: response.data.bot_user_id,
-              botAccessToken: response.data.bot_access_token
+              botUserId: response.data.bot.bot_user_id,
+              botAccessToken: response.bot.data.bot_access_token
             }
           })
             .spread((team, created) => {
@@ -49,8 +49,8 @@ const auth = {
                   {
                     teamDomain: response.data.team_name,
                     accessToken: response.data.access_token,
-                    botUserId: response.data.bot_user_id,
-                    botAccessToken: response.data.bot_access_token
+                    botUserId: response.data.bot.bot_user_id,
+                    botAccessToken: response.data.bot.bot_access_token
                   },
                   {
                     fields: [
@@ -125,7 +125,7 @@ const auth = {
     const team = await Team.findOne({ where: { teamId: teamId } });
     const slackBot = new SlackWebClient(team.botAccessToken);
 
-    return slackBot.im.open(slackUserId).then(res => {
+    slackBot.im.open(slackUserId).then(res => {
       const dmChannelId = res.channel.id;
       const associationUrl = `${authUrl}${nonce}`;
       slackBot.chat.postMessage(
@@ -155,7 +155,7 @@ const auth = {
           console.error("Failed to create new user : " + error.message);
           throw error;
         });
-    });
+    }).catch(console.error);
   },
 
   async beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
