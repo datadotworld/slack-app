@@ -37,7 +37,7 @@ const auth = {
               teamDomain: response.data.team_name,
               accessToken: response.data.access_token,
               botUserId: response.data.bot.bot_user_id,
-              botAccessToken: response.bot.data.bot_access_token
+              botAccessToken: response.data.bot.bot_access_token
             }
           })
             .spread((team, created) => {
@@ -77,7 +77,7 @@ const auth = {
         .catch(error => {
           console.error("Slack oauth failed : ", error);
           // redirect to failure page
-          res.redirect(`${process.env.SLACK_APP_BASE_URL}/failed`);
+          res.redirect(`${process.env.SLACK_APP_BASE_URL}failed`);
         });
     }
   },
