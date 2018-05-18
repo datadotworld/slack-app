@@ -49,74 +49,64 @@ const dataworld = {
       let res = await get(requestUrl, token);
       return res.data ? true : false;
     } catch(error) {
-      return error.response.status === 401 ? Promise.resolve(false) : Promise.reject(error);
+      console.error("DW token verification failed : ", error);
+      return false;
     }
   },
 
-  async getDataset(id, owner, token) {
+  getDataset(id, owner, token) {
     let requestUrl = `${baseUrl}/datasets/${owner}/${id}`;
-    let res = await get(requestUrl, token);
-    return res.data;
+    return get(requestUrl, token);
   },
 
-  async getProject(id, owner, token) {
+  getProject(id, owner, token) {
     let requestUrl = `${baseUrl}/projects/${owner}/${id}`;
-    let res = await get(requestUrl, token);
-    return res.data;
+    return get(requestUrl, token);
   },
 
-  async getInsight(id, projectId, owner, token) {
+  getInsight(id, projectId, owner, token) {
     let requestUrl = `${baseUrl}/insights/${owner}/${projectId}/${id}`;
-    let res = await get(requestUrl, token);
-    return res.data;
+    return get(requestUrl, token);
   },
 
-  async getInsights(projectId, owner, token) {
+  getInsights(projectId, owner, token) {
     let requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
-    let res = await get(requestUrl, token);
-    return res.data;
+    return get(requestUrl, token);
   },
 
-  async subscribeToDataset(owner, id, token) {
+  subscribeToDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    let res = await put(requestUrl, events, token);
-    return res.data;
+    return put(requestUrl, events, token);
   },
 
-  async subscribeToProject(owner, id, token) {
+  subscribeToProject(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    let res = await put(requestUrl, events, token);
-    return res.data;
+    return put(requestUrl, events, token);
   },
 
-  async subscribeToAccount(id, token) {
+  subscribeToAccount(id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    let res = await put(requestUrl, events, token);
-    return res.data;
+    return put(requestUrl, events, token);
   },
 
-  async unsubscribeFromDataset(owner, id, token) {
+  unsubscribeFromDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    let res = await del(requestUrl, token);
-    return res.data;
+    return del(requestUrl, token);
   },
 
-  async unsubscribeFromProject(owner, id, token) {
+  unsubscribeFromProject(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    let res = await del(requestUrl, token);
-    return res.data;
+    return del(requestUrl, token);
   },
 
-  async unsubscribeFromAccount(id, token) {
+  unsubscribeFromAccount(id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    let res = await del(requestUrl, token);
-    return res.data;
+    return del(requestUrl, token);
   },
 
-  async getSubscriptions(token) {
+  getSubscriptions(token) {
     let requestUrl = `${baseUrl}/user/webhooks`;
-    let res = await get(requestUrl, token);
-    return res.data;
+    return get(requestUrl, token);
   }
 };
 

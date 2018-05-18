@@ -4,6 +4,7 @@ const collection = require("lodash/collection");
 const object = require("lodash/object");
 
 const Channel = require("../models").Channel;
+const Team = require("../models").Team;
 
 const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
@@ -93,7 +94,8 @@ const unfurlDataset = params => {
   // Fetch resource info from DW
   return dataworld
     .getDataset(params.datasetId, params.owner, params.token)
-    .then(dataset => {
+    .then(response => {
+      const dataset = response.data;
       //Check if it's a project object.
       if (dataset.isProject) {
         return unfurlProject(params);
@@ -165,7 +167,8 @@ const unfurlProject = params => {
   // Fetch resource info from DW
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
-    .then(project => {
+    .then(response => {
+      const project = response.data;
       let owner = project.owner;
       const attachment = {
         fallback: project.title,
@@ -223,7 +226,8 @@ const unfurlInsights = params => {
   // Fetch resource info from DW
   return dataworld
     .getInsights(params.projectId, params.owner, params.token)
-    .then(insights => {
+    .then(response => {
+      const insights = response.data;
       if (insights.count > 0) {
         let insight = insights.records[0];
         return getInsightAttachment(insight, params.link);
@@ -240,7 +244,8 @@ const unfurlInsight = params => {
   // Fetch resource info from DW
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
-    .then(insight => {
+    .then(response => {
+      const insight = response.data;
       return getInsightAttachment(insight, params.link);
     })
     .catch(error => {
@@ -273,41 +278,40 @@ const getInsightAttachment = (insight, link) => {
   return attachment;
 };
 
-const handleLinkSharedEvent = (event, teamId) => {
+const handleLinkSharedEvent = async (event, teamId) => {
   // verify slack associaton
   try {
-    auth.checkSlackAssociationStatus(event.user).then(async (isAssociated, user) => {
-      if (isAssociated) {
-        let token = user.dwAccessToken;
-        const team = await Team.findOne({ where: { teamId: teamId } });
-        const slack = new SlackWebClient(team.accessToken);
-        // User is associated, carry on and unfold url
-        // retrieve user dw access token
-        Promise.all(
-          event.links.map(messageAttachmentFromLink.bind(null, token))
-        )
-          // Transform the array of attachments to an unfurls object keyed by URL
-          .then(attachments => collection.keyBy(attachments, "url")) // group by url
-          .then(unfurls =>
-            object.mapValues(unfurls, attachment =>
-              object.omit(attachment, "url")
-            )
-          ) // remove url from attachment object
-          // Invoke the Slack Web API to append the attachment
-          .then(unfurls =>
-            slack.chat.unfurl(event.message_ts, event.channel, unfurls)
+    const [ isAssociated, user ] = await auth.checkSlackAssociationStatus(event.user);
+    if (isAssociated) {
+      let token = user.dwAccessToken;
+      const team = await Team.findOne({ where: { teamId: teamId } });
+      const slack = new SlackWebClient(team.accessToken);
+      // User is associated, carry on and unfold url
+      // retrieve user dw access token
+      Promise.all(
+        event.links.map(messageAttachmentFromLink.bind(null, token))
+      )
+        // Transform the array of attachments to an unfurls object keyed by URL
+        .then(attachments => collection.keyBy(attachments, "url")) // group by url
+        .then(unfurls =>
+          object.mapValues(unfurls, attachment =>
+            object.omit(attachment, "url")
           )
-          .catch(console.error);
-      } else {
-        // User is not associated, begin association for unfurl
-        auth.beginUnfurlSlackAssociation(
-          event.user,
-          event.message_ts,
-          event.channel,
-          teamId
-        );
-      }
-    });
+        ) // remove url from attachment object
+        // Invoke the Slack Web API to append the attachment
+        .then(unfurls =>
+          slack.chat.unfurl(event.message_ts, event.channel, unfurls)
+        )
+        .catch(console.error);
+    } else {
+      // User is not associated, begin association for unfurl
+      auth.beginUnfurlSlackAssociation(
+        event.user,
+        event.message_ts,
+        event.channel,
+        teamId
+      );
+    }
   } catch (error) {
     console.error(
       "Failed to verify slack association status during link unfurl : ",

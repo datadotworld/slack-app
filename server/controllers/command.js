@@ -22,7 +22,7 @@ const SUBSCRIBE_ACCOUNT = "SUBSCRIBE_ACCOUNT";
 const UNSUBSCRIBE_DATASET_OR_PROJECT = "UNSUBSCRIBE_DATASET_OR_PROJECT";
 const UNSUBSCRIBE_ACCOUNT = "UNSUBSCRIBE_ACCOUNT";
 
-const subscribeToDatasetOrProject = (
+const subscribeToDatasetOrProject = async (
   userid,
   channelid,
   command,
@@ -32,8 +32,8 @@ const subscribeToDatasetOrProject = (
   // use dataworld wrapper to subscribe to dataset
   let commandParams = extractParamsFromCommand(command, false);
   try {
-    const response = dataworld.subscribeToProject(commandParams.owner, commandParams.id, token);
-    console.log("DW subscribe to project / dataset response : ", response);
+    const response = await dataworld.subscribeToProject(commandParams.owner, commandParams.id, token);
+    console.log("DW subscribe to project / dataset response : ", response.data);
     addSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
@@ -41,7 +41,7 @@ const subscribeToDatasetOrProject = (
       channelid
     );
     // send successful subscription message to Slack
-    sendSlackMessage(responseUrl, response.message);
+    sendSlackMessage(responseUrl, response.data.message);
 
   } catch (error) {
     console.warn("Failed to subscribe to project : ", error);
@@ -50,12 +50,12 @@ const subscribeToDatasetOrProject = (
   }
 };
 
-const subscribeToDataset = (userid, channelid, command, responseUrl, token) => {
+const subscribeToDataset = async (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to subscribe to dataset
   let commandParams = extractParamsFromCommand(command, false);
   try {
-    const response = dataworld.subscribeToDataset(commandParams.owner, commandParams.id, token);
-    console.log("DW subscribe to dataset response : ", response);
+    const response = await dataworld.subscribeToDataset(commandParams.owner, commandParams.id, token);
+    console.log("DW subscribe to dataset response : ", response.data);
       addSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
@@ -63,7 +63,7 @@ const subscribeToDataset = (userid, channelid, command, responseUrl, token) => {
         channelid
       );
       // send successful subscription message to Slack
-      sendSlackMessage(responseUrl, response.message);
+      sendSlackMessage(responseUrl, response.data.message);
   } catch(error) {
     console.warn("Failed to subscribe to dataset : ", error);
     sendSlackMessage(
@@ -73,11 +73,11 @@ const subscribeToDataset = (userid, channelid, command, responseUrl, token) => {
   }
 };
 
-const subscribeToAccount = (userid, channelid, command, responseUrl, token) => {
+const subscribeToAccount = async (userid, channelid, command, responseUrl, token) => {
   // use dataworld wrapper to subscribe to account
   let commandParams = extractParamsFromCommand(command, true);
   try {
-    const response = dataworld.subscribeToAccount(commandParams.id, token);
+    const response = await dataworld.subscribeToAccount(commandParams.id, token);
     console.log("DW subscribe to account response : ", response);
       addSubscriptionRecord(
         commandParams.owner,
@@ -86,7 +86,7 @@ const subscribeToAccount = (userid, channelid, command, responseUrl, token) => {
         channelid
       );
       // send successful subscription message to Slack
-      sendSlackMessage(responseUrl, response.message);
+      sendSlackMessage(responseUrl, response.data.message);
   } catch(error) {
     console.error("Error subscribing to account : ", error);
     sendSlackMessage(
@@ -113,7 +113,7 @@ const unsubscribeFromDatasetOrProject = async (
   );
   if (isValid) { // If subscription belongs to channel go ahead and unsubscribe
     try {
-      let response = dataworld.unsubscribeFromDataset(commandParams.owner, commandParams.id, token);
+      let response = await dataworld.unsubscribeFromDataset(commandParams.owner, commandParams.id, token);
       console.log("DW unsubscribe from dataset response : ", response);
       removeSubscriptionRecord(
         commandParams.owner,
@@ -121,7 +121,7 @@ const unsubscribeFromDatasetOrProject = async (
         userid
       );
       // send successful unsubscription message to Slack
-      sendSlackMessage(responseUrl, response.message);
+      sendSlackMessage(responseUrl, response.data.message);
     } catch(error) {
       console.warn("Failed to unsubscribe from dataset : ", error);
       // Handle as project
@@ -133,7 +133,7 @@ const unsubscribeFromDatasetOrProject = async (
   }
 };
 
-const unsubscribeFromProject = (
+const unsubscribeFromProject = async (
   userid,
   channelid,
   command,
@@ -143,7 +143,7 @@ const unsubscribeFromProject = (
   // use dataworld wrapper to unsubscribe to project
   let commandParams = extractParamsFromCommand(command, false);
   try {
-    const response = dataworld.unsubscribeFromProject(commandParams.owner, commandParams.id, token);
+    const response = await dataworld.unsubscribeFromProject(commandParams.owner, commandParams.id, token);
     console.log("DW unsubscribe from project response : ", response);
     removeSubscriptionRecord(
       commandParams.owner,
@@ -151,7 +151,7 @@ const unsubscribeFromProject = (
       userid
     );
     // send successful unsubscription message to Slack
-    sendSlackMessage(responseUrl, response.message);
+    sendSlackMessage(responseUrl, response.data.message);
   } catch(error) {
     console.error("Error unsubscribing from project : ", error);
     sendSlackMessage(
@@ -178,7 +178,7 @@ const unsubscribeFromAccount = async (
   );
   if (isValid) {
     try {
-      const response = dataworld.unsubscribeFromAccount(commandParams.id, token);
+      const response = await dataworld.unsubscribeFromAccount(commandParams.id, token);
       console.log("DW unsubscribe from account response : ", response);
       removeSubscriptionRecord(
         commandParams.owner,
@@ -186,7 +186,7 @@ const unsubscribeFromAccount = async (
         userid
       );
       // send successful unsubscription message to Slack
-      sendSlackMessage(responseUrl, response.message);
+      sendSlackMessage(responseUrl, response.data.message);
     } catch (error) {
       console.error("Error unsubscribing from account : ", error);
       sendSlackMessage(
@@ -220,16 +220,16 @@ const listSubscription = async (req, token) => {
   try {
     const response = await dataworld.getSubscriptions(token);
     // Construst subscriptions list message
-    console.log("DW Subscriptions response : ", response);
+    console.log("DW Subscriptions response : ", response.data);
     let message;
     let attachments;
     let baseUrl = "https://data.world";
 
-    if (response.count > 0) {
+    if (response.data.count > 0) {
       message = `*Active Subscriptions*`;
       let attachment = "";
       // extract datasets list from response
-      let datasetObjs = collection.map(response.records, "dataset");
+      let datasetObjs = collection.map(response.data.records, "dataset");
       if (!lang.isEmpty(datasetObjs)) {
         for (let value of datasetObjs) {
           if (value) {
@@ -247,7 +247,7 @@ const listSubscription = async (req, token) => {
       }
 
       // extract accounts list from response
-      let projectsObjs = collection.map(response.records, "project");
+      let projectsObjs = collection.map(response.data.records, "project");
       if (!lang.isEmpty(projectsObjs)) {
         for (let value of projectsObjs) {
           if (value) {
@@ -265,7 +265,7 @@ const listSubscription = async (req, token) => {
       }
 
       // extract projects list from response
-      let accountsObjs = collection.map(response.records, "user");
+      let accountsObjs = collection.map(response.data.records, "user");
       if (!lang.isEmpty(accountsObjs)) {
         for (let value of accountsObjs) {
           if (value) {
@@ -453,45 +453,41 @@ const command = {
         // Authenticate the Slack user
         // An assumption is being made: all commands require authentication
         // check association status
-        auth
-          .checkSlackAssociationStatus(req.body.user_id)
-          .then((isAssociated, user) => {
-            let message;
-            if (isAssociated) {
-              // User is associated, carry on and validate command
-              let option = req.body.text;
-              if (dwWebhookCommandFormat.test(req.body.command + option)) {
-                // Process command
-                subscribeOrUnsubscribe(req, user.dwAccessToken);
-              } else if (
-                dwSupportCommandFormat.test(req.body.command + option)
-              ) {
-                option === "list"
-                  ? listSubscription(req, user.dwAccessToken)
-                  : showHelp(req.body.response_url);
-              } else {
-                message = `Cannot understand the command: \`${
-                  req.body.command
-                } ${
-                  req.body.text
-                }\` . Please, Ensure command options and specified id are valid.`;
-              }
-            } else {
-              // User is not associated begin association process.
-              message = `Sorry <@${req.body.user_id}>, you can't run \`${
-                req.body.command
-              }\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`;
-              auth.beginSlackAssociation(
-                req.body.user_id,
-                req.body.user_name,
-                req.body.team_id
-              );
-            }
+        const [ isAssociated, user ] = await auth.checkSlackAssociationStatus(req.body.user_id);
+        let message;
+        if (isAssociated) {
+          // User is associated, carry on and validate command
+          let option = req.body.text;
+          if (dwWebhookCommandFormat.test(req.body.command + option)) {
+            // Process command
+            subscribeOrUnsubscribe(req, user.dwAccessToken);
+          } else if (dwSupportCommandFormat.test(req.body.command + option)) {
+            option === "list"
+              ? listSubscription(req, user.dwAccessToken)
+              : showHelp(req.body.response_url);
+          } else {
+            message = `Cannot understand the command: \`${
+              req.body.command
+            } ${
+              req.body.text
+            }\` . Please, Ensure command options and specified id are valid.`;
+          }
+        } else {
+          // User is not associated begin association process.
+          message = `Sorry <@${req.body.user_id}>, you can't run \`${
+            req.body.command
+          }\` until after you authenticate. I can help you, just check my DM for the next step, and then you can try the command again.`;
+          auth.beginSlackAssociation(
+            req.body.user_id,
+            req.body.user_name,
+            req.body.team_id
+          );
+        }
 
-            if (message) {
-              sendSlackMessage(req.body.response_url, message);
-            }
-          });
+        if (message) {
+          sendSlackMessage(req.body.response_url, message);
+        }
+
       } else {
         // inform user that bot user must be invited to channel
         message = `Sorry <@${req.body.user_id}>, you can't run \`${
@@ -502,6 +498,7 @@ const command = {
       }
     } catch (error) {
       // An internal error has occured send a descriptive message
+      console.error("Failed to process command : ", error);
       message = `Sorry <@${
         req.body.user_id
       }>, we're unable to process command \`${

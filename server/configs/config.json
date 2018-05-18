@@ -5,7 +5,9 @@
     "database": "slackapp",
     "host": "127.0.0.1",
     "dialect": "postgres",
-    "operatorsAliases": "Op"
+    "operatorsAliases": {
+      "$ne": "Op.ne"
+    }
   },
   "production": {
     "use_env_variable": "DATABASE_URL"

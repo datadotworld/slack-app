@@ -71,12 +71,12 @@ const getFileEventAttachmentText = (event) => {
 }
 
 //TODO : This needs to be refactored.
-const extractResouceIdFromWebLink = (webLink) => {
+const extractResouceIdFromWebLink = (webLink, action) => {
   let data = webLink.split("/");
   let owner = data[data.length - 2];
   let id = data[data.length - 1];
-
-  return `${owner}/${id}`;
+  // create events will be received for account subscriptions
+  return action === CREATE ? owner : `${owner}/${id}`;
 };
 
 const getEventSubscribedChannels =  async (resourceId) => {
@@ -122,7 +122,7 @@ const handleFileEvents = (events) => {
 }
 
 const sendEventToSlack = async (event, attachment) => {
-  const resourceId = extractResouceIdFromWebLink(event.links.web.project || event.links.web.dataset)
+  const resourceId = extractResouceIdFromWebLink(event.links.web.project || event.links.web.dataset, event.action);
   const channelIds = await getEventSubscribedChannels(resourceId)
   //send attachment to all subscribed channels
   console.log("Sending attachment : ", attachment);

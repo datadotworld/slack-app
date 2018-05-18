@@ -5,7 +5,9 @@ const User = require("../models").User;
 const Team = require("../models").Team;
 const { dataworld } = require("../api/dataworld");
 const { slack } = require("../api/slack");
+const Sequelize = require('sequelize');
 
+const Op = Sequelize.Op;
 const authUrl = process.env.AUTH_URL;
 const slackVerificationToken = process.env.SLACK_VERIFICATION_TOKEN;
 
@@ -13,7 +15,6 @@ const auth = {
   slackOauth(req, res) {
     // When a user authorizes an app, a code query parameter is passed on the oAuth endpoint.
     // If that code is not there, we respond with an error message
-    console.log("req query : ", req.query);
     if (!req.query.code) {
       if (req.query.error === "access_denied") {
         console.warn("User denied oauth request.");
@@ -25,7 +26,6 @@ const auth = {
     } else {
       // If it's there...
       // call slack api
-      console.log("req query code : ", req.query.code);
       slack
         .oauthAccess(req.query.code)
         .then(response => {
@@ -97,23 +97,15 @@ const auth = {
   async checkSlackAssociationStatus(slackId) {
     try {
       const user = await User.findOne({
-        where: { slackId: slackId, dwAccessToken: { $ne: null } }
+        where: { slackId: slackId, dwAccessToken: { [Op.ne]: null } }
       });
-      let isValid = false;
+      let isAssociated = false;
       if (user) {
         // Check user association
-        //user found, now verify token is active.
-        let isValid = await dataworld.verifyDwToken(user.dwAccessToken);
+        // User found, now verify token is active.
+        isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
       }
-      return new Promise((resolve, reject) => {
-        if (user && isValid) {
-          // user has active token
-          resolve(true, user);
-        } else {
-          // user not associated or token not valid
-          resolve(false, user);
-        }
-      });
+      return [isAssociated, user];
     } catch (error) {
       console.error("Error verifying slack association status : ", error);
       throw error;
@@ -121,11 +113,14 @@ const auth = {
   },
 
   async beginSlackAssociation(slackUserId, slackUsername, teamId) {
+    try {
     let nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
     const slackBot = new SlackWebClient(team.botAccessToken);
 
-    slackBot.im.open(slackUserId).then(res => {
+    slackBot.im
+      .open(slackUserId)
+      .then(res => {
       const dmChannelId = res.channel.id;
       const associationUrl = `${authUrl}${nonce}`;
       slackBot.chat.postMessage(
@@ -155,10 +150,15 @@ const auth = {
           console.error("Failed to create new user : " + error.message);
           throw error;
         });
-    }).catch(console.error);
+      })
+      .catch(console.error);
+    } catch (error) {
+      console.error("Begin slack association error : ", error);
+    }
   },
 
   async beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
+    try {
     const nonce = uuidv1();
     const associationUrl = `${authUrl}${nonce}`;
     let opts = {};
@@ -186,21 +186,26 @@ const auth = {
         });
       })
       .catch(error => {
-        console.error("Begin unfurl slack association error : ", error.message);
+        console.error("Failed to send begin unfurl message to slack : ", error);
       });
+    } catch(error) {
+      console.error("Begin unfurl slack association error : ", error);
+    }
   },
 
   async completeSlackAssociation(req, res) {
-    const res = await dataworld.exchangeAuthCode(req.query.code);
-    if (res.error) {
+    try {
+    const response = await dataworld.exchangeAuthCode(req.query.code);
+    if (response.error) {
       console.error("DW auth code exchange error : ", error);
       return res.status(400).send("failed");
     } else {
-      const token = res.body.access_token;
+      console.log("got DW response : " + response);
+      const token = response.data.access_token;
+      const nonce = req.query.state;
       // use nonce to retrieve user
       // Add returned token
       // redirect to success / homepage
-      try {
         const user = await User.findOne({ where: { nonce: nonce } });
         const team = await Team.findOne({ where: { teamId: user.teamId } });
         const slackBot = new SlackWebClient(team.botAccessToken);
@@ -208,6 +213,7 @@ const auth = {
           { dwAccessToken: token },
           { fields: ["dwAccessToken"] }
         );
+        console.log("Added DW token : " + token);
         res.status(201).send("success");
 
         //inform user via slack that authentication was successful
@@ -218,10 +224,10 @@ const auth = {
           dmChannelId,
           `Well, it\'s nice to meet you, <@${slackUserId}>!. Thanks for completing authentication.`
         );
+      }
       } catch (error) {
         console.error(error);
-        return res.status(400).send("failed");
-      }
+      return res.status(500).send("failed");
     }
   }
 };
