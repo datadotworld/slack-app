@@ -7,8 +7,6 @@ const { dataworld } = require("../api/dataworld");
 const { slack } = require("../api/slack");
 
 const authUrl = process.env.AUTH_URL;
-const slackWebApi = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
-const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 const slackVerificationToken = process.env.SLACK_VERIFICATION_TOKEN;
 
 const auth = {
@@ -122,8 +120,11 @@ const auth = {
     }
   },
 
-  beginSlackAssociation(slackUserId, slackUsername, slackTeamId) {
+  async beginSlackAssociation(slackUserId, slackUsername, teamId) {
     let nonce = uuidv1();
+    const team = await Team.findOne({ where: { teamId: teamId } });
+    const slackBot = new SlackWebClient(team.botAccessToken);
+
     return slackBot.im.open(slackUserId).then(res => {
       const dmChannelId = res.channel.id;
       const associationUrl = `${authUrl}${nonce}`;
@@ -141,7 +142,7 @@ const auth = {
       // create user with nonce and the slackdata
       User.findOrCreate({
         where: { slackId: slackUserId },
-        defaults: { teamId: slackTeamId, nonce: nonce }
+        defaults: { teamId: teamId, nonce: nonce }
       })
         .spread((user, created) => {
           if (!created) {
@@ -157,7 +158,7 @@ const auth = {
     });
   },
 
-  beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
+  async beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
     const nonce = uuidv1();
     const associationUrl = `${authUrl}${nonce}`;
     let opts = {};
@@ -166,8 +167,11 @@ const auth = {
     opts.user_auth_required = true;
     opts.user_auth_url = associationUrl;
 
-    return slackWebApi.chat
-      .unfurl(messageTs, channel, unfurls, opts)
+    const team = await Team.findOne({ where: { teamId: teamId } });
+    const slackWebApi = new SlackWebClient(team.accessToken);
+
+    slackWebApi.chat
+      .unfurl(messageTs, channel, unfurls, opts) // With opts, this will prompt user to authenticate using the association Url above.
       .then(() => {
         // create user with nonce and the slackdata
         User.findOrCreate({
@@ -198,6 +202,8 @@ const auth = {
       // redirect to success / homepage
       try {
         const user = await User.findOne({ where: { nonce: nonce } });
+        const team = await Team.findOne({ where: { teamId: user.teamId } });
+        const slackBot = new SlackWebClient(team.botAccessToken);
         await user.update(
           { dwAccessToken: token },
           { fields: ["dwAccessToken"] }

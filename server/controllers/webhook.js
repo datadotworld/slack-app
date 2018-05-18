@@ -2,9 +2,10 @@
 const string = require('lodash/string');
 const collection = require('lodash/collection');
 const lang = require('lodash/lang');
+const Channel = require("../models").Channel;
 const Subscription = require('../models').Subscription;
+const Team = require("../models").Team;
 const SlackWebClient = require('@slack/client').WebClient;
-const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN);
 
 // Possible event actions
 const CREATE = "create"
@@ -126,13 +127,16 @@ const sendEventToSlack = async (event, attachment) => {
   //send attachment to all subscribed channels
   console.log("Sending attachment : ", attachment);
   console.log("Found channelIds : ", channelIds);
-  collection.forEach(channelIds, (channelId) => {
+  collection.forEach(channelIds, async (channelId) => {
     console.log("Sending attachment to channel : " + channelId);
-    sendSlackMessage(channelId, attachment);
+    const channel = await Channel.findOne({ where: { channelId: channelId } });
+    sendSlackMessage(channelId, attachment, channel.teamId);
   });
 }
 
-const sendSlackMessage = (channelId, attachment) => {
+const sendSlackMessage = async (channelId, attachment, teamId) => {
+  const team = await Team.findOne({ where: { teamId: teamId } });
+  const slackBot = new SlackWebClient(team.botAccessToken);
   slackBot.chat.postMessage(channelId, "", {
     attachments: [attachment]
   });

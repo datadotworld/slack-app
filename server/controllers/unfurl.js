@@ -9,8 +9,6 @@ const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
 
-const slack = new SlackWebClient(process.env.SLACK_CLIENT_TOKEN);
-
 const DATASET = "dataset";
 const INSIGHT = "insight";
 const INSIGHTS = "insights";
@@ -278,9 +276,11 @@ const getInsightAttachment = (insight, link) => {
 const handleLinkSharedEvent = (event, teamId) => {
   // verify slack associaton
   try {
-    auth.checkSlackAssociationStatus(event.user).then((isAssociated, user) => {
+    auth.checkSlackAssociationStatus(event.user).then(async (isAssociated, user) => {
       if (isAssociated) {
         let token = user.dwAccessToken;
+        const team = await Team.findOne({ where: { teamId: teamId } });
+        const slack = new SlackWebClient(team.accessToken);
         // User is associated, carry on and unfold url
         // retrieve user dw access token
         Promise.all(
