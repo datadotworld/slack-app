@@ -1,0 +1,44 @@
+{
+    "name": "slack-app",
+    "description": "data.world slack app",
+    "scripts": {},
+    "env": {
+      "ACCESS_TOKEN_URL": {
+        "required": true
+      },
+      "AUTH_URL": {
+        "required": true
+      },
+      "DW_BASE_URL": {
+        "required": true
+      },
+      "SLACK_APP_BASE_URL": {
+        "required": true
+      },
+      "SLACK_CLIENT_ID": {
+        "required": true
+      },
+      "SLACK_CLIENT_SECRET": {
+        "required": true
+      },
+      "SLACK_OAUTH_ACCESS_URL": {
+        "required": true
+      },
+      "SLACK_VERIFICATION_TOKEN": {
+        "required": true
+      }
+    },
+    "formation": {
+      "web": {
+        "quantity": 1
+      }
+    },
+    "addons": [
+      "heroku-postgresql"
+    ],
+    "buildpacks": [
+      {
+        "url": "heroku/nodejs"
+      }
+    ]
+  }
