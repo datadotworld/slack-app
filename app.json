@@ -1,6 +1,7 @@
 {
     "name": "slack-app",
     "description": "data.world slack app",
+    "repository": "https://github.com/datadotworld/slack-app",
     "scripts": {},
     "env": {
       "ACCESS_TOKEN_URL": {
