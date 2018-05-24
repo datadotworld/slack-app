@@ -11,7 +11,6 @@ const slack = {
   },
 
   oauthAccess(code) {
-    console.log("oauthAccess called!!!.")
     let params = {
       code: code,
       client_id: process.env.SLACK_CLIENT_ID,

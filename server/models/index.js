@@ -1,3 +1,4 @@
+const dotenv = require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
@@ -7,11 +8,11 @@ const config = require(`${__dirname}/../configs/config.json`)[env];
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable]);
+if (config.prod_db_url_key) {
+  sequelize = new Sequelize(process.env[config.prod_db_url_key]);
 } else {
   sequelize = new Sequelize(
-    config.database, config.username, config.password, config
+    process.env[config.database], process.env[config.username], process.env[config.password], config.options
   );
 }
 

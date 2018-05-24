@@ -1,15 +1,17 @@
 {
   "development": {
-    "username": "Shittu",
-    "password": null,
-    "database": "slackapp",
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "operatorsAliases": {
-      "$ne": "Op.ne"
+    "username": "PG_USERNAME",
+    "password": "PG_PASSWORD",
+    "database": "PG_DATABASE",
+    "options": {
+      "host": "127.0.0.1",
+      "dialect": "postgres",
+      "operatorsAliases": {
+        "$ne": "Op.ne"
+      }
     }
   },
   "production": {
-    "use_env_variable": "DATABASE_URL"
+    "prod_db_url_key": "DATABASE_URL"
   }
 }

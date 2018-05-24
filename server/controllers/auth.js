@@ -26,6 +26,7 @@ const auth = {
     } else {
       // If it's there...
       // call slack api
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
       slack
         .oauthAccess(req.query.code)
         .then(response => {
@@ -71,13 +72,13 @@ const auth = {
               // error creating user
               console.error("Failed to create new Team : " + error.message);
               // redirect to failure page
-              res.redirect(`${process.env.SLACK_APP_BASE_URL}/failed`);
+              res.redirect(`${baseUrl}/failed`);
             });
         })
         .catch(error => {
           console.error("Slack oauth failed : ", error);
           // redirect to failure page
-          res.redirect(`${process.env.SLACK_APP_BASE_URL}failed`);
+          res.redirect(`${baseUrl}failed`);
         });
     }
   },
