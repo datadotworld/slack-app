@@ -9,6 +9,7 @@ const Team = require("../models").Team;
 const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
+const { helper } = require("../util/helper");
 
 const DATASET = "dataset";
 const INSIGHT = "insight";
@@ -24,15 +25,15 @@ const messageAttachmentFromLink = (token, link) => {
 
   switch (type) {
     case DATASET:
-      params = extractDatasetOrProjectParams(url);
+      params = helper.extractDatasetOrProjectParams(url);
       params.token = token;
       return unfurlDataset(params);
     case INSIGHT:
-      params = extractInsightParams(url);
+      params = helper.extractInsightParams(url);
       params.token = token;
       return unfurlInsight(params);
     case INSIGHTS:
-      params = extractInsightsParams(url);
+      params = helper.extractInsightsParams(url);
       params.token = token;
       return unfurlInsights(params);
     default:
@@ -52,42 +53,6 @@ const getType = link => {
     return INSIGHTS;
   }
   return;
-};
-
-const extractDatasetOrProjectParams = link => {
-  let params = {};
-  let parts = link.split("/");
-
-  params.datasetId = parts[parts.length - 1];
-  params.owner = parts[parts.length - 2];
-  params.link = link;
-
-  return params;
-};
-
-//TODO : This needs to be refactored.
-const extractInsightParams = link => {
-  let params = {};
-  let parts = link.split("/");
-
-  params.insightId = parts[parts.length - 1];
-  params.projectId = parts[parts.length - 3];
-  params.owner = parts[parts.length - 4];
-  params.link = link;
-
-  return params;
-};
-
-//TODO : This needs to be refactored.
-const extractInsightsParams = link => {
-  let params = {};
-  let parts = link.split("/");
-
-  params.projectId = parts[parts.length - 2];
-  params.owner = parts[parts.length - 3];
-  params.link = link;
-
-  return params;
 };
 
 const unfurlDataset = params => {
