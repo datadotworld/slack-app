@@ -32,18 +32,17 @@
         b. Click save urls
         c. Add the following scopes : bot, commands, link:read, link:write
         d. Click save changes
-    3. Event Subscriptions 
+    3. Add Bot user 
+        a. Set display name and default name to : dataworld
+        b. Enable : Always show my bot as online
+    4. Event Subscriptions 
         a. Enable events 
         b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app 
         is up and running)
         c. Add workspace event : link_shared
-        d. Add bot events : link_shared, member_joined_channel
-        e. Add app unfurl domain : data.world
-    4. Bot users 
-        a. Set display name and default name to : dataworld
-        b. Enable : Always show my bot as online
-        c. User ID Translation
-        d. Enable Translate Global IDs
+        d. Add app unfurl domain : data.world
+        h. Add bot events : link_shared, member_joined_channel
+        i. Click save changes
 
 ####5. Add env variables 
     1. Create a .env file in the project /server directory.
@@ -79,4 +78,6 @@
 ####7. Event subscription request url
     1. Go to slack app settings page 
     2. Go to event subscription section
+    3. Enable events 
     3. Add request url <ngrok or localhost>/api/v1/unfurl/action (Challenge should be successful).
+    4. Click save changes.
