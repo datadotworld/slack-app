@@ -81,3 +81,8 @@
     3. Enable events 
     3. Add request url <ngrok or localhost>/api/v1/unfurl/action (Challenge should be successful).
     4. Click save changes.
+
+#### 8. Install app in workspace
+    1. Go to slack app settings page 
+    2. Go to event install app section
+    3. Click install application button.
