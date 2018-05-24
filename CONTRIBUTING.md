@@ -1,23 +1,23 @@
-#Data.world Slack Application
+# Data.world Slack Application
 
-##Setup and configuration
+## Setup and configuration
 
-####1. Repo setup
+#### 1. Repo setup
     1. git clone https://github.com/datadotworld/slack-app
     2. From the project root dir : run npm install && cd server && npm install
 
-####2. Postgres config 
+#### 2. Postgres config 
     1. Install Postgres
     2. Install sequelize-cli
     3. Create database slackapp in postgres
 
-####3. DW Oauth Client configuration
+#### 3. DW Oauth Client configuration
     1. Create an oauth client on DW
     2. Add the following allowed roles : user_api_read, user_api_write, user_api_hooks
     3. Set webhook active field to : true
     4. Set the value of redirect_url to :  <ngrok or localhost>/oauth/code_callback
 
-####4. Create slack app
+#### 4. Create slack app
 
     Under features section in the left panel, configure each of the following :
      
@@ -44,7 +44,7 @@
         h. Add bot events : link_shared, member_joined_channel
         i. Click save changes
 
-####5. Add env variables 
+#### 5. Add env variables 
     1. Create a .env file in the project /server directory.
     2. Add and set value of the following env variables :
     
@@ -72,10 +72,10 @@
         &grant_type=authorization_code
         &code=)
 
-####6. Run the application
+#### 6. Run the application
     1. From the project root dir run : npm start
 
-####7. Event subscription request url
+#### 7. Event subscription request url
     1. Go to slack app settings page 
     2. Go to event subscription section
     3. Enable events 
