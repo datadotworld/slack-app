@@ -69,41 +69,71 @@ const unfurlDataset = params => {
       let owner = dataset.owner;
       const attachment = {
         fallback: dataset.title,
-        color: "#79B8FB",
+        color: "#5CC0DE",
         pretext: dataset.title,
         author_name: owner,
         author_link: `http://data.world/${owner}`,
         title: dataset.description,
         title_link: params.link,
         text: dataset.summary,
-        footer: "Data.World",
-        // we should change this to data.world logo
-        footer_icon:
-          "https://platform.slack-edge.com/img/default_application_icon.png",
+        footer: `${params.owner}/${params.datasetId}`,
+        footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+        mrkdwn_in: ["fields"],
+        actions: [
+          {
+            type: "button",
+            text: "Explore :microscope:",
+            url: `https://data.world/${params.owner}/${
+              params.datasetId
+            }/workspace`
+          }
+        ],
         url: params.link
       };
       const fields = [];
+
+      const files = dataset.files;
+      if (!lang.isEmpty(files)) {
+        let fieldValue = "";
+        collection.forEach(files, file => {
+          fieldValue += `• <https://data.world/${params.owner}/${
+            params.datasetId
+          }/workspace/file?filename=${file.name}|${file.name}> _(${(
+            file.sizeInBytes / 1024
+          ).toFixed(2)}KB)_\n`;
+        });
+
+        fields.push({
+          title: files.length > 1 ? "Files" : "File",
+          value: fieldValue,
+          short: false
+        });
+      } else {
+        fields.push({
+          title: "File(s)",
+          value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
+            params.owner
+          }/${params.datasetId}|add one>_`
+        });
+      }
+
+      const tags = dataset.tags;
+      if (!lang.isEmpty(tags)) {
+        let fieldValue = "";
+        collection.forEach(tags, tag => {
+          fieldValue += `\`${tag}\` `;
+        });
+        fields.push({
+          title: tags.length > 1 ? "Tags" : "Tag",
+          value: fieldValue,
+          short: false
+        });
+      }
 
       if (dataset.visibility) {
         fields.push({
           title: "Visibility",
           value: lang.toString(dataset.visibility),
-          short: true
-        });
-      }
-
-      if (dataset.files.length > 0) {
-        fields.push({
-          title: "Total files",
-          value: dataset.files.length,
-          short: true
-        });
-      }
-
-      if (dataset.tags.length > 0) {
-        fields.push({
-          title: "Tags",
-          value: lang.toString(dataset.tags),
           short: true
         });
       }
@@ -124,7 +154,7 @@ const unfurlDataset = params => {
     })
     .catch(error => {
       console.error("failed to get dataset attachment : ", error.message);
-      throw error;
+      return;
     });
 };
 
@@ -137,32 +167,93 @@ const unfurlProject = params => {
       let owner = project.owner;
       const attachment = {
         fallback: project.title,
-        color: "#79B8FB",
+        color: "#F6BD68",
         pretext: project.title,
         author_name: owner,
         author_link: `http://data.world/${owner}`,
         title: project.objective,
         title_link: params.link,
         text: project.summary,
-        footer: "Data.World",
-        footer_icon:
-          "https://platform.slack-edge.com/img/default_application_icon.png",
+        footer: `${params.owner}/${params.datasetId}`,
+        footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+        mrkdwn_in: ["fields"],
+        actions: [
+          {
+            type: "button",
+            text: "Learn more :nerd_face:",
+            url: `http://data.world/${params.owner}/${params.datasetId}`
+          },
+          {
+            type: "button",
+            text: "Discuss :left_speech_bubble:",
+            url: `http://data.world/${params.owner}/${params.datasetId}/discuss`
+          },
+          {
+            type: "button",
+            text: "Contribute :muscle:",
+            url: `http://data.world/${params.owner}/${
+              params.datasetId
+            }/workspace`
+          }
+        ],
         url: params.link
       };
       const fields = [];
 
-      if (project.files.length > 0) {
+      if (lang.isEmpty(project.linkedDatasets)) {
+        const files = project.files;
+        if (!lang.isEmpty(files)) {
+          let fieldValue = "";
+          collection.forEach(files, file => {
+            fieldValue += `• <https://data.world/${params.owner}/${
+              params.datasetId
+            }/workspace/file?filename=${file.name}|${file.name}> _(${(
+              file.sizeInBytes / 1024
+            ).toFixed(2)}KB)_\n`;
+          });
+
+          fields.push({
+            title: files.length > 1 ? "Files" : "File",
+            value: fieldValue,
+            short: false
+          });
+        } else {
+          fields.push({
+            title: "File(s)",
+            value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
+              params.owner
+            }/${params.datasetId}|add one>_`
+          });
+        }
+      } else {
+        // there are linked datasets
+        const linkedDatasets = project.linkedDatasets;
+        let fieldValue = "";
+        collection.forEach(linkedDatasets, linkedDataset => {
+          fieldValue += `• <https://data.world/${params.owner}/${
+            params.datasetId
+          }/workspace/dataset?datasetid=${
+            linkedDataset.id
+          }|${linkedDataset.description || linkedDataset.title}>\n`;
+        });
+
         fields.push({
-          title: "Total files",
-          value: project.files.length,
-          short: true
+          title:
+            linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
+          value: fieldValue,
+          short: false
         });
       }
 
-      if (project.tags.length > 0) {
+      const tags = project.tags;
+      if (!lang.isEmpty(tags)) {
+        let fieldValue = "";
+        collection.forEach(tags, tag => {
+          fieldValue += `\`${tag}\` `;
+        });
         fields.push({
-          title: "Tags",
-          value: lang.toString(project.tags),
+          title: tags.length > 1 ? "Tags" : "Tag",
+          value: fieldValue,
           short: true
         });
       }
@@ -194,14 +285,13 @@ const unfurlInsights = params => {
     .then(response => {
       const insights = response.data;
       if (insights.count > 0) {
-        let insight = insights.records[0];
-        return getInsightAttachment(insight, params.link);
+        return getInsightsAttachment(insights.records, params);
       }
       return;
     })
     .catch(error => {
       console.error("failed to fetch insights : ", error.message);
-      throw error;
+      return;
     });
 };
 
@@ -211,7 +301,7 @@ const unfurlInsight = params => {
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
     .then(response => {
       const insight = response.data;
-      return getInsightAttachment(insight, params.link);
+      return getInsightAttachment(insight, params);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -219,22 +309,76 @@ const unfurlInsight = params => {
     });
 };
 
-const getInsightAttachment = (insight, link) => {
+const getInsightsAttachment = (insights, params) => {
+  return dataworld
+    .getProject(params.projectId, params.owner, params.token)
+    .then(projectResponse => {
+      const project = projectResponse.data;
+      const attachment = {
+        fallback: project.title,
+        color: "#9581CA",
+        author_name: params.owner,
+        author_link: `http://data.world/${params.owner}`,
+        title: project.title,
+        title_link: params.link,
+        text: project.objective,
+        footer: `${params.owner}/${params.projectId}/insights`,
+        footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+        url: params.link
+      };
+
+      const fields = [];
+
+      if (!lang.isEmpty(insights)) {
+        let fieldValue = "";
+        collection.forEach(insights, insight => {
+          fieldValue += `• <https://data.world/${params.owner}/${
+            params.projectId
+          }/insights/${insight.id}|${insight.title}>\n`;
+        });
+
+        fields.push({
+          title: insights.length > 1 ? "Insights" : "Insight",
+          value: fieldValue,
+          short: false
+        });
+      }
+
+      if (!lang.isEmpty(fields)) {
+        attachment.fields = fields;
+      }
+
+      return attachment;
+    })
+    .catch(error => {
+      console.error("failed to unfurl insights : ", error.message);
+      return;
+    });
+};
+
+const getInsightAttachment = (insight, params) => {
   let author = insight.author;
-  let thumbUrl = insight.thumbnail || insight.body.imageUrl;
   const attachment = {
     fallback: insight.title,
-    color: "#79B8FB",
+    color: "#9581CA",
     author_name: author,
     author_link: `http://data.world/${author}`,
     title: insight.title,
-    title_link: link,
+    title_link: params.link,
     text: insight.description,
-    thumb_url: thumbUrl,
-    footer: "Data.World",
-    footer_icon:
-      "https://platform.slack-edge.com/img/default_application_icon.png",
-    url: link
+    image_url: insight.thumbnail,
+    footer: `${author}/${params.projectId}/insights/${insight.id}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    url: params.link,
+    actions: [
+      {
+        type: "button",
+        text: "Discuss :left_speech_bubble:",
+        url: `https://data.world/${author}/${params.projectId}/insights/${
+          insight.id
+        }`
+      }
+    ]
   };
   if (insight.body.imageUrl) {
     attachment.imageUrl = insight.body.imageUrl;
@@ -246,16 +390,18 @@ const getInsightAttachment = (insight, link) => {
 const handleLinkSharedEvent = async (event, teamId) => {
   // verify slack associaton
   try {
-    const [ isAssociated, user ] = await auth.checkSlackAssociationStatus(event.user);
+    const [isAssociated, user] = await auth.checkSlackAssociationStatus(
+      event.user
+    );
     if (isAssociated) {
       let token = user.dwAccessToken;
       const team = await Team.findOne({ where: { teamId: teamId } });
-      const slack = new SlackWebClient(process.env.SLACK_TEAM_TOKEN || team.accessToken);
+      const slack = new SlackWebClient(
+        process.env.SLACK_TEAM_TOKEN || team.accessToken
+      );
       // User is associated, carry on and unfold url
       // retrieve user dw access token
-      Promise.all(
-        event.links.map(messageAttachmentFromLink.bind(null, token))
-      )
+      Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
         // Transform the array of attachments to an unfurls object keyed by URL
         .then(attachments => collection.keyBy(attachments, "url")) // group by url
         .then(unfurls =>

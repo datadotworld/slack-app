@@ -279,7 +279,7 @@ const getNewProjectAttachment = (
     });
 
     fields.push({
-      title: linkedDatasets.length > 1 ? "Linked dataset" : "Linked datasets",
+      title: linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
       value: fieldValue,
       short: false
     });
@@ -338,7 +338,7 @@ const getNewInsightAttachment = (
     footer: `${params.owner}/${params.datasetId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
     ts: ts,
-    mrkdwn_in: ["text", "pretext", "fields"],
+    mrkdwn_in: ["text", "pretext"],
     actions: [
       {
         type: "button",
