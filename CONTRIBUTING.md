@@ -13,13 +13,18 @@
     4. Create database slackapp in postgres : CREATE DATABASE slackapp
     5. Quit postgres shell : \q
 
-#### 3. DW Oauth Client configuration
+#### 3. Configure download and config Ngrok
+    1. Follow instructions [here](https://ngrok.com/download) to setup ngrok.
+    2. Bind ngrok to port 5000 : ./ngrok http 5000
+    3. keep you ngrok url handy
+
+#### 4. DW Oauth Client configuration
     1. Create an oauth client on DW
     2. Add the following allowed roles : user_api_read, user_api_write, user_api_hooks
     3. Set webhook active field to : true
-    4. Set the value of redirect_url to :  <ngrok or localhost>/oauth/code_callback
+    4. Set the value of redirect_url to :  <ngrok url>/oauth/code_callback
 
-#### 4. Create slack app
+#### 5. Create slack app
 
     Under features section in the left panel, configure each of the following :
      
@@ -27,10 +32,10 @@
         a. Click create new command 
         b. Fill the form with the data below and save.
             i. Command : /data.world
-            ii. Request url : <ngrok or localhost>/api/v1/command/
+            ii. Request url : <ngrok url>/api/v1/command/
             iii. Enable Escape channels, users, and links sent to your app 
     2. Oauth & Permission 
-        a. Add new redirect url : <ngrok or localhost>/api/v1/auth/oauth
+        a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
         b. Click save urls
         c. Add the following scopes : bot, commands, link:read, link:write
         d. Click save changes
@@ -46,7 +51,7 @@
         h. Add bot events : link_shared, member_joined_channel
         i. Click save changes
 
-#### 5. Add env variables 
+#### 6. Add env variables 
     1. Create a .env file in the project /server directory.
     2. Add and set value of the following env variables :
     
@@ -71,7 +76,7 @@
         
         AUTH_URL= DW auth url (e.g https://data.world/embed/oauth-authorize
         ?client_id=<Your DW client_id>
-        &redirect_uri=<ngrok or localhost>/oauth/code_callback
+        &redirect_uri=<ngrok url>/oauth/code_callback
         &state=)
         
         ACCESS_TOKEN_URL=  DW access token request url (e.g https://data.world/oauth/access_token
@@ -80,17 +85,17 @@
         &grant_type=authorization_code
         &code=)
 
-#### 6. Run the application
-    1. From the project root dir run : npm start
+#### 7. Run the application
+    1. From the project root dir run : npm start (server should start on port 5000)
 
-#### 7. Event subscription request url
+#### 8. Event subscription request url
     1. Go to slack app settings page 
     2. Go to event subscription section
     3. Enable events 
-    3. Add request url <ngrok or localhost>/api/v1/unfurl/action (Challenge should be successful).
+    3. Add request url <ngrok url>/api/v1/unfurl/action (Challenge should be successful).
     4. Click save changes.
 
-#### 8. Install app in workspace
+#### 9. Install app in workspace
     1. Go to slack app settings page 
     2. Go to event install app section
     3. Click install application button.
