@@ -1,10 +1,11 @@
 const helper = {
     extractDatasetOrProjectParams(link) {
         let params = {};
-        let parts = link.split("/");
+        const cleanLink = link.replace(/(https\:\/\/data.world\/|)/g, '');
+        const pathNames = cleanLink.split("/");
       
-        params.datasetId = parts[parts.length - 1];
-        params.owner = parts[parts.length - 2];
+        params.owner = pathNames[0];
+        params.datasetId = pathNames[1];
         params.link = link;
       
         return params;
