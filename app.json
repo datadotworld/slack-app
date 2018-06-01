@@ -13,6 +13,9 @@
       "DW_BASE_URL": {
         "required": true
       },
+      "SLACK_APP_ID": {
+        "required": true
+      },
       "SLACK_CLIENT_ID": {
         "required": true
       },

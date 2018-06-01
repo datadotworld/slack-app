@@ -5,7 +5,7 @@ const User = require("../models").User;
 const Team = require("../models").Team;
 const { dataworld } = require("../api/dataworld");
 const { slack } = require("../api/slack");
-const Sequelize = require('sequelize');
+const Sequelize = require("sequelize");
 
 const Op = Sequelize.Op;
 const authUrl = process.env.AUTH_URL;
@@ -26,7 +26,7 @@ const auth = {
     } else {
       // If it's there...
       // call slack api
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
       slack
         .oauthAccess(req.query.code)
         .then(response => {
@@ -41,7 +41,7 @@ const auth = {
               botAccessToken: response.data.bot.bot_access_token
             }
           })
-            .spread((team, created) => {
+            .spread(async (team, created) => {
               if (!created) {
                 // Team record already exits.
                 // Update existing record with new data
@@ -64,9 +64,39 @@ const auth = {
                 );
               }
               console.log("Team added successfully!!!");
-              let teamName = response.data.team_name;
+              console.log("team add response data : " + response.data);
               // deep link to slack app or redirect to slack team in web.
-              res.redirect(`http://${teamName}.slack.com`);
+              res.redirect(
+                `https://slack.com/app_redirect?app=${
+                  process.env.SLACK_APP_ID
+                }&team=${team.teamId}`
+              );
+
+              //inform user via slack that installation was successful
+              const slackBot = new SlackWebClient(
+                process.env.SLACK_BOT_TOKEN || team.botAccessToken
+              );
+
+              const slackUserId = response.data.user_id;
+              const botResponse = await slackBot.im.open(slackUserId);
+              const dmChannelId = botResponse.channel.id;
+              slackBot.chat.postMessage(dmChannelId, "", {
+                attachments: [
+                  {
+                    color: "#79B8FB",
+                    text:
+                      "You've successfully installed Data.World on this Slack workspace :tada: \n" +
+                      "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
+                      "• _/data.world subscribe account_ \n" +
+                      "• _/data.world subscribe owner/dataset_ \n" +
+                      "• _/data.world subscribe owner/project_"
+                  },
+                  {
+                    color: "#79B8FB",
+                    text: `Looking for additional help? Try /data.world help`
+                  }
+                ]
+              });
             })
             .catch(error => {
               // error creating user
@@ -115,44 +145,46 @@ const auth = {
 
   async beginSlackAssociation(slackUserId, slackUsername, teamId) {
     try {
-    let nonce = uuidv1();
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN || team.botAccessToken);
-
-    slackBot.im
-      .open(slackUserId)
-      .then(res => {
-      const dmChannelId = res.channel.id;
-      const associationUrl = `${authUrl}${nonce}`;
-      slackBot.chat.postMessage(
-        dmChannelId,
-        `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`,
-        {
-          attachments: [
-            {
-              text: `<${associationUrl}|Click here> to introduce yourself to me by authenticating.`
-            }
-          ]
-        }
+      let nonce = uuidv1();
+      const team = await Team.findOne({ where: { teamId: teamId } });
+      const slackBot = new SlackWebClient(
+        process.env.SLACK_BOT_TOKEN || team.botAccessToken
       );
-      // create user with nonce and the slackdata
-      User.findOrCreate({
-        where: { slackId: slackUserId },
-        defaults: { teamId: teamId, nonce: nonce }
-      })
-        .spread((user, created) => {
-          if (!created) {
-            // User record already exits.
-            user.update({ nonce: nonce }, { fields: ["nonce"] });
-          }
+
+      slackBot.im
+        .open(slackUserId)
+        .then(res => {
+          const dmChannelId = res.channel.id;
+          const associationUrl = `${authUrl}${nonce}`;
+          slackBot.chat.postMessage(
+            dmChannelId,
+            `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`,
+            {
+              attachments: [
+                {
+                  text: `<${associationUrl}|Click here> to introduce yourself to me by authenticating.`
+                }
+              ]
+            }
+          );
+          // create user with nonce and the slackdata
+          User.findOrCreate({
+            where: { slackId: slackUserId },
+            defaults: { teamId: teamId, nonce: nonce }
+          })
+            .spread((user, created) => {
+              if (!created) {
+                // User record already exits.
+                user.update({ nonce: nonce }, { fields: ["nonce"] });
+              }
+            })
+            .catch(error => {
+              // error creating user
+              console.error("Failed to create new user : " + error.message);
+              throw error;
+            });
         })
-        .catch(error => {
-          // error creating user
-          console.error("Failed to create new user : " + error.message);
-          throw error;
-        });
-      })
-      .catch(console.error);
+        .catch(console.error);
     } catch (error) {
       console.error("Begin slack association error : ", error);
     }
@@ -160,63 +192,75 @@ const auth = {
 
   async beginUnfurlSlackAssociation(userId, messageTs, channel, teamId) {
     try {
-    const nonce = uuidv1();
-    const associationUrl = `${authUrl}${nonce}`;
-    let opts = {};
-    let unfurls = {};
+      const nonce = uuidv1();
+      const associationUrl = `${authUrl}${nonce}`;
+      let opts = {};
+      let unfurls = {};
 
-    opts.user_auth_required = true;
-    opts.user_auth_url = associationUrl;
+      opts.user_auth_required = true;
+      opts.user_auth_url = associationUrl;
 
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const slackWebApi = new SlackWebClient(process.env.SLACK_TEAM_TOKEN || team.accessToken);
+      const team = await Team.findOne({ where: { teamId: teamId } });
+      const slackWebApi = new SlackWebClient(
+        process.env.SLACK_TEAM_TOKEN || team.accessToken
+      );
 
-    slackWebApi.chat
-      .unfurl(messageTs, channel, unfurls, opts) // With opts, this will prompt user to authenticate using the association Url above.
-      .then(() => {
-        // create user with nonce and the slackdata
-        User.findOrCreate({
-          where: { slackId: userId },
-          defaults: { teamId: teamId, nonce: nonce }
-        }).spread((user, created) => {
-          if (!created) {
-            // User record already exits.
-            //update nonce, reauthenticating existing user.
-            user.update({ nonce: nonce }, { fields: ["nonce"] });
-          }
+      slackWebApi.chat
+        .unfurl(messageTs, channel, unfurls, opts) // With opts, this will prompt user to authenticate using the association Url above.
+        .then(() => {
+          // create user with nonce and the slackdata
+          User.findOrCreate({
+            where: { slackId: userId },
+            defaults: { teamId: teamId, nonce: nonce }
+          }).spread((user, created) => {
+            if (!created) {
+              // User record already exits.
+              //update nonce, reauthenticating existing user.
+              user.update({ nonce: nonce }, { fields: ["nonce"] });
+            }
+          });
+        })
+        .catch(error => {
+          console.error(
+            "Failed to send begin unfurl message to slack : ",
+            error
+          );
         });
-      })
-      .catch(error => {
-        console.error("Failed to send begin unfurl message to slack : ", error);
-      });
-    } catch(error) {
+    } catch (error) {
       console.error("Begin unfurl slack association error : ", error);
     }
   },
 
   async completeSlackAssociation(req, res) {
     try {
-    const response = await dataworld.exchangeAuthCode(req.query.code);
-    if (response.error) {
-      console.error("DW auth code exchange error : ", error);
-      return res.status(400).send("failed");
-    } else {
-      console.log("got DW response : " + response);
-      const token = response.data.access_token;
-      const nonce = req.query.state;
-      // use nonce to retrieve user
-      // Add returned token
-      // redirect to success / homepage
+      const response = await dataworld.exchangeAuthCode(req.query.code);
+      if (response.error) {
+        console.error("DW auth code exchange error : ", error);
+        return res.status(400).send("failed");
+      } else {
+        console.log("got DW response : " + response);
+        const token = response.data.access_token;
+        const nonce = req.query.state;
+        // use nonce to retrieve user
+        // Add returned token
+        // redirect to success / homepage
         const user = await User.findOne({ where: { nonce: nonce } });
         const team = await Team.findOne({ where: { teamId: user.teamId } });
         const dwUserResponse = await dataworld.getActiveDWUser(token);
-        const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN || team.botAccessToken);
+        const slackBot = new SlackWebClient(
+          process.env.SLACK_BOT_TOKEN || team.botAccessToken
+        );
         await user.update(
-          { dwAccessToken: token, dwUserId: dwUserResponse.data.id},
+          { dwAccessToken: token, dwUserId: dwUserResponse.data.id },
           { fields: ["dwAccessToken", "dwUserId"] }
         );
         console.log("Added DW token : " + token);
-        res.status(201).send("success");
+
+        res.redirect(
+          `https://slack.com/app_redirect?app=${
+            process.env.SLACK_APP_ID
+          }&team=${team.teamId}`
+        );
 
         //inform user via slack that authentication was successful
         const slackUserId = user.slackId;
@@ -227,8 +271,8 @@ const auth = {
           `Well, it\'s nice to meet you, <@${slackUserId}>!. Thanks for completing authentication.`
         );
       }
-      } catch (error) {
-        console.error(error);
+    } catch (error) {
+      console.error(error);
       return res.status(500).send("failed");
     }
   }

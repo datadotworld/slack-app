@@ -6,10 +6,11 @@
     1. git clone https://github.com/datadotworld/slack-app
     2. From the project root dir : run npm install && cd server && npm install
 
-#### 2. Postgres config 
-    1. Install Postgres
-    2. Install sequelize-cli
-    3. Create database slackapp in postgres
+#### 2. Postgres config (https://launchschool.com/blog/how-to-install-postgresql-on-a-mac)
+    1. Install Postgres : brew install postgres
+    2. Start Postgres using : brew services start postgresql
+    3. Open postgres shell : psql postgres
+    4. Create database slackapp in postgres : CREATE DATABASE slackapp
 
 #### 3. DW Oauth Client configuration
     1. Create an oauth client on DW
@@ -50,6 +51,7 @@
     
         The following can be copied from basic information section in slack app settings: 
         
+        SLACK_APP_ID= slack app id
         SLACK_CLIENT_ID= slack client id
         SLACK_CLIENT_SECRET= slack client secret
         SLACK_VERIFICATION_TOKEN= slack verification token
