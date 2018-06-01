@@ -11,6 +11,7 @@
     2. Start Postgres using : brew services start postgresql
     3. Open postgres shell : psql postgres
     4. Create database slackapp in postgres : CREATE DATABASE slackapp
+    5. Quit postgres shell : \q
 
 #### 3. DW Oauth Client configuration
     1. Create an oauth client on DW
