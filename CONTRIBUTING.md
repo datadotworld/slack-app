@@ -55,6 +55,11 @@
         SLACK_VERIFICATION_TOKEN= slack verification token
         SLACK_OAUTH_ACCESS_URL= https://slack.com/api/oauth.access
 
+        The following should be copied from the install app settings section.
+
+        SLACK_TEAM_TOKEN= slack team oauth access token e.g xoxp-215****...
+        SLACK_BOT_TOKEN= slack bot user oauth token e.g xoxb-322****...
+
         PORT= node server port (defaults to 5000)
         PG_USERNAME= Postgres username
         PG_PASSWORD= Postgres password

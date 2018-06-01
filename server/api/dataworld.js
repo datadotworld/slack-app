@@ -54,6 +54,16 @@ const dataworld = {
     }
   },
 
+  getActiveDWUser(token) {
+    let requestUrl = `${baseUrl}/user`;
+    return get(requestUrl, token);
+  },
+
+  getDWUser(token, account) {
+    let requestUrl = `${baseUrl}/users/${account}`;
+    return get(requestUrl, token);
+  },
+
   getDataset(id, owner, token) {
     let requestUrl = `${baseUrl}/datasets/${owner}/${id}`;
     return get(requestUrl, token);
@@ -61,6 +71,11 @@ const dataworld = {
 
   getProject(id, owner, token) {
     let requestUrl = `${baseUrl}/projects/${owner}/${id}`;
+    return get(requestUrl, token);
+  },
+
+  getProjectByVersion(id, owner, versionId, token) {
+    let requestUrl = `${baseUrl}/projects/${owner}/${id}/v/${versionId}`;
     return get(requestUrl, token);
   },
 

@@ -1,5 +1,5 @@
 const helper = {
-    extractDatasetOrProjectParams = link => {
+    extractDatasetOrProjectParams(link) {
         let params = {};
         let parts = link.split("/");
       
@@ -11,7 +11,7 @@ const helper = {
       },
       
       //TODO : This needs to be refactored.
-      extractInsightParams = link => {
+      extractInsightParams(link) {
         let params = {};
         let parts = link.split("/");
       
@@ -24,7 +24,7 @@ const helper = {
       },
       
       //TODO : This needs to be refactored.
-      extractInsightsParams = link => {
+      extractInsightsParams(link) {
         let params = {};
         let parts = link.split("/");
       
@@ -33,6 +33,15 @@ const helper = {
         params.link = link;
       
         return params;
+      },
+
+      extractIdFromLink(link) {
+        let data = link.split("/");
+        return data[data.length - 1];
+      },
+
+      cleanSlackLinkInput(link) {
+        return link.replace(/(<https\:\/\/data.world\/|>)/g, '');
       }
 };
   

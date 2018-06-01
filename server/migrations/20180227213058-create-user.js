@@ -22,6 +22,9 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
+      dwUserId: {
+        type: Sequelize.TEXT
+      },
       dwAccessToken: {
         type: Sequelize.TEXT
       },

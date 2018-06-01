@@ -1,3 +1,4 @@
+const array = require("lodash/array");
 const string = require("lodash/string");
 const collection = require("lodash/collection");
 const lang = require("lodash/lang");
@@ -5,9 +6,13 @@ const moment = require("moment");
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
+const User = require("../models").User;
 const SlackWebClient = require("@slack/client").WebClient;
+const Sequelize = require("sequelize");
 const { dataworld } = require("../api/dataworld");
 const { helper } = require("../util/helper");
+
+const Op = Sequelize.Op;
 
 // Possible event actions
 const CREATE = "create";
@@ -38,27 +43,37 @@ const getAttachment = (author, authorLink, owner, ownerLink, text) => {
   return attachment;
 };
 
-const getNewDatasetAttachment = (params, dataset, event) => {
-  // DW actor or owner
-  // DW dataset (api call)
-  // user slack id
-
-  // event.actor,
-  // event.links.web.actor,
-  // event.owner,
-  // event.links.web.owner,
-
+const getNewDatasetAttachment = (
+  params,
+  dataset,
+  event,
+  dwOwner,
+  dwActorId,
+  actorSlackId
+) => {
+  const offset = moment(
+    event.timestamp,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(event.timestamp, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+  const slackUserMentionText = actorSlackId
+    ? `<@${actorSlackId}>`
+    : `<${event.links.web.actor}|${dwActorId}>`;
   const attachment = {
-    fallback: `${event.actor} created a new dataset`,
-    pretext: `${event.actor} created a *new dataset*`,
-    title: dataset.title,
+    fallback: `${dwActorId} created a new dataset`,
+    pretext: `${slackUserMentionText} created a *new dataset*`,
+    title: dataset.description || dataset.title,
     title_link: event.links.web.dataset,
-    thumb_url: "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+    thumb_url:
+      dwOwner.avatarUrl ||
+      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
     color: "#5CC0DE",
-    text: dataset.description,
-    footer: `${params.owner}/${params.id}`, // dataset id
+    text: dataset.summary,
+    footer: `${params.owner}/${params.datasetId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
-    ts: moment(event.timestamp), // dataset created timestamp
+    ts: ts,
     mrkdwn_in: ["text", "pretext", "fields"],
     actions: [
       {
@@ -71,66 +86,337 @@ const getNewDatasetAttachment = (params, dataset, event) => {
 
   const fields = [];
 
-  if (dataset.files.length > 0) {
+  const files = dataset.files;
+  if (!lang.isEmpty(files)) {
+    let fieldValue = "";
+    collection.forEach(files, file => {
+      fieldValue += `• <https://data.world/${params.owner}/${
+        params.datasetId
+      }/workspace/file?filename=${file.name}|${file.name}> _(${(
+        file.sizeInBytes / 1024
+      ).toFixed(2)}KB)_\n`;
+    });
+
     fields.push({
-      title: "Total files",
-      value: dataset.files.length,
+      title: files.length > 1 ? "Files" : "File",
+      value: fieldValue,
+      short: false
+    });
+  } else {
+    fields.push({
+      title: "File(s)",
+      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
+        params.owner
+      }/${params.datasetId}|add one>_`
+    });
+  }
+
+  const tags = dataset.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
       short: false
     });
   }
 
-  if (dataset.tags.length > 0) {
-    fields.push({
-      value: lang.toString(dataset.tags),
-      short: false
-    });
-  }
-
-  if (fields.length > 0) {
+  if (!lang.isEmpty(fields)) {
     attachment.fields = fields;
   }
 
   return attachment;
 };
 
-const getUpdatedDatasetAttachment = () => {
-  // DW actor or owner
-  // DW dataset (api call)
-  // user slack id
+const getLinkedDatasetAttachment = (
+  params,
+  dataset,
+  event,
+  dwActor,
+  actorSlackId
+) => {
+  const offset = moment(
+    event.timestamp,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(event.timestamp, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+  const dwActorId = dwActor.id;
+  const slackUserMentionText = actorSlackId
+    ? `<@${actorSlackId}>`
+    : `<${event.links.web.actor}|${dwActorId}>`;
+
   const attachment = {
+    fallback: `${dwActorId} linked a dataset to a project`,
+    color: "#F6BD68",
+    pretext: `${slackUserMentionText} linked a *dataset* to a *project*`,
+    author_name: event.actor,
+    author_link: event.links.web.actor,
+    author_icon: dwActor.avatarUrl,
+    title: dataset.description || dataset.title,
+    title_link: `${event.links.web.project}/workspace`,
+    text: dataset.summary,
+    thumb_url: "https://cdn.filepicker.io/api/file/F4HMCtpTiqpfQltddbYg",
+    footer: `${params.owner}/${params.datasetId}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    ts: 123456789,
+    mrkdwn_in: ["text", "pretext", "fields"]
+  };
+
+  const fields = [];
+
+  const tags = dataset.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
+      short: false
+    });
+  }
+
+  if (!lang.isEmpty(fields)) {
+    attachment.fields = fields;
+  }
+
+  return attachment;
+};
+
+const getNewProjectAttachment = (
+  params,
+  project,
+  event,
+  dwOwner,
+  dwActorId,
+  actorSlackId
+) => {
+  const offset = moment(
+    event.timestamp,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(event.timestamp, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+  const slackUserMentionText = actorSlackId
+    ? `<@${actorSlackId}>`
+    : `<${event.links.web.actor}|${dwActorId}>`;
+
+  const attachment = {
+    fallback: `${dwActorId} created a new project`,
+    pretext: `${slackUserMentionText} created a *new project*`,
+    title: project.objective || project.title,
+    title_link: event.links.web.project,
+    thumb_url:
+      dwOwner.avatarUrl ||
+      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+    color: "#F6BD68",
+    text: project.summary,
+    footer: `${params.owner}/${params.datasetId}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    ts: ts,
+    mrkdwn_in: ["text", "pretext", "fields"],
+    actions: [
+      {
+        type: "button",
+        text: "Learn more :nerd_face:",
+        url: `${event.links.web.project}`
+      },
+      {
+        type: "button",
+        text: "Discuss :left_speech_bubble:",
+        url: `${event.links.web.project}/discuss`
+      },
+      {
+        type: "button",
+        text: "Contribute :muscle:",
+        url: `${event.links.web.project}/workspace`
+      }
+    ]
+  };
+
+  const fields = [];
+
+  if (lang.isEmpty(project.linkedDatasets)) {
+    const files = project.files;
+    if (!lang.isEmpty(files)) {
+      let fieldValue = "";
+      collection.forEach(files, file => {
+        fieldValue += `• <https://data.world/${params.owner}/${
+          params.datasetId
+        }/workspace/file?filename=${file.name}|${file.name}> _(${(
+          file.sizeInBytes / 1024
+        ).toFixed(2)}KB)_\n`;
+      });
+
+      fields.push({
+        title: files.length > 1 ? "Files" : "File",
+        value: fieldValue,
+        short: false
+      });
+    } else {
+      fields.push({
+        title: "File(s)",
+        value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
+          params.owner
+        }/${params.datasetId}|add one>_`
+      });
+    }
+  } else {
+    // there are linked datasets
+    const linkedDatasets = project.linkedDatasets;
+    let fieldValue = "";
+    collection.forEach(linkedDatasets, linkedDataset => {
+      fieldValue += `• <https://data.world/${params.owner}/${
+        params.datasetId
+      }/workspace/dataset?datasetid=${
+        linkedDataset.id
+      }|${linkedDataset.description || linkedDataset.title}>\n`;
+    });
+
+    fields.push({
+      title: linkedDatasets.length > 1 ? "Linked dataset" : "Linked datasets",
+      value: fieldValue,
+      short: false
+    });
+  }
+
+  const tags = project.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
+      short: false
+    });
+  }
+
+  if (!lang.isEmpty(fields)) {
+    attachment.fields = fields;
+  }
+
+  return attachment;
+};
+
+const getNewInsightAttachment = (
+  params,
+  insight,
+  event,
+  dwActor,
+  actorSlackId
+) => {
+  const offset = moment(
+    event.timestamp,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(event.timestamp, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+  const dwActorId = dwActor.id;
+  const slackUserMentionText = actorSlackId
+    ? `<@${actorSlackId}>`
+    : `<${event.links.web.actor}|${dwActorId}>`;
+
+  const attachment = {
+    fallback: `${dwActorId} shared a new insight`,
+    pretext: `${slackUserMentionText} shared a *new insight*`,
+    author_name: event.actor,
+    author_link: event.links.web.actor,
+    author_icon: dwActor.avatarUrl,
+    title: insight.title,
+    title_link: event.links.web.insight,
+    thumb_url: "https://cdn.filepicker.io/api/file/CQvuh91XRlqhTKEimEls",
+    image_url: insight.thumbnail,
+    color: "#9581CA",
+    text: insight.description,
+    footer: `${params.owner}/${params.datasetId}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    ts: ts,
+    mrkdwn_in: ["text", "pretext", "fields"],
+    actions: [
+      {
+        type: "button",
+        text: "Discuss :left_speech_bubble:",
+        url: `https://data.world/${params.owner}/${params.datasetId}/insights/${
+          insight.id
+        }`
+      }
+    ]
   };
 
   return attachment;
 };
 
-const getDatasetEventAttachmentText = event => {
-  // "Successfully updated <http://data.world|2016 Uber customers>"
-  let action = string.capitalize(event.action);
-  return `Successfully ${action}d <${event.links.web.project ||
-    event.links.web.dataset}|${event.project || event.dataset}>`;
-};
+const getFileUploadAttachment = (
+  params,
+  files,
+  event,
+  dwActorId,
+  actorSlackId,
+  isProjectFiles
+) => {
+  const offset = moment(
+    event.timestamp,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(event.timestamp, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
 
-const getInsightEventAttachmentText = event => {
-  switch (event.action) {
-    case CREATE:
-      return `Added new insight <${event.links.web.insight}|${
-        event.insight
-      }> to <${event.links.web.project ||
-        event.links.web.dataset}|${event.project || event.dataset}>`;
-    case UPDATE:
-      return `Updated insight <${event.links.web.insight}|${
-        event.insight
-      }> in <${event.links.web.project ||
-        event.links.web.dataset}|${event.project || event.dataset}>`;
-    case DELETE:
-      return `Removed insight <${event.links.web.insight}|${
-        event.insight
-      }> from <${event.links.web.project ||
-        event.links.web.dataset}|${event.project || event.dataset}>`;
-    default:
-      console.warn("Unrecognized Insight event action : ", event);
-      return "";
-  }
+  const slackUserMentionText = actorSlackId
+    ? `<@${actorSlackId}>`
+    : `<${event.links.web.actor}|${dwActorId}>`;
+  const fileCount = files.length;
+  const fallback =
+    fileCount > 1
+      ? `${dwActorId} uploaded ${fileCount} files`
+      : `${dwActorId} uploaded a file`;
+  const pretext =
+    fileCount > 1
+      ? `${dwActorId} uploaded *${fileCount} files*`
+      : `${dwActorId} uploaded *a file*`;
+  const attachment = {
+    fallback: fallback,
+    pretext: pretext,
+    color: isProjectFiles ? "#F6BD68" : "#5CC0DE", // changes if it's project file upload
+    thumb_url: isProjectFiles
+      ? "https://cdn.filepicker.io/api/file/y3pOY9LSCSETkcqcvUtX"
+      : "https://cdn.filepicker.io/api/file/KneqPAwARf6qJr5njc8Q", // changes if it's project file upload
+    footer: `${params.owner}/${params.datasetId}`,
+    footer_icon: isProjectFiles
+      ? "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr"
+      : "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT", // changes if it's project file upload
+    ts: ts,
+    mrkdwn_in: ["pretext", "fields"]
+  };
+
+  const fields = [];
+  let fieldValue = "";
+  console.log("Fields in files: ", files);
+
+  collection.forEach(files, file => {
+    fieldValue += `• <https://data.world/${params.owner}/${
+      params.datasetId
+    }/workspace/file?filename=${file.name}|${file.name}> _(${(
+      file.sizeInBytes / 1024
+    ).toFixed(2)}KB)_\n`;
+  });
+
+  fields.push({
+    title: fileCount > 1 ? "Files Uploaded" : "File Uploaded",
+    value: fieldValue,
+    short: false
+  });
+
+  attachment.fields = fields;
+
+  return attachment;
 };
 
 const getFileEventAttachmentText = event => {
@@ -169,92 +455,222 @@ const getEventSubscribedChannels = async resourceId => {
   return collection.map(subscriptions, "channelId");
 };
 
-const handleDatasetEvent = async event => {
+const handleDatasetEvent = async (
+  resourceId,
+  channelIds,
+  user,
+  event,
+  dwActorId,
+  actorSlackId
+) => {
   try {
-    // Get resource id
-    const resourceId = extractResouceIdFromWebLink(
-      event.links.web.project || event.links.web.dataset,
-      event.action
-    );
-    // Get subsciptions
-    const subscriptions = await Subscription.findAll({
-      where: { resourceId: resourceId }
-    });
-    // Get subscribed channelIds
-    const channelIds = collection.map(subscriptions, "channelId");
-    // Get subscribers
-    const subscribers = collection.map(subscriptions, "slackUserId");
-    // Get one user from list of subscribers
-    const user = await User.findOne({
-      where: {
-        slackId: { [Op.in]: subscribers },
-        dwAccessToken: { [Op.ne]: null }
-      }
-    });
     // Fetch necessary DW resources
-    const params = helper.extractDatasetOrProjectParams(event.links.web.project || event.links.web.dataset);
-    const response = await dataworld.getDataset(
-      params.id,
-      params.owner,
-      user.dwAccessToken
+    const isProject = event.links.web.project ? true : false; // check type.
+    const params = helper.extractDatasetOrProjectParams(
+      event.links.web.project || event.links.web.dataset
     );
-    const dataset = response.data;
+    const response = isProject
+      ? await dataworld.getProject(
+          params.datasetId,
+          params.owner,
+          user.dwAccessToken
+        )
+      : await dataworld.getDataset(
+          params.datasetId,
+          params.owner,
+          user.dwAccessToken
+        );
+    const data = response.data;
+
+    // dw owner object
+    const dwOwnerId = helper.extractIdFromLink(event.links.web.owner);
+    const dwOwnerResponse = await dataworld.getDWUser(
+      user.dwAccessToken,
+      dwOwnerId
+    );
+    const dwOwner = dwOwnerResponse.data;
     // Create attachment
-    const attachment = event.action === CREATE ? getNewDatasetAttachment(params, dataset, event) : getUpdatedDatasetAttachment();
-    // Send message
-    sendEventToSlack(resourceId, channelIds, attachment);
+    let attachment = null;
+
+    if (event.action === CREATE) {
+      //handle datasets/projects create event
+      attachment = isProject
+        ? getNewProjectAttachment(
+            params,
+            data,
+            event,
+            dwOwner,
+            dwActorId,
+            actorSlackId
+          )
+        : getNewDatasetAttachment(
+            params,
+            data,
+            event,
+            dwOwner,
+            dwActorId,
+            actorSlackId
+          );
+    } else {
+      // handle dataset/project update events
+      if (isProject) {
+        // Fetch prev version
+        const prevProjectResponse = await dataworld.getProjectByVersion(
+          params.datasetId,
+          params.owner,
+          event.previous_version_id,
+          user.dwAccessToken
+        );
+        const prevProject = prevProjectResponse.data;
+
+        // Check size diff to ensure we send notification only when files are added not deleted.
+        // This will keep the amount of notification going to slack minimal. Maybe we'll reconsider and handle file deletion in v2.
+        if (data.files.length > prevProject.files.length) {
+          // Get difference in files
+          const addedFiles = array.differenceBy(
+            data.files,
+            prevProject.files,
+            "name"
+          );
+
+          const fileAttachment = getFileUploadAttachment(
+            params,
+            addedFiles,
+            event,
+            dwActorId,
+            actorSlackId,
+            isProject
+          );
+          return sendEventToSlack(resourceId, channelIds, fileAttachment);
+        }
+
+        // Check size diff to ensure we send notification only when dataset are linked not removed.
+        // This will keep the amount of notification going to slack minimal. Maybe we'll reconsider and handle unlinking in v2.
+        if (data.linkedDatasets.length > prevProject.linkedDatasets.length) {
+          // Get difference in linked Datasets
+          const linkedDatasets = array.differenceBy(
+            data.linkedDatasets,
+            prevProject.linkedDatasets,
+            "id"
+          );
+          const dwActorResponse = await dataworld.getDWUser(
+            user.dwAccessToken,
+            dwActorId
+          );
+          const dwActor = dwActorResponse.data;
+          collection.forEach(linkedDatasets, linkedDataset => {
+            const attachment = getLinkedDatasetAttachment(
+              params,
+              linkedDataset,
+              event,
+              dwActor,
+              actorSlackId
+            );
+            sendEventToSlack(resourceId, channelIds, attachment);
+          });
+          return;
+        }
+        console.warn(
+          "We don't process all project update event, we handle new files and link"
+        );
+        return;
+      } else {
+        // return we don't want to process dataset meta data update events for now.
+        console.warn("We don't process dataset update event for now.");
+        return;
+      }
+    }
+    if (attachment) {
+      // Send message
+      sendEventToSlack(resourceId, channelIds, attachment);
+    }
   } catch (error) {
     console.error("Failed to handle dataset event : ", error);
   }
 };
 
-const handleInsightEvent = event => {
-  // Get resource id
-  // Get subsciptions
-  // Get subscribers
-  // Get subscribed channels
-  // Fetch necessary DW resources
-  // Create attachment
-  // Send message
-  const attachmentText = getInsightEventAttachmentText(event);
-  const attachment = getAttachment(
-    event.actor,
-    event.links.web.actor,
-    event.owner,
-    event.links.web.owner,
-    attachmentText
+const handleInsightEvent = async (
+  resourceId,
+  channelIds,
+  user,
+  event,
+  dwActorId,
+  actorSlackId
+) => {
+  const params = helper.extractDatasetOrProjectParams(event.links.web.project);
+  const dwInsightId = helper.extractIdFromLink(event.links.web.insight);
+  const response = await dataworld.getInsight(
+    dwInsightId,
+    params.datasetId,
+    params.owner,
+    user.dwAccessToken
   );
-  sendEventToSlack(event, attachment);
+  const insight = response.data;
+  const dwActorResponse = await dataworld.getDWUser(
+    user.dwAccessToken,
+    dwActorId
+  );
+  const dwActor = dwActorResponse.data;
+  const attachment = getNewInsightAttachment(
+    params,
+    insight,
+    event,
+    dwActor,
+    actorSlackId
+  );
+  sendEventToSlack(resourceId, channelIds, attachment);
 };
 
-const handleFileEvents = events => {
+const handleFileEvents = async (
+  resourceId,
+  channelIds,
+  user,
+  events,
+  dwActorId,
+  actorSlackId
+) => {
   // For files we always receive an array of event from the webhook api
   // I believe this to handle situations where multiple files were uploaded at once
 
   // retrieve the first event from the array.
   const event = events[0];
-  const attachmentText = getFileEventAttachmentText(event);
-  const attachment = getAttachment(
-    event.actor,
-    event.links.web.actor,
-    event.owner,
-    event.links.web.owner,
-    attachmentText
+  const params = helper.extractDatasetOrProjectParams(
+    event.links.web.project || event.links.web.dataset
   );
+  const isProjectFiles = event.links.web.project ? true : false;
+  // get DW project or dataset
+  const response = isProjectFiles
+    ? await dataworld.getProject(
+        params.datasetId,
+        params.owner,
+        user.dwAccessToken
+      )
+    : await dataworld.getDataset(
+        params.datasetId,
+        params.owner,
+        user.dwAccessToken
+      );
+  const data = response.data;
 
-  // add all files as attachment fields.
-  const fields = [];
-  collection.forEach(events, event => {
-    fields.push({
-      value: `<${event.links.web.file}|${event.file}>`,
-      short: true
-    });
+  // get newly added file names from event.
+  const newFiles = collection.map(events, "file");
+  // Select newly added file(s) only.
+  const files = [];
+  collection.forEach(data.files, file => {
+    if (newFiles.indexOf(file.name) > -1) {
+      files.push(file);
+    }
   });
-  if (fields.length > 0) {
-    attachment.fields = fields;
-  }
 
-  sendEventToSlack(event, attachment);
+  const attachment = getFileUploadAttachment(
+    params,
+    files,
+    event,
+    dwActorId,
+    actorSlackId,
+    isProjectFiles
+  );
+  sendEventToSlack(resourceId, channelIds, attachment);
 };
 
 const sendEventToSlack = async (resourceId, channelIds, attachment) => {
@@ -270,31 +686,87 @@ const sendEventToSlack = async (resourceId, channelIds, attachment) => {
 
 const sendSlackMessage = async (channelId, attachment, teamId) => {
   const team = await Team.findOne({ where: { teamId: teamId } });
-  const slackBot = new SlackWebClient(team.botAccessToken);
+  const slackBot = new SlackWebClient(
+    process.env.SLACK_BOT_TOKEN || team.botAccessToken
+  );
   slackBot.chat.postMessage(channelId, "", {
     attachments: [attachment]
   });
 };
 
 const webhook = {
-  process(req, res) {
-    const event = req.body;
-    console.log("Incoming DW webhook event : ", event);
-    res.status(200).send();
-    // process event based on type
-    switch (getEntityType(event)) {
-      case DATASET:
-        handleDatasetEvent(event);
-        break;
-      case INSIGHT:
-        handleInsightEvent(event);
-        break;
-      case FILE:
-        handleFileEvents(event);
-        break;
-      default:
-        console.warn("Received unknown dw webhook event : ", req.body);
-        break;
+  async process(req, res) {
+    try {
+      const event = lang.isArray(req.body) ? req.body[0] : req.body;
+      console.log("Incoming DW webhook event : ", event);
+      res.status(200).send();
+      // process event based on type
+      // Get resource id
+      const resourceId = extractResouceIdFromWebLink(
+        event.links.web.project || event.links.web.dataset,
+        event.action
+      );
+      // Get subsciptions
+      const subscriptions = await Subscription.findAll({
+        where: { resourceId: resourceId }
+      });
+      if (!lang.isEmpty(subscriptions)) {
+        // Get subscribed channelIds
+        const channelIds = collection.map(subscriptions, "channelId");
+        // Get subscribers
+        const subscriberIds = collection.map(subscriptions, "slackUserId");
+        // Get one user from list of subscribers
+        const user = await User.findOne({
+          where: {
+            slackId: { [Op.in]: subscriberIds },
+            dwAccessToken: { [Op.ne]: null }
+          }
+        });
+        // get actor object info
+        const dwActorId = helper.extractIdFromLink(event.links.web.actor);
+        const actor = await User.findOne({ where: { dwUserId: dwActorId } });
+        const actorSlackId = actor ? actor.slackUserId : null;
+
+        switch (getEntityType(event)) {
+          case DATASET:
+            handleDatasetEvent(
+              resourceId,
+              channelIds,
+              user,
+              req.body,
+              dwActorId,
+              actorSlackId
+            );
+            break;
+          case INSIGHT:
+            handleInsightEvent(
+              resourceId,
+              channelIds,
+              user,
+              req.body,
+              dwActorId,
+              actorSlackId
+            );
+            break;
+          case FILE:
+            handleFileEvents(
+              resourceId,
+              channelIds,
+              user,
+              req.body,
+              dwActorId,
+              actorSlackId
+            );
+            break;
+          default:
+            console.warn("Received unknown dw webhook event : ", req.body);
+            break;
+        }
+      } else {
+        console.warn("No subscriptions found for event.");
+      }
+    } catch (error) {
+      console.error("Failed to process webhook event! : ", error);
     }
   }
 };

@@ -6,14 +6,15 @@ const lang = require("lodash/lang");
 const { slack } = require("../api/slack");
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
+const { helper } = require("../util/helper");
 
 // data.world command format
 const dwWebhookCommandFormat = /^((\/data.world)(subscribe|unsubscribe|list|help) [\w-\/\:\.]+)$/i;
 const dwSupportCommandFormat = /^((\/data.world)(list|help))$/i;
 
 // sub command format
-const subscribeFormat = /^((\/data.world)(subscribe) [\w-\/\:\.]+)$/i;
-const unsubscribeFormat = /^((\/data.world)(unsubscribe) [\w-\/\:\.]+)$/i;
+const subscribeFormat = /^((\/data.world)(subscribe) (https\:\/\/data.world\/|)[\w-\/]+)$/i;
+const unsubscribeFormat = /^((\/data.world)(unsubscribe) (https\:\/\/data.world\/|)[\w-\/]+)$/i;
 
 // /data.world sub command types
 const SUBSCRIBE_DATASET_OR_PROJECT = "SUBSCRIBE_DATASET_OR_PROJECT";
@@ -97,7 +98,7 @@ const subscribeToAccount = async (userid, channelid, command, responseUrl, token
 };
 
 const unsubscribeFromDatasetOrProject = async (
-  userid,
+  userId,
   channelid,
   command,
   responseUrl,
@@ -106,6 +107,7 @@ const unsubscribeFromDatasetOrProject = async (
   // use dataworld wrapper to unsubscribe to dataset
   let commandParams = extractParamsFromCommand(command, false);
   let resourceId = `${commandParams.owner}/${commandParams.id}`;
+  console.log("command parrams : " + commandParams)
   const isValid = await belongsToChannel(
     resourceId,
     channelid,
@@ -114,18 +116,18 @@ const unsubscribeFromDatasetOrProject = async (
   if (isValid) { // If subscription belongs to channel go ahead and unsubscribe
     try {
       let response = await dataworld.unsubscribeFromDataset(commandParams.owner, commandParams.id, token);
-      console.log("DW unsubscribe from dataset response : ", response);
+      console.log("DW unsubscribe from dataset response : ", response.status);
       removeSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
-        userid
+        userId
       );
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.data.message);
     } catch(error) {
       console.warn("Failed to unsubscribe from dataset : ", error);
       // Handle as project
-      unsubscribeFromProject(command, responseUrl, token);
+      unsubscribeFromProject(userId, channelid, command, responseUrl, token);
     }
   } else {
     sendSlackMessage(responseUrl, `Specified subscription \`${resourceId}\` not found in this channel.`);
@@ -134,7 +136,7 @@ const unsubscribeFromDatasetOrProject = async (
 };
 
 const unsubscribeFromProject = async (
-  userid,
+  userId,
   channelid,
   command,
   responseUrl,
@@ -148,7 +150,7 @@ const unsubscribeFromProject = async (
     removeSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
-      userid
+      userId
     );
     // send successful unsubscription message to Slack
     sendSlackMessage(responseUrl, response.data.message);
@@ -162,7 +164,7 @@ const unsubscribeFromProject = async (
 };
 
 const unsubscribeFromAccount = async (
-  userid,
+  userId,
   channelid,
   command,
   responseUrl,
@@ -183,7 +185,7 @@ const unsubscribeFromAccount = async (
       removeSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
-        userid
+        userId
       );
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.data.message);
@@ -200,9 +202,9 @@ const unsubscribeFromAccount = async (
   }
 };
 
-const belongsToChannel = async (resourceid, channelid, userid) => {
+const belongsToChannel = async (resourceid, channelid, userId) => {
   const subscription = await Subscription.findOne({
-    where: { resourceId: resourceid, channelId: channelid, slackUserId: userid }
+    where: { resourceId: resourceid, channelId: channelid, slackUserId: userId }
   });
   if (subscription) {
     return true;
@@ -317,11 +319,11 @@ const addSubscriptionRecord = (owner, id, userId, channelId) => {
     });
 };
 
-const removeSubscriptionRecord = (owner, id, userid) => {
+const removeSubscriptionRecord = (owner, id, userId) => {
   // delete subscription
   let resourceId = owner ? `${owner}/${id}` : `${id}`;
   Subscription.destroy({
-    where: { resourceId: resourceid, slackUserId: userid }
+    where: { resourceId: resourceId, slackUserId: userId }
   }).catch(error => {
     // error deleting Subscription
     console.error("Failed to create new Subscription record : ", error);
@@ -366,8 +368,8 @@ const getType = (command, option) => {
 
 const subscribeOrUnsubscribe = (req, token) => {
   //Invalid / Unrecognized command is not expected to make it here.
-  let command = req.body.command + req.body.text;
-  let commandType = getType(command, req.body.text);
+  let command = req.body.command + helper.cleanSlackLinkInput(req.body.text);
+  let commandType = getType(command, helper.cleanSlackLinkInput(req.body.text));
   let responseUrl = req.body.response_url;
 
   switch (commandType) {
@@ -458,7 +460,7 @@ const command = {
         if (isAssociated) {
           // User is associated, carry on and validate command
           let option = req.body.text;
-          if (dwWebhookCommandFormat.test(req.body.command + option)) {
+          if (dwWebhookCommandFormat.test(req.body.command + helper.cleanSlackLinkInput(option))) {
             // Process command
             subscribeOrUnsubscribe(req, user.dwAccessToken);
           } else if (dwSupportCommandFormat.test(req.body.command + option)) {

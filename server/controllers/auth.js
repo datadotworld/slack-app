@@ -117,7 +117,7 @@ const auth = {
     try {
     let nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
-    const slackBot = new SlackWebClient(team.botAccessToken);
+    const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN || team.botAccessToken);
 
     slackBot.im
       .open(slackUserId)
@@ -169,7 +169,7 @@ const auth = {
     opts.user_auth_url = associationUrl;
 
     const team = await Team.findOne({ where: { teamId: teamId } });
-    const slackWebApi = new SlackWebClient(team.accessToken);
+    const slackWebApi = new SlackWebClient(process.env.SLACK_TEAM_TOKEN || team.accessToken);
 
     slackWebApi.chat
       .unfurl(messageTs, channel, unfurls, opts) // With opts, this will prompt user to authenticate using the association Url above.
@@ -209,10 +209,11 @@ const auth = {
       // redirect to success / homepage
         const user = await User.findOne({ where: { nonce: nonce } });
         const team = await Team.findOne({ where: { teamId: user.teamId } });
-        const slackBot = new SlackWebClient(team.botAccessToken);
+        const dwUserResponse = await dataworld.getActiveDWUser(token);
+        const slackBot = new SlackWebClient(process.env.SLACK_BOT_TOKEN || team.botAccessToken);
         await user.update(
-          { dwAccessToken: token },
-          { fields: ["dwAccessToken"] }
+          { dwAccessToken: token, dwUserId: dwUserResponse.data.id},
+          { fields: ["dwAccessToken", "dwUserId"] }
         );
         console.log("Added DW token : " + token);
         res.status(201).send("success");

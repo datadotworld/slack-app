@@ -250,7 +250,7 @@ const handleLinkSharedEvent = async (event, teamId) => {
     if (isAssociated) {
       let token = user.dwAccessToken;
       const team = await Team.findOne({ where: { teamId: teamId } });
-      const slack = new SlackWebClient(team.accessToken);
+      const slack = new SlackWebClient(process.env.SLACK_TEAM_TOKEN || team.accessToken);
       // User is associated, carry on and unfold url
       // retrieve user dw access token
       Promise.all(

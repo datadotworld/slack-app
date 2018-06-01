@@ -15,6 +15,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING,
     },
+    dwUserId: {
+      type: DataTypes.TEXT
+    },
     dwAccessToken: {
       type: DataTypes.TEXT
     },

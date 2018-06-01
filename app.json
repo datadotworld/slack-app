@@ -19,6 +19,12 @@
       "SLACK_CLIENT_SECRET": {
         "required": true
       },
+      "SLACK_BOT_TOKEN": {
+        "required": true
+      },
+      "SLACK_TEAM_TOKEN": {
+        "required": true
+      },
       "SLACK_OAUTH_ACCESS_URL": {
         "required": true
       },
