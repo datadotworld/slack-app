@@ -13,12 +13,17 @@ const { dataworld } = require("../api/dataworld");
 const { helper } = require("../util/helper");
 
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
+const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = (token, link) => {
   let url = link.url;
   let params = {};
 
-  if (dwLinkFormat.test(url)) {
+  if (insightLinkFormat.test(url)) {
+    params = helper.extractInsightParams(url);
+    params.token = token;
+    return unfurlInsight(params);
+  } else if (dwLinkFormat.test(url)) {
     params = helper.extractDatasetOrProjectParams(url);
     params.token = token;
     return unfurlDatasetOrProject(params);
