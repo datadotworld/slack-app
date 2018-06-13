@@ -1,10 +1,10 @@
-const SlackWebClient = require("@slack/client").WebClient;
-const uuidv1 = require("uuid/v1");
-
 const User = require("../models").User;
 const Team = require("../models").Team;
 const { dataworld } = require("../api/dataworld");
 const { slack } = require("../api/slack");
+
+const SlackWebClient = require("@slack/client").WebClient;
+const uuidv1 = require("uuid/v1");
 const Sequelize = require("sequelize");
 
 const Op = Sequelize.Op;
@@ -20,7 +20,6 @@ const auth = {
         console.warn("User denied oauth request.");
         return res.status(401).send();
       }
-      console.log("Looks like we're not getting code.");
       res.status(500);
       res.send({ Error: "Looks like we're not getting code." });
     } else {
@@ -45,7 +44,6 @@ const auth = {
               if (!created) {
                 // Team record already exits.
                 // Update existing record with new data
-                console.log("Team record already exist!, updating...");
                 team.update(
                   {
                     teamDomain: response.data.team_name,
@@ -63,8 +61,6 @@ const auth = {
                   }
                 );
               }
-              console.log("Team added successfully!!!");
-              console.log("team add response data : " + response.data);
               // deep link to slack app or redirect to slack team in web.
               res.redirect(
                 `https://slack.com/app_redirect?app=${
@@ -238,7 +234,6 @@ const auth = {
         console.error("DW auth code exchange error : ", error);
         return res.status(400).send("failed");
       } else {
-        console.log("got DW response : " + response);
         const token = response.data.access_token;
         const nonce = req.query.state;
         // use nonce to retrieve user
@@ -254,14 +249,7 @@ const auth = {
           { dwAccessToken: token, dwUserId: dwUserResponse.data.id },
           { fields: ["dwAccessToken", "dwUserId"] }
         );
-        console.log("Added DW token : " + token);
-
-        res.redirect(
-          `https://slack.com/app_redirect?app=${
-            process.env.SLACK_APP_ID
-          }&team=${team.teamId}`
-        );
-
+        res.status(200).json({url:`https://slack.com/app_redirect?app=${process.env.SLACK_APP_ID}&team=${team.teamId}`});
         //inform user via slack that authentication was successful
         const slackUserId = user.slackId;
         const botResponse = await slackBot.im.open(slackUserId);

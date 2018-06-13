@@ -5,6 +5,7 @@ const object = require("lodash/object");
 const moment = require("moment");
 
 const Channel = require("../models").Channel;
+const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
 
 const SlackWebClient = require("@slack/client").WebClient;
@@ -15,7 +16,7 @@ const { helper } = require("../util/helper");
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
-const messageAttachmentFromLink = (token, link) => {
+const messageAttachmentFromLink = (token, channel, link) => {
   let url = link.url;
   let params = {};
 
@@ -26,105 +27,35 @@ const messageAttachmentFromLink = (token, link) => {
   } else if (dwLinkFormat.test(url)) {
     params = helper.extractDatasetOrProjectParams(url);
     params.token = token;
-    return unfurlDatasetOrProject(params);
+    return unfurlDatasetOrProject(params, channel);
   } else {
     console.warn("Can't unfold unsupported link type : ", url);
     return;
   }
 };
 
-const unfurlDatasetOrProject = params => {
+const unfurlDatasetOrProject = (params, channelId) => {
   // Fetch resource info from DW
   return dataworld
     .getDataset(params.datasetId, params.owner, params.token)
     .then(async response => {
       const dataset = response.data;
-      if (dataset.isProject) {
-        return unfurlProject(params);
-      }
-
+      const resourceId = `${params.owner}/${params.datasetId}`;
+      //check if there's an active subscription for this resource in the channel
+      const subscription = await Subscription.findOne({
+        where: { resourceId: resourceId, channelId: channelId }
+      });
+      const notSubcribed = subscription ? false : true;
       const ownerResponse = await dataworld.getDWUser(
         params.token,
         params.owner
       );
       const owner = ownerResponse.data;
-      //Check if it's a project object.
-      const offset = moment(
-        dataset.updated,
-        "YYYY-MM-DDTHH:mm:ss.SSSSZ"
-      ).utcOffset();
-      const ts = moment(dataset.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
-        .utcOffset(offset)
-        .unix();
-
-      const attachment = {
-        fallback: dataset.title,
-        color: "#5CC0DE",
-        title: dataset.description,
-        title_link: params.link,
-        text: dataset.summary,
-        thumb_url:
-          owner.avatarUrl ||
-          "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
-        footer: `${params.owner}/${params.datasetId}`,
-        footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
-        ts: ts,
-        mrkdwn_in: ["fields"],
-        actions: [
-          {
-            type: "button",
-            text: "Explore :microscope:",
-            url: `https://data.world/${params.owner}/${
-              params.datasetId
-            }/workspace`
-          }
-        ],
-        url: params.link
-      };
-      const fields = [];
-
-      const tags = dataset.tags;
-      if (!lang.isEmpty(tags)) {
-        let fieldValue = "";
-        collection.forEach(tags, tag => {
-          fieldValue += `\`${tag}\` `;
-        });
-        fields.push({
-          value: fieldValue,
-          short: false
-        });
-      }
-
-      const files = dataset.files;
-      if (!lang.isEmpty(files)) {
-        let fieldValue = "";
-        collection.forEach(files, file => {
-          fieldValue += `• <https://data.world/${params.owner}/${
-            params.datasetId
-          }/workspace/file?filename=${file.name}|${file.name}> _(${(
-            file.sizeInBytes / 1024
-          ).toFixed(2)}KB)_\n`;
-        });
-
-        fields.push({
-          title: files.length > 1 ? "Files" : "File",
-          value: fieldValue,
-          short: false
-        });
+      if (dataset.isProject) {
+        return unfurlProject(params, owner, notSubcribed);
       } else {
-        fields.push({
-          title: "File(s)",
-          value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
-            params.owner
-          }/${params.datasetId}|add one>_`
-        });
+        return unfurlDataset(params, dataset, owner, notSubcribed);
       }
-
-      if (fields.length > 0) {
-        attachment.fields = fields;
-      }
-
-      return attachment;
     })
     .catch(error => {
       console.error("failed to get dataset attachment : ", error.message);
@@ -132,18 +63,99 @@ const unfurlDatasetOrProject = params => {
     });
 };
 
-const unfurlProject = params => {
+const unfurlDataset = (params, dataset, owner, notSubcribed) => {
+  const resourceId = `${params.owner}/${params.datasetId}`;
+  //Check if it's a project object.
+  const offset = moment(
+    dataset.updated,
+    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+  ).utcOffset();
+  const ts = moment(dataset.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+
+  const attachment = {
+    fallback: dataset.title,
+    color: "#5CC0DE",
+    title: dataset.title,
+    title_link: params.link,
+    text: dataset.description,
+    thumb_url:
+      owner.avatarUrl ||
+      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+    footer: `${resourceId}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+    ts: ts,
+    callback_id: "dataset_subscribe_button",
+    mrkdwn_in: ["fields"],
+    actions: [
+      {
+        type: "button",
+        text: "Explore :microscope:",
+        url: `https://data.world/${resourceId}/workspace`
+      }
+    ],
+    url: params.link
+  };
+
+  if (notSubcribed) {
+    attachment.actions.push({
+      name: "subscribe",
+      text: "Subscribe :nerd_face:",
+      style: "primary",
+      type: "button",
+      value: `${resourceId}`
+    });
+  }
+
+  const fields = [];
+  const tags = dataset.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
+      short: false
+    });
+  }
+
+  const files = dataset.files;
+  if (!lang.isEmpty(files)) {
+    let fieldValue = "";
+    collection.forEach(files, file => {
+      fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
+        file.sizeInBytes / 1024
+      ).toFixed(2)}KB)_\n`;
+    });
+
+    fields.push({
+      title: files.length > 1 ? "Files" : "File",
+      value: fieldValue,
+      short: false
+    });
+  } else {
+    fields.push({
+      title: "File(s)",
+      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+    });
+  }
+
+  if (fields.length > 0) {
+    attachment.fields = fields;
+  }
+
+  return attachment;
+};
+
+const unfurlProject = (params, owner, notSubcribed) => {
   // Fetch resource info from DW
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
     .then(async response => {
       const project = response.data;
-
-      const ownerResponse = await dataworld.getDWUser(
-        params.token,
-        params.owner
-      );
-      const owner = ownerResponse.data;
+      const resourceId = `${params.owner}/${params.datasetId}`;
 
       const offset = moment(
         project.updated,
@@ -158,34 +170,34 @@ const unfurlProject = params => {
         title: project.title,
         title_link: params.link,
         text: project.objective,
-        footer: `${params.owner}/${params.datasetId}`,
+        footer: `${resourceId}`,
         footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
         thumb_url:
           owner.avatarUrl ||
           "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
         ts: ts,
         mrkdwn_in: ["fields"],
+        callback_id: "dataset_subscribe_button",
         actions: [
           {
             type: "button",
-            text: "Learn more :nerd_face:",
-            url: `http://data.world/${params.owner}/${params.datasetId}`
-          },
-          {
-            type: "button",
-            text: "Discuss :left_speech_bubble:",
-            url: `http://data.world/${params.owner}/${params.datasetId}/discuss`
-          },
-          {
-            type: "button",
-            text: "Contribute :muscle:",
-            url: `http://data.world/${params.owner}/${
-              params.datasetId
-            }/workspace`
+            text: "Explore :microscope:",
+            url: `https://data.world/${resourceId}/workspace`
           }
         ],
         url: params.link
       };
+
+      if (notSubcribed) {
+        attachment.actions.push({
+          name: "subscribe",
+          text: "Subscribe :nerd_face:",
+          style: "primary",
+          type: "button",
+          value: `${resourceId}`
+        });
+      }
+      
       const fields = [];
 
       const tags = project.tags;
@@ -205,9 +217,7 @@ const unfurlProject = params => {
         if (!lang.isEmpty(files)) {
           let fieldValue = "";
           collection.forEach(files, file => {
-            fieldValue += `• <https://data.world/${params.owner}/${
-              params.datasetId
-            }/workspace/file?filename=${file.name}|${file.name}> _(${(
+            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
               file.sizeInBytes / 1024
             ).toFixed(2)}KB)_\n`;
           });
@@ -220,9 +230,7 @@ const unfurlProject = params => {
         } else {
           fields.push({
             title: "File(s)",
-            value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
-              params.owner
-            }/${params.datasetId}|add one>_`
+            value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
           });
         }
       } else {
@@ -230,9 +238,7 @@ const unfurlProject = params => {
         const linkedDatasets = project.linkedDatasets;
         let fieldValue = "";
         collection.forEach(linkedDatasets, linkedDataset => {
-          fieldValue += `• <https://data.world/${params.owner}/${
-            params.datasetId
-          }/workspace/dataset?datasetid=${
+          fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
             linkedDataset.id
           }|${linkedDataset.description || linkedDataset.title}>\n`;
         });
@@ -257,6 +263,57 @@ const unfurlProject = params => {
     });
 };
 
+const unfurlInsight = params => {
+  // Fetch resource info from DW
+  return dataworld
+    .getInsight(params.insightId, params.projectId, params.owner, params.token)
+    .then(async response => {
+      const ownerResponse = await dataworld.getDWUser(
+        params.token,
+        params.owner
+      );
+      const owner = ownerResponse.data;
+      const insight = response.data;
+      return getInsightAttachment(insight, owner, params);
+    })
+    .catch(error => {
+      console.error("failed to fetch insight : ", error.message);
+      throw error;
+    });
+};
+
+const getInsightAttachment = (insight, owner, params) => {
+  let author = insight.author;
+  const attachment = {
+    fallback: insight.title,
+    color: "#9581CA",
+    author_name: author,
+    author_link: `http://data.world/${author}`,
+    author_icon: owner.avatarUrl,
+    title: insight.title,
+    title_link: params.link,
+    text: insight.description,
+    image_url: insight.thumbnail,
+    footer: `${author}/${params.projectId}/insights/${insight.id}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    url: params.link,
+    actions: [
+      {
+        type: "button",
+        text: "Discuss :left_speech_bubble:",
+        url: `https://data.world/${author}/${params.projectId}/insights/${
+          insight.id
+        }`
+      }
+    ]
+  };
+  if (insight.body.imageUrl) {
+    attachment.imageUrl = insight.body.imageUrl;
+  }
+
+  return attachment;
+};
+
 const handleLinkSharedEvent = async (event, teamId) => {
   // verify slack associaton
   try {
@@ -264,14 +321,18 @@ const handleLinkSharedEvent = async (event, teamId) => {
       event.user
     );
     if (isAssociated) {
+      // User is associated, carry on and unfold url
       let token = user.dwAccessToken;
       const team = await Team.findOne({ where: { teamId: teamId } });
       const slack = new SlackWebClient(
         process.env.SLACK_TEAM_TOKEN || team.accessToken
       );
-      // User is associated, carry on and unfold url
       // retrieve user dw access token
-      Promise.all(event.links.map(messageAttachmentFromLink.bind(null, token)))
+      Promise.all(
+        event.links.map(
+          messageAttachmentFromLink.bind(null, token, event.channel)
+        )
+      )
         // Transform the array of attachments to an unfurls object keyed by URL
         .then(attachments => collection.keyBy(attachments, "url")) // group by url
         .then(unfurls =>

@@ -99,3 +99,17 @@
     1. Go to slack app settings page 
     2. Go to event install app section
     3. Click install application button.
+
+#### 10. Deploy to heroku
+    You can deploy to Heroku using the heroku deploy button but before that ensure you do the following:
+
+    1. Replace <ngrok url> with <heroku app base url> in the following : 
+    
+        a. DW Oauth Client redirect_url
+        b. Slash Commands request url
+        c. Oauth & Permission redirect url
+        d. Redirect_uri query param in env variale AUTH_URL
+
+    2. Now you can click the heroku button below to deploy. 
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master) 

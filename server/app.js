@@ -5,10 +5,10 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-const command = require('./routes/command');
-const webhook = require('./routes/webhook');
 const auth = require('./routes/auth');
+const command = require('./routes/command');
 const unfurl = require('./routes/unfurl');
+const webhook = require('./routes/webhook');
 
 const app = express();
 
@@ -18,10 +18,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../build')));
 
-app.use('/api/v1/command', command);
-app.use('/api/v1/webhook', webhook);
 app.use('/api/v1/auth', auth);
+app.use('/api/v1/command', command);
 app.use('/api/v1/unfurl', unfurl);
+app.use('/api/v1/webhook', webhook);
 
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../build', 'index.html'));

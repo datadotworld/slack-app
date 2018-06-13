@@ -20,7 +20,7 @@ const UPDATE = "update";
 const DELETE = "delete";
 const UPLOAD = "upload";
 
-//Possible event entities
+// Possible event entities
 const DATASET = "dataset";
 const INSIGHT = "insight";
 const FILE = "file";
@@ -61,25 +61,34 @@ const getNewDatasetAttachment = (
   const slackUserMentionText = actorSlackId
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
+  const resourceId = `${params.owner}/${params.datasetId}`;
   const attachment = {
     fallback: `${dwActorId} created a new dataset`,
     pretext: `${slackUserMentionText} created a *new dataset*`,
-    title: dataset.description || dataset.title,
+    title: dataset.title,
     title_link: event.links.web.dataset,
     thumb_url:
       dwOwner.avatarUrl ||
       "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
     color: "#5CC0DE",
-    text: dataset.summary,
-    footer: `${params.owner}/${params.datasetId}`,
+    text: dataset.description || "*No Description*",
+    footer: `${resourceId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
     ts: ts,
     mrkdwn_in: ["text", "pretext", "fields"],
+    callback_id: "dataset_subscribe_button",
     actions: [
       {
         type: "button",
         text: "Explore :microscope:",
         url: `${event.links.web.dataset}/workspace`
+      },
+      {
+        name: "subscribe",
+        text: "Subscribe",
+        style: "primary",
+        type: "button",
+        value: `${resourceId}`
       }
     ]
   };
@@ -105,9 +114,7 @@ const getNewDatasetAttachment = (
   } else {
     fields.push({
       title: "File(s)",
-      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
-        params.owner
-      }/${params.datasetId}|add one>_`
+      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
     });
   }
 
@@ -156,9 +163,9 @@ const getLinkedDatasetAttachment = (
     author_name: event.actor,
     author_link: event.links.web.actor,
     author_icon: dwActor.avatarUrl,
-    title: dataset.description || dataset.title,
+    title: dataset.title,
     title_link: `${event.links.web.project}/workspace`,
-    text: dataset.summary,
+    text: dataset.description || "*No Description*",
     thumb_url: "https://cdn.filepicker.io/api/file/F4HMCtpTiqpfQltddbYg",
     footer: `${params.owner}/${params.datasetId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
@@ -206,35 +213,35 @@ const getNewProjectAttachment = (
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
 
+  const resourceId = `${params.owner}/${params.datasetId}`;
+
   const attachment = {
     fallback: `${dwActorId} created a new project`,
     pretext: `${slackUserMentionText} created a *new project*`,
-    title: project.objective || project.title,
+    title: project.title,
     title_link: event.links.web.project,
     thumb_url:
       dwOwner.avatarUrl ||
       "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
     color: "#F6BD68",
-    text: project.summary,
-    footer: `${params.owner}/${params.datasetId}`,
+    text: project.objective || "*No Description*",
+    footer: `${resourceId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
     ts: ts,
     mrkdwn_in: ["text", "pretext", "fields"],
+    callback_id: "dataset_subscribe_button",
     actions: [
       {
         type: "button",
-        text: "Learn more :nerd_face:",
-        url: `${event.links.web.project}`
+        text: "Explore :microscope:",
+        url: `${event.links.web.dataset}/workspace`
       },
       {
+        name: "subscribe",
+        text: "Subscribe",
+        style: "primary",
         type: "button",
-        text: "Discuss :left_speech_bubble:",
-        url: `${event.links.web.project}/discuss`
-      },
-      {
-        type: "button",
-        text: "Contribute :muscle:",
-        url: `${event.links.web.project}/workspace`
+        value: `${resourceId}`
       }
     ]
   };
@@ -246,9 +253,7 @@ const getNewProjectAttachment = (
     if (!lang.isEmpty(files)) {
       let fieldValue = "";
       collection.forEach(files, file => {
-        fieldValue += `• <https://data.world/${params.owner}/${
-          params.datasetId
-        }/workspace/file?filename=${file.name}|${file.name}> _(${(
+        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
           file.sizeInBytes / 1024
         ).toFixed(2)}KB)_\n`;
       });
@@ -261,9 +266,7 @@ const getNewProjectAttachment = (
     } else {
       fields.push({
         title: "File(s)",
-        value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${
-          params.owner
-        }/${params.datasetId}|add one>_`
+        value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
       });
     }
   } else {
@@ -271,9 +274,7 @@ const getNewProjectAttachment = (
     const linkedDatasets = project.linkedDatasets;
     let fieldValue = "";
     collection.forEach(linkedDatasets, linkedDataset => {
-      fieldValue += `• <https://data.world/${params.owner}/${
-        params.datasetId
-      }/workspace/dataset?datasetid=${
+      fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
         linkedDataset.id
       }|${linkedDataset.description || linkedDataset.title}>\n`;
     });

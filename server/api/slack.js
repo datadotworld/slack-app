@@ -7,7 +7,7 @@ const headers = {
 const slack = {
   
   sendResponse(responseUrl, data) {
-    axios.post(responseUrl, data, { headers: headers });
+    return axios.post(responseUrl, data, { headers: headers });
   },
 
   oauthAccess(code) {

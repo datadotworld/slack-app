@@ -8,4 +8,7 @@ const router = express.Router();
 /* Slack command. */
 router.post('/', auth.verifySlackClient, command.validate);
 
+/* Slack action button events. */
+router.post('/action', command.performAction);
+
 module.exports = router;
