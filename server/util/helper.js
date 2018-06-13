@@ -11,7 +11,6 @@ const helper = {
         return params;
       },
       
-      //TODO : This needs to be refactored.
       extractInsightParams(link) {
         let params = {};
         let parts = link.split("/");
@@ -24,7 +23,6 @@ const helper = {
         return params;
       },
       
-      //TODO : This needs to be refactored.
       extractInsightsParams(link) {
         let params = {};
         let parts = link.split("/");
