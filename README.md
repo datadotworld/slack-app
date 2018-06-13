@@ -5,7 +5,7 @@ Data.World slack application.
 
 Click the button below to install data.world slack app in your workspace.
 
-<a href="https://slack.com/oauth/authorize?client_id=215802421649.314971591810&scope=commands,bot,links:read,links:write"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+<a href="https://slack.com/oauth/authorize?client_id=373203963251.380938312853&scope=commands,bot,links:read,links:write"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
 ### How it works
 

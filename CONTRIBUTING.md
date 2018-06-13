@@ -65,8 +65,8 @@
 
         The following should be copied from the install app settings section.
 
-        SLACK_TEAM_TOKEN= slack team oauth access token e.g xoxp-215****...
-        SLACK_BOT_TOKEN= slack bot user oauth token e.g xoxb-322****...
+        SLACK_TEAM_TOKEN= slack team oauth access token e.g xoxp-215****... (only required When app is installed as internal integration.)
+        SLACK_BOT_TOKEN= slack bot user oauth token e.g xoxb-322****...(only required When app is installed as internal integration.)
 
         PORT= node server port (defaults to 5000)
         PG_USERNAME= Postgres username
