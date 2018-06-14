@@ -21,6 +21,7 @@ const array = require("lodash/array");
 const lang = require("lodash/lang");
 const collection = require("lodash/collection");
 const object = require("lodash/object");
+const pretty = require("prettysize");
 const moment = require("moment");
 
 const Channel = require("../models").Channel;
@@ -144,9 +145,7 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, file => {
-      fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
-        file.sizeInBytes / 1024
-      ).toFixed(2)}KB)_\n`;
+      fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
     });
 
     fields.push({
@@ -165,6 +164,7 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
     attachment.fields = fields;
   }
 
+  console.log("#### Sending dataset attachment : " + JSON.stringify(attachment));
   return attachment;
 };
 
@@ -236,9 +236,7 @@ const unfurlProject = (params, owner, notSubcribed) => {
         if (!lang.isEmpty(files)) {
           let fieldValue = "";
           collection.forEach(files, file => {
-            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
-              file.sizeInBytes / 1024
-            ).toFixed(2)}KB)_\n`;
+            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
           });
 
           fields.push({
@@ -313,14 +311,14 @@ const getInsightAttachment = (insight, owner, params) => {
     title_link: params.link,
     text: insight.description,
     image_url: insight.thumbnail,
-    footer: `${author}/${params.projectId}/insights/${insight.id}`,
+    footer: `${params.owner}/${params.projectId}/insights/${insight.id}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
     url: params.link,
     actions: [
       {
         type: "button",
         text: "Discuss :left_speech_bubble:",
-        url: `https://data.world/${author}/${params.projectId}/insights/${
+        url: `https://data.world/${params.owner}/${params.projectId}/insights/${
           insight.id
         }`
       }

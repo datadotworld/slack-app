@@ -26,6 +26,8 @@ const headers = {
 const slack = {
   
   sendResponse(responseUrl, data) {
+    data.replace_original = true;
+    data.delete_original = true;
     return axios.post(responseUrl, data, { headers: headers });
   },
 

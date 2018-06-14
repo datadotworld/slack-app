@@ -21,6 +21,7 @@ const array = require("lodash/array");
 const string = require("lodash/string");
 const collection = require("lodash/collection");
 const lang = require("lodash/lang");
+const pretty = require("prettysize");
 const moment = require("moment");
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
@@ -120,9 +121,7 @@ const getNewDatasetAttachment = (
     collection.forEach(files, file => {
       fieldValue += `• <https://data.world/${params.owner}/${
         params.datasetId
-      }/workspace/file?filename=${file.name}|${file.name}> _(${(
-        file.sizeInBytes / 1024
-      ).toFixed(2)}KB)_\n`;
+      }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
     });
 
     fields.push({
@@ -272,9 +271,7 @@ const getNewProjectAttachment = (
     if (!lang.isEmpty(files)) {
       let fieldValue = "";
       collection.forEach(files, file => {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${(
-          file.sizeInBytes / 1024
-        ).toFixed(2)}KB)_\n`;
+        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
       });
 
       fields.push({
@@ -423,9 +420,7 @@ const getFileUploadAttachment = (
   collection.forEach(files, file => {
     fieldValue += `• <https://data.world/${params.owner}/${
       params.datasetId
-    }/workspace/file?filename=${file.name}|${file.name}> _(${(
-      file.sizeInBytes / 1024
-    ).toFixed(2)}KB)_\n`;
+    }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
   });
 
   fields.push({

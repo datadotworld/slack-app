@@ -364,7 +364,7 @@ const sendSlackMessage = (responseUrl, message, attachments) => {
     if (attachments && !lang.isEmpty(attachments)) {
       data.attachments = attachments;
     }
-    data.replace_original = false;
+    // data.replace_original = false;
     slack.sendResponse(responseUrl, data);
   } catch (error) {
     console.error("Failed to send message to slack", error);
