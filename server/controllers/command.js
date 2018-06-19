@@ -364,7 +364,6 @@ const sendSlackMessage = (responseUrl, message, attachments) => {
     if (attachments && !lang.isEmpty(attachments)) {
       data.attachments = attachments;
     }
-    // data.replace_original = false;
     slack.sendResponse(responseUrl, data);
   } catch (error) {
     console.error("Failed to send message to slack", error);
@@ -598,8 +597,7 @@ const command = {
 
   async validate(req, res, next) {
     // respond to request immediately no need to wait.
-    res.json({ response_type: "in_channel" });
-
+    res.json({ response_type: "ephemeral", text: `\`${req.body.command} ${req.body.text}\``});
     try {
       const channel = await Channel.findOne({
         where: { channelId: req.body.channel_id }
