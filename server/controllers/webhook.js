@@ -91,7 +91,7 @@ const getNewDatasetAttachment = (
       dwOwner.avatarUrl ||
       "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
     color: "#5CC0DE",
-    text: dataset.description || "*No Description*",
+    text: dataset.description || "_No Description_",
     footer: `${resourceId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
     ts: ts,
@@ -118,7 +118,7 @@ const getNewDatasetAttachment = (
   const files = dataset.files;
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
-    collection.forEach(files, file => {
+    collection.forEach(files, (file, index) => {
       if(index < FILES_LIMIT ) {
       fieldValue += `• <https://data.world/${params.owner}/${
         params.datasetId
@@ -188,7 +188,7 @@ const getLinkedDatasetAttachment = (
     author_icon: dwActor.avatarUrl,
     title: dataset.title,
     title_link: `${event.links.web.project}/workspace`,
-    text: dataset.description || "*No Description*",
+    text: dataset.description || "_No Description_",
     thumb_url: "https://cdn.filepicker.io/api/file/F4HMCtpTiqpfQltddbYg",
     footer: `${params.owner}/${params.datasetId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
@@ -247,7 +247,7 @@ const getNewProjectAttachment = (
       dwOwner.avatarUrl ||
       "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
     color: "#F6BD68",
-    text: project.objective || "*No Description*",
+    text: project.objective || "_No Description_",
     footer: `${resourceId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
     ts: ts,
@@ -476,12 +476,17 @@ const extractResouceIdFromWebLink = (webLink, action) => {
   return action === CREATE ? owner : `${owner}/${id}`;
 };
 
-const getEventSubscribedChannels = async resourceId => {
-  const subscriptions = await Subscription.findAll({
-    where: { resourceId: resourceId }
-  });
-  console.log("Found subsciptions : ", JSON.stringify(subscriptions));
-  return collection.map(subscriptions, "channelId");
+const getEventSubscribedChannels = async (resourceId, subscriberId) => {
+  const subscriber = await User.findOne({where: { dwUserId: subscriberId }});
+  if (subscriber) {
+    const subscriptions = await Subscription.findAll({
+      where: { resourceId: resourceId, slackUserId: subscriber.slackId }
+    });
+    console.log("Found subsciptions : ", JSON.stringify(subscriptions));
+    return collection.map(subscriptions, "channelId");
+  }
+  console.error("ERROR: Active DW subscriber not found in DB : ", subscriberId);
+  return;
 };
 
 const handleDatasetEvent = async (
@@ -735,9 +740,17 @@ const webhook = {
         event.links.web.project || event.links.web.dataset,
         event.action
       );
+      // Get DW subscriber id
+      const subscriberId =  event.subscriberid.split(":")[1];
+      // Get subscriber
+      const subscriber = await User.findOne({where: { dwUserId: subscriberId }});
+      if(!subscriber) {
+        console.error("ERROR: Active DW subscriber not found in DB : ", subscriberId);
+        return;
+      }
       // Get subsciptions
       const subscriptions = await Subscription.findAll({
-        where: { resourceId: resourceId }
+        where: { resourceId: resourceId, slackUserId: subscriber.slackId }
       });
       if (!lang.isEmpty(subscriptions)) {
         // Get subscribed channelIds
