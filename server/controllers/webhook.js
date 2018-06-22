@@ -30,7 +30,7 @@ const User = require("../models").User;
 const SlackWebClient = require("@slack/client").WebClient;
 const Sequelize = require("sequelize");
 const { dataworld } = require("../api/dataworld");
-const { helper } = require("../util/helper");
+const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
 
 const Op = Sequelize.Op;
 
@@ -119,9 +119,14 @@ const getNewDatasetAttachment = (
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, file => {
+      if(index < FILES_LIMIT ) {
       fieldValue += `• <https://data.world/${params.owner}/${
         params.datasetId
       }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
+    } else {
+      fieldValue += `<https://data.world/${params.owner}/${params.datasetId}|See more>\n`
+      return false
+    }
     });
 
     fields.push({
@@ -270,8 +275,13 @@ const getNewProjectAttachment = (
     const files = project.files;
     if (!lang.isEmpty(files)) {
       let fieldValue = "";
-      collection.forEach(files, file => {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
+      collection.forEach(files, (file, index) => {
+        if(index < FILES_LIMIT ) {
+          fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+        } else {
+          fieldValue += `<https://data.world/${resourceId}|See more>\n`
+          return false
+        }
       });
 
       fields.push({
@@ -290,9 +300,14 @@ const getNewProjectAttachment = (
     const linkedDatasets = project.linkedDatasets;
     let fieldValue = "";
     collection.forEach(linkedDatasets, linkedDataset => {
-      fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
-        linkedDataset.id
-      }|${linkedDataset.description || linkedDataset.title}>\n`;
+      if (index < LINKED_DATASET_LIMIT) {
+        fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
+          linkedDataset.id
+          }|${linkedDataset.description || linkedDataset.title}>\n`;
+      } else {
+        fieldValue += `<https://data.world/${resourceId}|See more>\n`
+        return false
+      }
     });
 
     fields.push({

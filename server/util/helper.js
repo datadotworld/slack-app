@@ -17,6 +17,8 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const FILES_LIMIT = 5;
+const LINKED_DATASET_LIMIT = 5;
 const helper = {
     extractDatasetOrProjectParams(link) {
         let params = {};
@@ -63,4 +65,4 @@ const helper = {
       }
 };
   
-module.exports = { helper };
+module.exports = { helper, FILES_LIMIT, LINKED_DATASET_LIMIT };

@@ -31,7 +31,7 @@ const Team = require("../models").Team;
 const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
-const { helper } = require("../util/helper");
+const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
 
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
@@ -144,8 +144,13 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
   const files = dataset.files;
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
-    collection.forEach(files, file => {
-      fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
+    collection.forEach(files, (file, index) => {
+      if(index < FILES_LIMIT ) {
+        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+      } else {
+        fieldValue += `<https://data.world/${resourceId}|See more>\n`
+        return false
+      }
     });
 
     fields.push({
@@ -235,8 +240,13 @@ const unfurlProject = (params, owner, notSubcribed) => {
         const files = project.files;
         if (!lang.isEmpty(files)) {
           let fieldValue = "";
-          collection.forEach(files, file => {
-            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
+          collection.forEach(files, (file, index) => {
+            if(index < FILES_LIMIT ) {
+              fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+            } else {
+              fieldValue += `<https://data.world/${resourceId}|See more>\n`
+              return false
+            }
           });
 
           fields.push({
@@ -255,9 +265,14 @@ const unfurlProject = (params, owner, notSubcribed) => {
         const linkedDatasets = project.linkedDatasets;
         let fieldValue = "";
         collection.forEach(linkedDatasets, linkedDataset => {
-          fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
-            linkedDataset.id
-          }|${linkedDataset.description || linkedDataset.title}>\n`;
+          if (index < LINKED_DATASET_LIMIT) {
+            fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
+              linkedDataset.id
+              }|${linkedDataset.description || linkedDataset.title}>\n`;
+          } else {
+            fieldValue += `<https://data.world/${resourceId}|See more>\n`
+            return false
+          }
         });
 
         fields.push({
