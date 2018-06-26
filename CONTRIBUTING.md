@@ -44,12 +44,14 @@
         b. Enable : Always show my bot as online
     4. Event Subscriptions 
         a. Enable events 
-        b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app 
-        is up and running)
+        b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
         c. Add workspace event : link_shared
         d. Add app unfurl domain : data.world
         h. Add bot events : link_shared, member_joined_channel
         i. Click save changes
+    5. Add Interactive Components
+        a. Enable Interactivity
+        b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
 
 #### 6. Add env variables 
     1. Create a .env file in the project /server directory.
@@ -88,10 +90,17 @@
 #### 7. Run the application
     1. From the project root dir run : npm start (server should start on port 5000)
 
-#### 8. Event subscription request url
+#### 8. Event subscription &  Interactive Components request url
     1. Go to slack app settings page 
     2. Go to event subscription section
     3. Enable events 
+    3. Add request url <ngrok url>/api/v1/unfurl/action (Challenge should be successful).
+    4. Click save changes.
+
+    Add request url for Interactive component
+
+    1. Go to event interactive section
+    2. Ensure interactivity is enabled
     3. Add request url <ngrok url>/api/v1/unfurl/action (Challenge should be successful).
     4. Click save changes.
 
