@@ -19,12 +19,13 @@
  */
 const User = require("../models").User;
 const Team = require("../models").Team;
-const { dataworld } = require("../api/dataworld");
-const { slack } = require("../api/slack");
 
 const SlackWebClient = require("@slack/client").WebClient;
 const uuidv1 = require("uuid/v1");
 const Sequelize = require("sequelize");
+
+const { dataworld } = require("../api/dataworld");
+const { slack } = require("../api/slack");
 
 const Op = Sequelize.Op;
 const authUrl = process.env.AUTH_URL;
@@ -39,93 +40,95 @@ const auth = {
         console.warn("User denied oauth request.");
         return res.status(401).send();
       }
-      res.status(500);
-      res.send({ Error: "Looks like we're not getting code." });
-    } else {
-      // If it's there...
-      // call slack api
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
-      slack
-        .oauthAccess(req.query.code)
-        .then(response => {
-          console.log("Slack oauth was successful : ", response.data);
-          // create team with returned data
-          Team.findOrCreate({
-            where: { teamId: response.data.team_id },
-            defaults: {
-              teamDomain: response.data.team_name,
-              accessToken: response.data.access_token,
-              botUserId: response.data.bot.bot_user_id,
-              botAccessToken: response.data.bot.bot_access_token
-            }
-          })
-            .spread(async (team, created) => {
-              if (!created) {
-                // Team record already exits.
-                // Update existing record with new data
-                team.update(
-                  {
-                    teamDomain: response.data.team_name,
-                    accessToken: response.data.access_token,
-                    botUserId: response.data.bot.bot_user_id,
-                    botAccessToken: response.data.bot.bot_access_token
-                  },
-                  {
-                    fields: [
-                      "teamDomain",
-                      "accessToken",
-                      "botUserId",
-                      "botAccessToken"
-                    ]
-                  }
-                );
-              }
-              // deep link to slack app or redirect to slack team in web.
-              res.redirect(
-                `https://slack.com/app_redirect?app=${
-                  process.env.SLACK_APP_ID
-                }&team=${team.teamId}`
-              );
-
-              //inform user via slack that installation was successful
-              const slackBot = new SlackWebClient(
-                process.env.SLACK_BOT_TOKEN || team.botAccessToken
-              );
-
-              const slackUserId = response.data.user_id;
-              const botResponse = await slackBot.im.open(slackUserId);
-              const dmChannelId = botResponse.channel.id;
-              slackBot.chat.postMessage(dmChannelId, "", {
-                attachments: [
-                  {
-                    color: "#79B8FB",
-                    text:
-                      "You've successfully installed Data.World on this Slack workspace :tada: \n" +
-                      "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
-                      "• _/data.world subscribe account_ \n" +
-                      "• _/data.world subscribe owner/dataset_ \n" +
-                      "• _/data.world subscribe owner/project_"
-                  },
-                  {
-                    color: "#79B8FB",
-                    text: `Looking for additional help? Try /data.world help`
-                  }
-                ]
-              });
-            })
-            .catch(error => {
-              // error creating user
-              console.error("Failed to create new Team : " + error.message);
-              // redirect to failure page
-              res.redirect(`${baseUrl}/failed`);
-            });
-        })
-        .catch(error => {
-          console.error("Slack oauth failed : ", error);
-          // redirect to failure page
-          res.redirect(`${baseUrl}failed`);
+      return res
+        .status(500)
+        .send({
+          Error:
+            "Looks like we're not getting the expected code query parameter."
         });
     }
+    // If it's there...
+    // call slack api
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    slack
+      .oauthAccess(req.query.code)
+      .then(response => {
+        // create team with returned data
+        Team.findOrCreate({
+          where: { teamId: response.data.team_id },
+          defaults: {
+            teamDomain: response.data.team_name,
+            accessToken: response.data.access_token,
+            botUserId: response.data.bot.bot_user_id,
+            botAccessToken: response.data.bot.bot_access_token
+          }
+        })
+          .spread(async (team, created) => {
+            if (!created) {
+              // Team record already exits.
+              // Update existing record with new data
+              team.update(
+                {
+                  teamDomain: response.data.team_name,
+                  accessToken: response.data.access_token,
+                  botUserId: response.data.bot.bot_user_id,
+                  botAccessToken: response.data.bot.bot_access_token
+                },
+                {
+                  fields: [
+                    "teamDomain",
+                    "accessToken",
+                    "botUserId",
+                    "botAccessToken"
+                  ]
+                }
+              );
+            }
+            // deep link to slack app or redirect to slack team in web.
+            res.redirect(
+              `https://slack.com/app_redirect?app=${
+                process.env.SLACK_APP_ID
+              }&team=${team.teamId}`
+            );
+
+            //inform user via slack that installation was successful
+            const slackBot = new SlackWebClient(
+              process.env.SLACK_BOT_TOKEN || team.botAccessToken
+            );
+
+            const slackUserId = response.data.user_id;
+            const botResponse = await slackBot.im.open(slackUserId);
+            const dmChannelId = botResponse.channel.id;
+            slackBot.chat.postMessage(dmChannelId, "", {
+              attachments: [
+                {
+                  color: "#79B8FB",
+                  text:
+                    "You've successfully installed Data.World on this Slack workspace :tada: \n" +
+                    "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
+                    "• _/data.world subscribe account_ \n" +
+                    "• _/data.world subscribe owner/dataset_ \n" +
+                    "• _/data.world subscribe owner/project_"
+                },
+                {
+                  color: "#79B8FB",
+                  text: `Looking for additional help? Try /data.world help`
+                }
+              ]
+            });
+          })
+          .catch(error => {
+            // error creating user
+            console.error("Failed to create new Team : " + error.message);
+            // redirect to failure page
+            res.redirect(`${baseUrl}/failed`);
+          });
+      })
+      .catch(error => {
+        console.error("Slack oauth failed : ", error);
+        // redirect to failure page
+        res.redirect(`${baseUrl}failed`);
+      });
   },
 
   verifySlackClient(req, res, next) {
@@ -148,7 +151,7 @@ const auth = {
       let isAssociated = false;
       if (user) {
         // Check user association
-        // User found, now verify token is active.
+        // User found, now verify DW token is active/valid.
         isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
       }
       return [isAssociated, user];
@@ -268,7 +271,13 @@ const auth = {
           { dwAccessToken: token, dwUserId: dwUserResponse.data.id },
           { fields: ["dwAccessToken", "dwUserId"] }
         );
-        res.status(200).json({url:`https://slack.com/app_redirect?app=${process.env.SLACK_APP_ID}&team=${team.teamId}`});
+        res
+          .status(200)
+          .json({
+            url: `https://slack.com/app_redirect?app=${
+              process.env.SLACK_APP_ID
+            }&team=${team.teamId}`
+          });
         //inform user via slack that authentication was successful
         const slackUserId = user.slackId;
         const botResponse = await slackBot.im.open(slackUserId);
@@ -280,7 +289,7 @@ const auth = {
       }
     } catch (error) {
       console.error(error);
-      return res.status(500).send("failed");
+      return res.status(500).send("Slack association failed.");
     }
   }
 };

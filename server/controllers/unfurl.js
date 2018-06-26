@@ -17,6 +17,11 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const Channel = require("../models").Channel;
+const Subscription = require("../models").Subscription;
+const Team = require("../models").Team;
+const SlackWebClient = require("@slack/client").WebClient;
+
 const array = require("lodash/array");
 const lang = require("lodash/lang");
 const collection = require("lodash/collection");
@@ -24,11 +29,6 @@ const object = require("lodash/object");
 const pretty = require("prettysize");
 const moment = require("moment");
 
-const Channel = require("../models").Channel;
-const Subscription = require("../models").Subscription;
-const Team = require("../models").Team;
-
-const SlackWebClient = require("@slack/client").WebClient;
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
 const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
@@ -37,8 +37,8 @@ const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = (token, channel, link) => {
-  let url = link.url;
-  let params = {};
+  const url = link.url;
+  const params = {};
 
   if (insightLinkFormat.test(url)) {
     params = helper.extractInsightParams(url);
@@ -65,16 +65,16 @@ const unfurlDatasetOrProject = (params, channelId) => {
       const subscription = await Subscription.findOne({
         where: { resourceId: resourceId, channelId: channelId }
       });
-      const notSubcribed = subscription ? false : true;
+      const notSubscribed = subscription ? false : true;
       const ownerResponse = await dataworld.getDWUser(
         params.token,
         params.owner
       );
       const owner = ownerResponse.data;
       if (dataset.isProject) {
-        return unfurlProject(params, owner, notSubcribed);
+        return unfurlProject(params, owner, notSubscribed);
       } else {
-        return unfurlDataset(params, dataset, owner, notSubcribed);
+        return unfurlDataset(params, dataset, owner, notSubscribed);
       }
     })
     .catch(error => {
@@ -83,7 +83,7 @@ const unfurlDatasetOrProject = (params, channelId) => {
     });
 };
 
-const unfurlDataset = (params, dataset, owner, notSubcribed) => {
+const unfurlDataset = (params, dataset, owner, notSubscribed) => {
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
   const offset = moment(
@@ -118,7 +118,7 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
     url: params.link
   };
 
-  if (notSubcribed) {
+  if (notSubscribed) {
     attachment.actions.push({
       name: "subscribe",
       text: "Subscribe :nerd_face:",
@@ -145,11 +145,13 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
-      if(index < FILES_LIMIT ) {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+      if (index < FILES_LIMIT) {
+        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+          file.name
+        }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
       } else {
-        fieldValue += `<https://data.world/${resourceId}|See more>\n`
-        return false
+        fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+        return false;
       }
     });
 
@@ -168,12 +170,10 @@ const unfurlDataset = (params, dataset, owner, notSubcribed) => {
   if (fields.length > 0) {
     attachment.fields = fields;
   }
-
-  console.log("#### Sending dataset attachment : " + JSON.stringify(attachment));
   return attachment;
 };
 
-const unfurlProject = (params, owner, notSubcribed) => {
+const unfurlProject = (params, owner, notSubscribed) => {
   // Fetch resource info from DW
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
@@ -212,7 +212,7 @@ const unfurlProject = (params, owner, notSubcribed) => {
         url: params.link
       };
 
-      if (notSubcribed) {
+      if (notSubscribed) {
         attachment.actions.push({
           name: "subscribe",
           text: "Subscribe :nerd_face:",
@@ -221,7 +221,7 @@ const unfurlProject = (params, owner, notSubcribed) => {
           value: `${resourceId}`
         });
       }
-      
+
       const fields = [];
 
       const tags = project.tags;
@@ -241,11 +241,13 @@ const unfurlProject = (params, owner, notSubcribed) => {
         if (!lang.isEmpty(files)) {
           let fieldValue = "";
           collection.forEach(files, (file, index) => {
-            if(index < FILES_LIMIT ) {
-              fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+            if (index < FILES_LIMIT) {
+              fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+                file.name
+              }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
             } else {
-              fieldValue += `<https://data.world/${resourceId}|See more>\n`
-              return false
+              fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+              return false;
             }
           });
 
@@ -268,10 +270,10 @@ const unfurlProject = (params, owner, notSubcribed) => {
           if (index < LINKED_DATASET_LIMIT) {
             fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
               linkedDataset.id
-              }|${linkedDataset.description || linkedDataset.title}>\n`;
+            }|${linkedDataset.description || linkedDataset.title}>\n`;
           } else {
-            fieldValue += `<https://data.world/${resourceId}|See more>\n`
-            return false
+            fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+            return false;
           }
         });
 
@@ -396,7 +398,7 @@ const handleLinkSharedEvent = async (event, teamId) => {
 
 const handleJoinedChannelEvent = event => {
   // Update known channel
-  //add channel if not existing
+  // Add channel if not existing
   // create user with nonce and the slackdata
   Channel.findOrCreate({
     where: { channelId: event.channel },
@@ -424,8 +426,7 @@ const unfurl = {
       // respond to request immediately no need to wait.
       res.json({ response_type: "in_channel" });
 
-      let event = req.body.event;
-      console.log("Recieved new event from slack : ", event);
+      const event = req.body.event;
       switch (event.type) {
         case "link_shared":
           handleLinkSharedEvent(event, req.body.team_id);

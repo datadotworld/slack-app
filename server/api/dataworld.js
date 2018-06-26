@@ -18,19 +18,20 @@
  * data.world, Inc. (http://data.world/).
  */
 const axios = require("axios");
+
 const accessTokenUrl = process.env.ACCESS_TOKEN_URL;
 const baseUrl = process.env.DW_BASE_URL;
+const events = { events: ["ALL"] };
 const headers = {
   "Accept": "application/json",
   "Content-Type": "application/json"
 };
-const events = { events: ["ALL"] };
 
 const post = (url, data, token) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  return axios.post(url, data, { headers: headers });
+  return axios.post(url, data, { headers });
 };
 
 const put = (url, data, token) => {
@@ -59,17 +60,6 @@ const dataworld = {
   exchangeAuthCode(code) {
     let requestUrl = `${accessTokenUrl}${code}`;
     return post(requestUrl, {}, null);
-  },
-
-  async verifyDwToken(token) {
-    let requestUrl = `${baseUrl}/user`;
-    try {
-      let res = await get(requestUrl, token);
-      return res.data ? true : false;
-    } catch(error) {
-      console.error("DW token verification failed : ", error);
-      return false;
-    }
   },
 
   getActiveDWUser(token) {
@@ -107,6 +97,11 @@ const dataworld = {
     return get(requestUrl, token);
   },
 
+  getSubscriptions(token) {
+    let requestUrl = `${baseUrl}/user/webhooks`;
+    return get(requestUrl, token);
+  },
+
   subscribeToDataset(owner, id, token) {
     let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
     return put(requestUrl, events, token);
@@ -137,9 +132,15 @@ const dataworld = {
     return del(requestUrl, token);
   },
 
-  getSubscriptions(token) {
-    let requestUrl = `${baseUrl}/user/webhooks`;
-    return get(requestUrl, token);
+  async verifyDwToken(token) {
+    let requestUrl = `${baseUrl}/user`;
+    try {
+      let res = await get(requestUrl, token);
+      return res.data ? true : false;
+    } catch(error) {
+      console.error("DW token verification failed : ", error);
+      return false;
+    }
   }
 };
 

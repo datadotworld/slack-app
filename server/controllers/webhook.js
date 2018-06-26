@@ -17,18 +17,20 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const Channel = require("../models").Channel;
+const Subscription = require("../models").Subscription;
+const Team = require("../models").Team;
+const User = require("../models").User;
+
 const array = require("lodash/array");
 const string = require("lodash/string");
 const collection = require("lodash/collection");
 const lang = require("lodash/lang");
 const pretty = require("prettysize");
 const moment = require("moment");
-const Channel = require("../models").Channel;
-const Subscription = require("../models").Subscription;
-const Team = require("../models").Team;
-const User = require("../models").User;
-const SlackWebClient = require("@slack/client").WebClient;
 const Sequelize = require("sequelize");
+const SlackWebClient = require("@slack/client").WebClient;
+
 const { dataworld } = require("../api/dataworld");
 const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
 
@@ -36,9 +38,6 @@ const Op = Sequelize.Op;
 
 // Possible event actions
 const CREATE = "create";
-const UPDATE = "update";
-const DELETE = "delete";
-const UPLOAD = "upload";
 
 // Possible event entities
 const DATASET = "dataset";
@@ -119,14 +118,18 @@ const getNewDatasetAttachment = (
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
-      if(index < FILES_LIMIT ) {
-      fieldValue += `• <https://data.world/${params.owner}/${
-        params.datasetId
-      }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
-    } else {
-      fieldValue += `<https://data.world/${params.owner}/${params.datasetId}|See more>\n`
-      return false
-    }
+      if (index < FILES_LIMIT) {
+        fieldValue += `• <https://data.world/${params.owner}/${
+          params.datasetId
+        }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
+          file.sizeInBytes
+        )})_\n`;
+      } else {
+        fieldValue += `<https://data.world/${params.owner}/${
+          params.datasetId
+        }|See more>\n`;
+        return false;
+      }
     });
 
     fields.push({
@@ -276,11 +279,13 @@ const getNewProjectAttachment = (
     if (!lang.isEmpty(files)) {
       let fieldValue = "";
       collection.forEach(files, (file, index) => {
-        if(index < FILES_LIMIT ) {
-          fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`
+        if (index < FILES_LIMIT) {
+          fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+            file.name
+          }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
         } else {
-          fieldValue += `<https://data.world/${resourceId}|See more>\n`
-          return false
+          fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+          return false;
         }
       });
 
@@ -303,10 +308,10 @@ const getNewProjectAttachment = (
       if (index < LINKED_DATASET_LIMIT) {
         fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
           linkedDataset.id
-          }|${linkedDataset.description || linkedDataset.title}>\n`;
+        }|${linkedDataset.description || linkedDataset.title}>\n`;
       } else {
-        fieldValue += `<https://data.world/${resourceId}|See more>\n`
-        return false
+        fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+        return false;
       }
     });
 
@@ -430,12 +435,13 @@ const getFileUploadAttachment = (
 
   const fields = [];
   let fieldValue = "";
-  console.log("Fields in files: ", files);
 
   collection.forEach(files, file => {
     fieldValue += `• <https://data.world/${params.owner}/${
       params.datasetId
-    }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(file.sizeInBytes)})_\n`;
+    }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
+      file.sizeInBytes
+    )})_\n`;
   });
 
   fields.push({
@@ -449,40 +455,20 @@ const getFileUploadAttachment = (
   return attachment;
 };
 
-const getFileEventAttachmentText = event => {
-  switch (event.action) {
-    case UPLOAD:
-      return `Added new file(s) to <${event.links.web.project ||
-        event.links.web.dataset}|${event.project || event.dataset}>`;
-    case UPDATE:
-      return `Updated file <${event.links.web.file}|${event.file}> in <${event
-        .links.web.project || event.links.web.dataset}|${event.project ||
-        event.dataset}>`;
-    case DELETE:
-      return `Removed file <${event.links.web.file}|${event.file}> from <${event
-        .links.web.project || event.links.web.dataset}|${event.project ||
-        event.dataset}>`;
-    default:
-      console.warn("Unrecognized Insight event action : ", event);
-      return "";
-  }
-};
-
 const extractResouceIdFromWebLink = (webLink, action) => {
-  let data = webLink.split("/");
-  let owner = data[data.length - 2];
-  let id = data[data.length - 1];
-  // create events will be received for account subscriptions
+  const data = webLink.split("/");
+  const owner = data[data.length - 2];
+  const id = data[data.length - 1];
+  // create events will only be received for account subscriptions
   return action === CREATE ? owner : `${owner}/${id}`;
 };
 
 const getEventSubscribedChannels = async (resourceId, subscriberId) => {
-  const subscriber = await User.findOne({where: { dwUserId: subscriberId }});
+  const subscriber = await User.findOne({ where: { dwUserId: subscriberId } });
   if (subscriber) {
     const subscriptions = await Subscription.findAll({
       where: { resourceId: resourceId, slackUserId: subscriber.slackId }
     });
-    console.log("Found subsciptions : ", JSON.stringify(subscriptions));
     return collection.map(subscriptions, "channelId");
   }
   console.error("ERROR: Active DW subscriber not found in DB : ", subscriberId);
@@ -556,7 +542,6 @@ const handleDatasetEvent = async (
           user.dwAccessToken
         );
         const prevProject = prevProjectResponse.data;
-
         // Check size diff to ensure we send notification only when files are added not deleted.
         // This will keep the amount of notification going to slack minimal. Maybe we'll reconsider and handle file deletion in v2.
         if (data.files.length > prevProject.files.length) {
@@ -709,10 +694,7 @@ const handleFileEvents = async (
 
 const sendEventToSlack = async (resourceId, channelIds, attachment) => {
   //send attachment to all subscribed channels
-  console.log("Sending attachment : ", attachment);
-  console.log("Found channelIds : ", channelIds);
   collection.forEach(channelIds, async channelId => {
-    console.log("Sending attachment to channel : " + channelId);
     const channel = await Channel.findOne({ where: { channelId: channelId } });
     sendSlackMessage(channelId, attachment, channel.teamId);
   });
@@ -732,7 +714,6 @@ const webhook = {
   async process(req, res) {
     try {
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
-      console.log("Incoming DW webhook event : ", event);
       res.status(200).send();
       // process event based on type
       // Get resource id
@@ -741,11 +722,16 @@ const webhook = {
         event.action
       );
       // Get DW subscriber id
-      const subscriberId =  event.subscriberid.split(":")[1];
+      const subscriberId = event.subscriberid.split(":")[1];
       // Get subscriber
-      const subscriber = await User.findOne({where: { dwUserId: subscriberId }});
-      if(!subscriber) {
-        console.error("ERROR: Active DW subscriber not found in DB : ", subscriberId);
+      const subscriber = await User.findOne({
+        where: { dwUserId: subscriberId }
+      });
+      if (!subscriber) {
+        console.error(
+          "ERROR: Active DW subscriber not found in DB : ",
+          subscriberId
+        );
         return;
       }
       // Get subsciptions

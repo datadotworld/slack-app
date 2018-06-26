@@ -19,15 +19,11 @@
  */
 const axios = require("axios");
 const headers = {
-  Accept: "application/json",
+  "Accept": "application/json",
   "Content-Type": "application/json"
 };
 
 const slack = {
-  
-  sendResponse(responseUrl, data) {
-    return axios.post(responseUrl, data, { headers: headers });
-  },
 
   oauthAccess(code) {
     let params = {
@@ -37,9 +33,13 @@ const slack = {
     };
 
     return axios.get(process.env.SLACK_OAUTH_ACCESS_URL, {
-      headers: headers,
-      params: params
+      headers,
+      params
     });
+  },
+  
+  sendResponse(responseUrl, data) {
+    return axios.post(responseUrl, data, { headers });
   }
 };
 

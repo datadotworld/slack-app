@@ -21,20 +21,20 @@ const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const User = require("../models").User;
 
+const array = require("lodash/array");
+const collection = require("lodash/collection");
+const lang = require("lodash/lang");
+
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
 const { helper } = require("../util/helper");
 const { slack } = require("../api/slack");
 
-const array = require("lodash/array");
-const collection = require("lodash/collection");
-const lang = require("lodash/lang");
-
 // data.world command format
 const dwWebhookCommandFormat = /^((\/data.world)(subscribe|unsubscribe|list|help) [\w-\/\:\.]+)$/i;
 const dwSupportCommandFormat = /^((\/data.world)(list|help))$/i;
 
-// sub command format
+// Sub command format
 const subscribeFormat = /^((\/data.world)(subscribe) (https\:\/\/data.world\/|)[\w-\/]+)$/i;
 const unsubscribeFormat = /^((\/data.world)(unsubscribe) (https\:\/\/data.world\/|)[\w-\/]+)$/i;
 
@@ -45,27 +45,32 @@ const SUBSCRIBE_ACCOUNT = "SUBSCRIBE_ACCOUNT";
 const UNSUBSCRIBE_DATASET_OR_PROJECT = "UNSUBSCRIBE_DATASET_OR_PROJECT";
 const UNSUBSCRIBE_ACCOUNT = "UNSUBSCRIBE_ACCOUNT";
 
-const subscribeToDatasetOrProject = async (
+// This method handles subscription to projects and datasets
+const subscribeToProjectOrDataset = async (
   userid,
   channelid,
   command,
   responseUrl,
   token
 ) => {
-  // use dataworld wrapper to subscribe to dataset
+  // extract params from command
   const commandParams = extractParamsFromCommand(command, false);
   try {
+    // check if subscription already exist in channel
     const subscription = await Subscription.findOne({
-      where: { resourceId: `${commandParams.owner}/${commandParams.id}` }, channelId: channelid
+      where: { resourceId: `${commandParams.owner}/${commandParams.id}` },
+      channelId: channelid
     });
     let message = "Subscription already exists in this channel.";
     if (!subscription) {
+      // subscription not found in channel
+      // use dataworld wrapper to subscribe to project
       const response = await dataworld.subscribeToProject(
         commandParams.owner,
         commandParams.id,
         token
       );
-      console.log("DW subscribe to project / dataset response : ", response.data);
+      // Add subscription record to DB.
       addSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
@@ -78,7 +83,7 @@ const subscribeToDatasetOrProject = async (
     sendSlackMessage(responseUrl, message);
   } catch (error) {
     console.warn("Failed to subscribe to project : ", error);
-    // Handle as dataset
+    // Failed ot subscribe as project, Handle as dataset
     subscribeToDataset(userid, channelid, command, responseUrl, token);
   }
 };
@@ -98,7 +103,6 @@ const subscribeToDataset = async (
       commandParams.id,
       token
     );
-    console.log("DW subscribe to dataset response : ", response.data);
     addSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
@@ -116,6 +120,7 @@ const subscribeToDataset = async (
   }
 };
 
+// Subscribe to a DW account
 const subscribeToAccount = async (
   userid,
   channelid,
@@ -124,10 +129,11 @@ const subscribeToAccount = async (
   token
 ) => {
   // use dataworld wrapper to subscribe to account
-  let commandParams = extractParamsFromCommand(command, true);
+  const commandParams = extractParamsFromCommand(command, true);
   try {
     const subscription = await Subscription.findOne({
-      where: { resourceId: commandParams.id }, channelId: channelid
+      where: { resourceId: commandParams.id },
+      channelId: channelid
     });
     let message = "Subscription already exists in this channel.";
     if (!subscription) {
@@ -161,19 +167,19 @@ const unsubscribeFromDatasetOrProject = async (
   responseUrl,
   token
 ) => {
-  // use dataworld wrapper to unsubscribe to dataset
-  let commandParams = extractParamsFromCommand(command, false);
-  let resourceId = `${commandParams.owner}/${commandParams.id}`;
+  // extract params from command 
+  const commandParams = extractParamsFromCommand(command, false);
+  const resourceId = `${commandParams.owner}/${commandParams.id}`;
   const isValid = await belongsToChannelAndUser(resourceId, channelid, userId);
-  if (isValid) {
-    // If subscription belongs to channel and the actor(user) go ahead and unsubscribe
+  if (isValid) {// If subscription belongs to channel and the actor(user), then go ahead and unsubscribe
     try {
-      let response = await dataworld.unsubscribeFromDataset(
+      // use dataworld wrapper to unsubscribe to dataset
+      const response = await dataworld.unsubscribeFromDataset(
         commandParams.owner,
         commandParams.id,
         token
       );
-      console.log("DW unsubscribe from dataset response : ", response.status);
+      // remove subscription from DB.
       removeSubscriptionRecord(commandParams.owner, commandParams.id, userId);
       // send successful unsubscription message to Slack
       sendSlackMessage(responseUrl, response.data.message);
@@ -206,7 +212,6 @@ const unsubscribeFromProject = async (
       commandParams.id,
       token
     );
-    console.log("DW unsubscribe from project response : ", response);
     removeSubscriptionRecord(commandParams.owner, commandParams.id, userId);
     // send successful unsubscription message to Slack
     sendSlackMessage(responseUrl, response.data.message);
@@ -259,11 +264,7 @@ const belongsToChannelAndUser = async (resourceid, channelid, userId) => {
   const subscription = await Subscription.findOne({
     where: { resourceId: resourceid, channelId: channelid, slackUserId: userId }
   });
-  if (subscription) {
-    return true;
-  } else {
-    return false;
-  }
+  return subscription ? true : false;
 };
 
 const listSubscription = async (req, token) => {
@@ -427,7 +428,7 @@ const subscribeOrUnsubscribe = (req, token) => {
 
   switch (commandType) {
     case SUBSCRIBE_DATASET_OR_PROJECT:
-      subscribeToDatasetOrProject(
+      subscribeToProjectOrDataset(
         req.body.user_id,
         req.body.channel_id,
         command,
@@ -495,7 +496,7 @@ const showHelp = responseUrl => {
 
 const handleButtonAction = (payload, action, user) => {
   if (payload.callback_id === "dataset_subscribe_button") {
-    subscribeToDatasetOrProject(
+    subscribeToProjectOrDataset(
       payload.user.id,
       payload.channel.id,
       `subscribe ${action.value}`,
@@ -611,7 +612,10 @@ const command = {
 
   async validate(req, res, next) {
     // respond to request immediately no need to wait.
-    res.json({ response_type: "ephemeral", text: `\`${req.body.command} ${req.body.text}\``});
+    res.json({
+      response_type: "ephemeral",
+      text: `\`${req.body.command} ${req.body.text}\``
+    });
     try {
       const channel = await Channel.findOne({
         where: { channelId: req.body.channel_id }

@@ -18,7 +18,9 @@
  * data.world, Inc. (http://data.world/).
  */
 const express = require('express');
+
 const { webhook } = require('../controllers/webhook');
+
 const router = express.Router();
 
 /* Listen for DW incomming webhook. */

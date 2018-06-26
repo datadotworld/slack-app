@@ -18,8 +18,10 @@
  * data.world, Inc. (http://data.world/).
  */
 const express = require('express');
+
 const { auth } = require('../controllers/auth');
 const { command } = require('../controllers/command');
+
 const router = express.Router();
 
 /* Slack command. */
