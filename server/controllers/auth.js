@@ -125,7 +125,7 @@ const auth = {
           });
       })
       .catch(error => {
-        console.error("Slack oauth failed : ", error);
+        console.error("Slack oauth failed : ", error.message);
         // redirect to failure page
         res.redirect(`${baseUrl}failed`);
       });
@@ -156,7 +156,7 @@ const auth = {
       }
       return [isAssociated, user];
     } catch (error) {
-      console.error("Error verifying slack association status : ", error);
+      console.error("Error verifying slack association status : ", error.message);
       throw error;
     }
   },
@@ -204,7 +204,7 @@ const auth = {
         })
         .catch(console.error);
     } catch (error) {
-      console.error("Begin slack association error : ", error);
+      console.error("Begin slack association error : ", error.message);
     }
   },
 

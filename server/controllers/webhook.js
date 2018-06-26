@@ -23,7 +23,6 @@ const Team = require("../models").Team;
 const User = require("../models").User;
 
 const array = require("lodash/array");
-const string = require("lodash/string");
 const collection = require("lodash/collection");
 const lang = require("lodash/lang");
 const pretty = require("prettysize");
@@ -47,19 +46,6 @@ const FILE = "file";
 const getEntityType = event => {
   // File event returns array. we handle that here.
   return lang.isArray(event) ? event[0].entity : event.entity;
-};
-
-const getAttachment = (author, authorLink, owner, ownerLink, text) => {
-  const attachment = {
-    author_name: author,
-    author_link: authorLink,
-    color: "#79B8FB",
-    text: text,
-    footer: `Owner : ${owner}`,
-    footer_icon: ownerLink
-  };
-
-  return attachment;
 };
 
 const getNewDatasetAttachment = (
@@ -604,7 +590,7 @@ const handleDatasetEvent = async (
       sendEventToSlack(resourceId, channelIds, attachment);
     }
   } catch (error) {
-    console.error("Failed to handle dataset event : ", error);
+    console.error("Failed to handle dataset event : ", error.message);
   }
 };
 
@@ -794,7 +780,7 @@ const webhook = {
         console.warn("No subscriptions found for event.");
       }
     } catch (error) {
-      console.error("Failed to process webhook event! : ", error);
+      console.error("Failed to process webhook event! : ", error.message);
     }
   }
 };

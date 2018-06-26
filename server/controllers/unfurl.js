@@ -22,7 +22,6 @@ const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
 const SlackWebClient = require("@slack/client").WebClient;
 
-const array = require("lodash/array");
 const lang = require("lodash/lang");
 const collection = require("lodash/collection");
 const object = require("lodash/object");
@@ -38,7 +37,7 @@ const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-
 
 const messageAttachmentFromLink = (token, channel, link) => {
   const url = link.url;
-  const params = {};
+  let params = {};
 
   if (insightLinkFormat.test(url)) {
     params = helper.extractInsightParams(url);

@@ -82,7 +82,7 @@ const subscribeToProjectOrDataset = async (
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
   } catch (error) {
-    console.warn("Failed to subscribe to project : ", error);
+    console.warn("Failed to subscribe to project : ", error.message);
     // Failed ot subscribe as project, Handle as dataset
     subscribeToDataset(userid, channelid, command, responseUrl, token);
   }
@@ -112,7 +112,7 @@ const subscribeToDataset = async (
     // send successful subscription message to Slack
     sendSlackMessage(responseUrl, response.data.message);
   } catch (error) {
-    console.warn("Failed to subscribe to dataset : ", error);
+    console.warn("Failed to subscribe to dataset : ", error.message);
     sendSlackMessage(
       responseUrl,
       "Failed to subscribe to dataset : " + commandParams.id
@@ -152,7 +152,7 @@ const subscribeToAccount = async (
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
   } catch (error) {
-    console.error("Error subscribing to account : ", error);
+    console.error("Error subscribing to account : ", error.message);
     sendSlackMessage(
       responseUrl,
       "Failed to subscribe to : " + commandParams.id
@@ -167,11 +167,12 @@ const unsubscribeFromDatasetOrProject = async (
   responseUrl,
   token
 ) => {
-  // extract params from command 
+  // extract params from command
   const commandParams = extractParamsFromCommand(command, false);
   const resourceId = `${commandParams.owner}/${commandParams.id}`;
   const isValid = await belongsToChannelAndUser(resourceId, channelid, userId);
-  if (isValid) {// If subscription belongs to channel and the actor(user), then go ahead and unsubscribe
+  if (isValid) {
+    // If subscription belongs to channel and the actor(user), then go ahead and unsubscribe
     try {
       // use dataworld wrapper to unsubscribe to dataset
       const response = await dataworld.unsubscribeFromDataset(
@@ -182,9 +183,9 @@ const unsubscribeFromDatasetOrProject = async (
       // remove subscription from DB.
       removeSubscriptionRecord(commandParams.owner, commandParams.id, userId);
       // send successful unsubscription message to Slack
-      sendSlackMessage(responseUrl, response.data.message);
+      sendSlackMessage(responseUrl, response.data.message, null, true);
     } catch (error) {
-      console.warn("Failed to unsubscribe from dataset : ", error);
+      console.warn("Failed to unsubscribe from dataset : ", error.message);
       // Handle as project
       unsubscribeFromProject(userId, channelid, command, responseUrl, token);
     }
@@ -216,7 +217,7 @@ const unsubscribeFromProject = async (
     // send successful unsubscription message to Slack
     sendSlackMessage(responseUrl, response.data.message);
   } catch (error) {
-    console.error("Error unsubscribing from project : ", error);
+    console.error("Error unsubscribing from project : ", error.message);
     sendSlackMessage(
       responseUrl,
       "Failed to unsubscribe from : " + commandParams.id
@@ -243,9 +244,9 @@ const unsubscribeFromAccount = async (
       );
       removeSubscriptionRecord(commandParams.owner, commandParams.id, userId);
       // send successful unsubscription message to Slack
-      sendSlackMessage(responseUrl, response.data.message);
+      sendSlackMessage(responseUrl, response.data.message, null, true);
     } catch (error) {
-      console.error("Error unsubscribing from account : ", error);
+      console.error("Error unsubscribing from account : ", error.message);
       sendSlackMessage(
         responseUrl,
         "Failed to unsubscribe from account : " + commandParams.id
@@ -326,7 +327,7 @@ const listSubscription = async (req, token) => {
     }
     sendSlackMessage(responseUrl, message, attachments);
   } catch (error) {
-    console.error("Error getting subscriptions : ", error);
+    console.error("Error getting subscriptions : ", error.message);
     sendSlackMessage(responseUrl, "Failed to get subscription list.");
   }
 };
@@ -346,7 +347,10 @@ const addSubscriptionRecord = (owner, id, userId, channelId) => {
     })
     .catch(error => {
       // error creating channel
-      console.error("Failed to create new Subscription record : ", error);
+      console.error(
+        "Failed to create new Subscription record : ",
+        error.message
+      );
     });
 };
 
@@ -357,7 +361,7 @@ const removeSubscriptionRecord = (owner, id, userId) => {
     where: { resourceId: resourceId, slackUserId: userId }
   }).catch(error => {
     // error deleting Subscription
-    console.error("Failed to create new Subscription record : ", error);
+    console.error("Failed to create new Subscription record : ", error.message);
   });
 };
 
@@ -373,25 +377,29 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
   return params;
 };
 
-const sendSlackMessage = (responseUrl, message, attachments) => {
+const sendSlackMessage = (
+  responseUrl,
+  message,
+  attachments,
+  replaceOriginal
+) => {
   try {
     let data = { text: message };
     if (attachments && !lang.isEmpty(attachments)) {
       data.attachments = attachments;
     }
+    data.replace_original = replaceOriginal ? replaceOriginal : false;
     slack.sendResponse(responseUrl, data);
   } catch (error) {
-    console.error("Failed to send message to slack", error);
+    console.error("Failed to send message to slack", error.message);
   }
 };
 
 const sendSlackAttachment = (responseUrl, attachment) => {
   try {
-    console.log("Sending slack attachment to res url ....", responseUrl);
-    console.log("Sending slack attachment ....", attachment);
     slack.sendResponse(responseUrl, attachment).catch(console.error);
   } catch (error) {
-    console.error("Failed to send attachment to slack", error);
+    console.error("Failed to send attachment to slack", error.message);
   }
 };
 
@@ -401,7 +409,7 @@ const sendSlackAttachments = (responseUrl, attachments) => {
     data.attachments = attachments;
     slack.sendResponse(responseUrl, data).catch(console.error);
   } catch (error) {
-    console.error("Failed to send attachments to slack", error);
+    console.error("Failed to send attachments to slack", error.message);
   }
 };
 
@@ -560,53 +568,61 @@ const handleMenuAction = (payload, action, user) => {
 
 const command = {
   async performAction(req, res) {
-    const payload = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
-    console.log("payload is : " + JSON.stringify(payload));
     res.status(200).send();
-    const channel = await Channel.findOne({
-      where: { channelId: payload.channel.id }
-    });
-    if (channel) {
-      const [isAssociated, user] = await auth.checkSlackAssociationStatus(
-        payload.user.id
-      );
-      let message;
-      if (isAssociated) {
-        // subscribe or unsubscribe to/from resource.
-        collection.forEach(payload.actions, action => {
-          switch (action.type) {
-            case "button":
-              handleButtonAction(payload, action, user);
-              break;
-            case "select":
-              handleMenuAction(payload, action, user);
-              break;
-            default:
-              console.warn("Unknown action type : ", action.type);
-              break;
-          }
-        });
+    const payload = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
+    try {
+      const channel = await Channel.findOne({
+        where: { channelId: payload.channel.id }
+      });
+      if (channel) {
+        const [isAssociated, user] = await auth.checkSlackAssociationStatus(
+          payload.user.id
+        );
+        let message;
+        if (isAssociated) {
+          // subscribe or unsubscribe to/from resource.
+          collection.forEach(payload.actions, action => {
+            switch (action.type) {
+              case "button":
+                handleButtonAction(payload, action, user);
+                break;
+              case "select":
+                handleMenuAction(payload, action, user);
+                break;
+              default:
+                console.warn("Unknown action type : ", action.type);
+                break;
+            }
+          });
+        } else {
+          // User is not associated begin association process.
+          message = `Sorry <@${
+            payload.user.id
+          }>, authentication is required for this action. I can help you, just check my DM for the next step, and then you can try the command again.`;
+          auth.beginSlackAssociation(
+            payload.user.id,
+            payload.user.name,
+            payload.team.id
+          );
+        }
+        if (message) {
+          sendSlackMessage(payload.response_url, message);
+        }
       } else {
-        // User is not associated begin association process.
+        // inform user that bot user must be invited to channel
         message = `Sorry <@${
           payload.user.id
-        }>, authentication is required for this action. I can help you, just check my DM for the next step, and then you can try the command again.`;
-        auth.beginSlackAssociation(
-          payload.user.id,
-          payload.user.name,
-          payload.team.id
-        );
-      }
-      if (message) {
+        }>, you can't perform this action until you've invited <@dataworld> to this channel.`;
         sendSlackMessage(payload.response_url, message);
+        return;
       }
-    } else {
-      // inform user that bot user must be invited to channel
+    } catch (error) {
+      // An internal error has occured send a descriptive message
+      console.error("Failed to perform action : ", error.message);
       message = `Sorry <@${
         payload.user.id
-      }>, you can't perform this action until you've invited <@dataworld> to this channel.`;
+      }>, we're unable to perform this action at the moment right now. Kindly, try again later.`;
       sendSlackMessage(payload.response_url, message);
-      return;
     }
   },
 
@@ -674,7 +690,7 @@ const command = {
       }
     } catch (error) {
       // An internal error has occured send a descriptive message
-      console.error("Failed to process command : ", error);
+      console.error("Failed to process command : ", error.message);
       message = `Sorry <@${
         req.body.user_id
       }>, we're unable to process command \`${
