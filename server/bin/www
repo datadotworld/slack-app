@@ -31,6 +31,7 @@ models.sequelize.sync({force: false}).then(function () {
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
+  server.on('unhandledRejection', onRejection);
 });
 
 /**
@@ -79,6 +80,11 @@ function onError(error) {
     default:
       throw error;
   }
+}
+
+function onRejection(error) {
+  console.log('##### caught rejection error!');
+  console.error(error);
 }
 
 /**

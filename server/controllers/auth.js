@@ -28,7 +28,9 @@ const { dataworld } = require("../api/dataworld");
 const { slack } = require("../api/slack");
 
 const Op = Sequelize.Op;
-const authUrl = process.env.AUTH_URL;
+const authUrl = `${process.env.DW_AUTH_BASE_URL}?client_id=${
+  process.env.DW_CLIENT_ID
+}&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
 const slackVerificationToken = process.env.SLACK_VERIFICATION_TOKEN;
 
 const auth = {
@@ -40,12 +42,9 @@ const auth = {
         console.warn("User denied oauth request.");
         return res.status(401).send();
       }
-      return res
-        .status(500)
-        .send({
-          Error:
-            "Looks like we're not getting the expected code query parameter."
-        });
+      return res.status(500).send({
+        Error: "Looks like we're not getting the expected code query parameter."
+      });
     }
     // If it's there...
     // call slack api
@@ -137,6 +136,9 @@ const auth = {
       return res.status(200).send({ challenge: req.body.challenge });
     }
     if (req.body.token === slackVerificationToken) {
+      if (req.body.ssl_check) {
+        return res.status(200).send();
+      }
       next();
     } else {
       next(new Error("Could not verify the request originated from Slack."));
@@ -156,7 +158,10 @@ const auth = {
       }
       return [isAssociated, user];
     } catch (error) {
-      console.error("Error verifying slack association status : ", error.message);
+      console.error(
+        "Error verifying slack association status : ",
+        error.message
+      );
       throw error;
     }
   },
@@ -257,6 +262,7 @@ const auth = {
         return res.status(400).send("failed");
       } else {
         const token = response.data.access_token;
+        console.log("State is : " + req.query.state);
         const nonce = req.query.state;
         // use nonce to retrieve user
         // Add returned token
@@ -271,13 +277,11 @@ const auth = {
           { dwAccessToken: token, dwUserId: dwUserResponse.data.id },
           { fields: ["dwAccessToken", "dwUserId"] }
         );
-        res
-          .status(200)
-          .json({
-            url: `https://slack.com/app_redirect?app=${
-              process.env.SLACK_APP_ID
-            }&team=${team.teamId}`
-          });
+        res.status(200).json({
+          url: `https://slack.com/app_redirect?app=${
+            process.env.SLACK_APP_ID
+          }&team=${user.teamId}`
+        });
         //inform user via slack that authentication was successful
         const slackUserId = user.slackId;
         const botResponse = await slackBot.im.open(slackUserId);

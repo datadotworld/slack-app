@@ -383,16 +383,14 @@ const sendSlackMessage = (
   attachments,
   replaceOriginal
 ) => {
-  try {
-    let data = { text: message };
-    if (attachments && !lang.isEmpty(attachments)) {
-      data.attachments = attachments;
-    }
-    data.replace_original = replaceOriginal ? replaceOriginal : false;
-    slack.sendResponse(responseUrl, data);
-  } catch (error) {
-    console.error("Failed to send message to slack", error.message);
+  let data = { text: message };
+  if (attachments && !lang.isEmpty(attachments)) {
+    data.attachments = attachments;
   }
+  data.replace_original = replaceOriginal ? replaceOriginal : false;
+  slack.sendResponse(responseUrl, data).catch(error => {
+    console.error("Failed to send message to slack", error.message);
+  });
 };
 
 const sendSlackAttachment = (responseUrl, attachment) => {
@@ -568,7 +566,12 @@ const handleMenuAction = (payload, action, user) => {
 
 const command = {
   async performAction(req, res) {
+    // respond with 200 within 3secs
     res.status(200).send();
+    // If it's ssl check no need for further processing.
+    if (req.body.ssl_check) {
+      return;
+    }
     const payload = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
     try {
       const channel = await Channel.findOne({

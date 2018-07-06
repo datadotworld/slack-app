@@ -4,13 +4,22 @@
     "repository": "https://github.com/datadotworld/slack-app",
     "scripts": {},
     "env": {
-      "ACCESS_TOKEN_URL": {
+      "DW_AUTH_BASE_URL": {
         "required": true
-      },
-      "AUTH_URL": {
-        "required": true
-      },
+      },      
       "DW_BASE_URL": {
+        "required": true
+      },      
+      "DW_CLIENT_ID": {
+        "required": true
+      },      
+      "DW_CLIENT_SECRET": {
+        "required": true
+      },      
+      "DW_GET_TOKEN_BASE_URL": {
+        "required": true
+      },      
+      "DW_REDIRECT_URI": {
         "required": true
       },
       "SLACK_APP_ID": {
@@ -27,9 +36,6 @@
       },
       "SLACK_TEAM_TOKEN": {
         "required": false
-      },
-      "SLACK_OAUTH_ACCESS_URL": {
-        "required": true
       },
       "SLACK_VERIFICATION_TOKEN": {
         "required": true

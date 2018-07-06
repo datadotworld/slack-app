@@ -35,13 +35,13 @@ class Auth extends Component {
       .get("/api/v1/auth/exchange?code=" + code + "&state=" + state)
       .then(response => {
         const { statusText, data } = response;
-
         return statusText === "OK"
           ? this.redirectSuccess(data.url)
           : this.redirectFailed();
       })
-      .catch(function(error) {
+      .catch(error => {
         console.log(error);
+        this.redirectFailed();
       });
   };
 

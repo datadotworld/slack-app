@@ -19,11 +19,16 @@
  */
 const axios = require("axios");
 
-const accessTokenUrl = process.env.ACCESS_TOKEN_URL;
+const accessTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${
+  process.env.DW_CLIENT_ID
+}&client_secret=${
+  process.env.DW_CLIENT_SECRET
+}&grant_type=authorization_code&code=`;
+
 const baseUrl = process.env.DW_BASE_URL;
 const events = { events: ["ALL"] };
 const headers = {
-  "Accept": "application/json",
+  Accept: "application/json",
   "Content-Type": "application/json"
 };
 
@@ -56,7 +61,6 @@ const del = (url, token) => {
 };
 
 const dataworld = {
-
   exchangeAuthCode(code) {
     let requestUrl = `${accessTokenUrl}${code}`;
     return post(requestUrl, {}, null);
@@ -137,7 +141,7 @@ const dataworld = {
     try {
       let res = await get(requestUrl, token);
       return res.data ? true : false;
-    } catch(error) {
+    } catch (error) {
       console.error("DW token verification failed : ", error.message);
       return false;
     }

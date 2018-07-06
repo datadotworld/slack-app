@@ -32,7 +32,7 @@ const slack = {
       client_secret: process.env.SLACK_CLIENT_SECRET
     };
 
-    return axios.get(process.env.SLACK_OAUTH_ACCESS_URL, {
+    return axios.get("https://slack.com/api/oauth.access", {
       headers,
       params
     });

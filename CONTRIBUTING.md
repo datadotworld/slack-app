@@ -63,7 +63,6 @@
         SLACK_CLIENT_ID= slack client id
         SLACK_CLIENT_SECRET= slack client secret
         SLACK_VERIFICATION_TOKEN= slack verification token
-        SLACK_OAUTH_ACCESS_URL= https://slack.com/api/oauth.access
 
         The following should be copied from the install app settings section.
 
@@ -75,17 +74,6 @@
         PG_PASSWORD= Postgres password
         PG_DATABASE= Postgres database name(slackapp)
         DW_BASE_URL= https://api.data.world/v0
-        
-        AUTH_URL= DW auth url (e.g https://data.world/embed/oauth-authorize
-        ?client_id=<Your DW client_id>
-        &redirect_uri=<ngrok url>/oauth/code_callback
-        &state=)
-        
-        ACCESS_TOKEN_URL=  DW access token request url (e.g https://data.world/oauth/access_token
-        ?client_id=<Your DW client_id>
-        &client_secret=<Your DW client_secret>
-        &grant_type=authorization_code
-        &code=)
 
 #### 7. Run the application
     1. From the project root dir run : npm start (server should start on port 5000)
@@ -112,13 +100,14 @@
 #### 10. Deploy to heroku
     You can deploy to Heroku using the heroku deploy button but before that ensure you do the following:
 
-    1. Replace <ngrok url> with <heroku app base url> in the following : 
+    1. Replace <ngrok url> with <heroku app base url> in your slack app settings: 
     
         a. DW Oauth Client redirect_url
-        b. Slash Commands request url
-        c. Oauth & Permission redirect url
-        d. Redirect_uri query param in env variale AUTH_URL
+        b. Interactive Components request url
+        c. Event subscription request url
+        d. Slash Commands request url
+        e. Oauth & Permission redirect url
 
-    2. Now you can click the heroku button below to deploy. 
+    2. Now you can click the heroku button below to deploy and fill in the env variables. 
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master) 

@@ -418,24 +418,19 @@ const handleJoinedChannelEvent = event => {
 
 const unfurl = {
   processRequest(req, res) {
-    if (req.body.challenge) {
-      // Respond to slack challenge.
-      res.status(200).send({ challenge: req.body.challenge });
-    } else {
-      // respond to request immediately no need to wait.
-      res.json({ response_type: "in_channel" });
+    // respond to request immediately no need to wait.
+    res.json({ response_type: "in_channel" });
 
-      const event = req.body.event;
-      switch (event.type) {
-        case "link_shared":
-          handleLinkSharedEvent(event, req.body.team_id);
-          break;
-        case "member_joined_channel":
-          handleJoinedChannelEvent(event);
-          break;
-        default:
-          break;
-      }
+    const event = req.body.event;
+    switch (event.type) {
+      case "link_shared":
+        handleLinkSharedEvent(event, req.body.team_id);
+        break;
+      case "member_joined_channel":
+        handleJoinedChannelEvent(event);
+        break;
+      default:
+        break;
     }
   }
 };

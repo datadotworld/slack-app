@@ -7,6 +7,12 @@
 # production
 /build
 
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
 # misc
 package-lock.json
 .DS_Store
