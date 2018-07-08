@@ -18,7 +18,6 @@
  * data.world, Inc. (http://data.world/).
  */
 const express = require('express');
-const config = require('./configs/config');
 const path = require('path');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');

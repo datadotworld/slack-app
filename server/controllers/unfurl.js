@@ -30,7 +30,7 @@ const moment = require("moment");
 
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
-const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
+const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../helpers/helper");
 
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;

@@ -34,10 +34,15 @@
     "dev": "npm run heroku-prebuild && npm run start",
     "heroku-prebuild": "npm install && npm run build",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "test": "npm run unit:test && npm run integration:test",
+    "unit:test": "jasmine-node server/test/unit",
+    "integration:test": "jasmine-node server/test/integration",
+    "test:coverage": "istanbul cover --report html jasmine-node server/test/unit",
+    "eject": "react-scripts eject",
+    "help": "istanbul help"
   },
   "devDependencies": {
+    "istanbul": "1.0.0-alpha.2",
     "jasmine-node": "^1.15.0",
     "slack-mock": "^1.1.1"
   }

@@ -27,7 +27,7 @@ const lang = require("lodash/lang");
 
 const { auth } = require("./auth");
 const { dataworld } = require("../api/dataworld");
-const { helper } = require("../util/helper");
+const { helper } = require("../helpers/helper");
 const { slack } = require("../api/slack");
 
 // data.world command format

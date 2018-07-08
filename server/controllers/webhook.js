@@ -31,7 +31,7 @@ const Sequelize = require("sequelize");
 const SlackWebClient = require("@slack/client").WebClient;
 
 const { dataworld } = require("../api/dataworld");
-const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../util/helper");
+const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../helpers/helper");
 
 const Op = Sequelize.Op;
 

@@ -145,6 +145,10 @@ const auth = {
     }
   },
 
+  multiply(multiplier1, multiplier2) {
+    return multiplier1 * multiplier2;
+  },
+
   async checkSlackAssociationStatus(slackId) {
     try {
       const user = await User.findOne({
