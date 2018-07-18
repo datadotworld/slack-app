@@ -19,8 +19,8 @@
  */
 const express = require('express');
 
-const { auth } = require('../controllers/auth');
-const { command } = require('../controllers/command');
+const auth = require('../controllers/auth');
+const command = require('../controllers/command');
 
 const router = express.Router();
 

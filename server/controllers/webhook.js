@@ -30,8 +30,8 @@ const moment = require("moment");
 const Sequelize = require("sequelize");
 const SlackWebClient = require("@slack/client").WebClient;
 
-const { dataworld } = require("../api/dataworld");
-const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../helpers/helper");
+const dataworld = require("../api/dataworld");
+const helper = require("../helpers/helper");
 
 const Op = Sequelize.Op;
 
@@ -104,7 +104,7 @@ const getNewDatasetAttachment = (
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
-      if (index < FILES_LIMIT) {
+      if (index < helper.FILES_LIMIT) {
         fieldValue += `• <https://data.world/${params.owner}/${
           params.datasetId
         }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
@@ -265,7 +265,7 @@ const getNewProjectAttachment = (
     if (!lang.isEmpty(files)) {
       let fieldValue = "";
       collection.forEach(files, (file, index) => {
-        if (index < FILES_LIMIT) {
+        if (index < helper.FILES_LIMIT) {
           fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
             file.name
           }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
@@ -291,7 +291,7 @@ const getNewProjectAttachment = (
     const linkedDatasets = project.linkedDatasets;
     let fieldValue = "";
     collection.forEach(linkedDatasets, linkedDataset => {
-      if (index < LINKED_DATASET_LIMIT) {
+      if (index < helper.LINKED_DATASET_LIMIT) {
         fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
           linkedDataset.id
         }|${linkedDataset.description || linkedDataset.title}>\n`;
@@ -472,7 +472,7 @@ const handleDatasetEvent = async (
   try {
     // Fetch necessary DW resources
     const isProject = event.links.web.project ? true : false; // check type.
-    const params = helper.extractDatasetOrProjectParams(
+    const params = helper.extractDatasetOrProjectParamsFromLink(
       event.links.web.project || event.links.web.dataset
     );
     const response = isProject
@@ -602,7 +602,7 @@ const handleInsightEvent = async (
   dwActorId,
   actorSlackId
 ) => {
-  const params = helper.extractDatasetOrProjectParams(event.links.web.project);
+  const params = helper.extractDatasetOrProjectParamsFromLink(event.links.web.project);
   const dwInsightId = helper.extractIdFromLink(event.links.web.insight);
   const response = await dataworld.getInsight(
     dwInsightId,
@@ -639,7 +639,7 @@ const handleFileEvents = async (
 
   // retrieve the first event from the array.
   const event = events[0];
-  const params = helper.extractDatasetOrProjectParams(
+  const params = helper.extractDatasetOrProjectParamsFromLink(
     event.links.web.project || event.links.web.dataset
   );
   const isProjectFiles = event.links.web.project ? true : false;
@@ -682,15 +682,21 @@ const sendEventToSlack = async (resourceId, channelIds, attachment) => {
   //send attachment to all subscribed channels
   collection.forEach(channelIds, async channelId => {
     const channel = await Channel.findOne({ where: { channelId: channelId } });
-    sendSlackMessage(channelId, attachment, channel.teamId);
+    sendSlackMessage(channelId, channel.slackUserId, attachment, channel.teamId);
   });
 };
 
-const sendSlackMessage = async (channelId, attachment, teamId) => {
+const sendSlackMessage = async (channelId, slackUserId, attachment, teamId) => {
   const team = await Team.findOne({ where: { teamId: teamId } });
   const slackBot = new SlackWebClient(
     process.env.SLACK_BOT_TOKEN || team.botAccessToken
   );
+
+  if(channelId.startsWith("D")) { // if subscription was added in DM channel, we should reach user via bot DM channel 
+    const botResponse = await slackBot.im.open(slackUserId);
+    channelId = botResponse.channel.id;
+  }
+
   slackBot.chat.postMessage(channelId, "", {
     attachments: [attachment]
   });
@@ -699,6 +705,7 @@ const sendSlackMessage = async (channelId, attachment, teamId) => {
 const webhook = {
   async process(req, res) {
     try {
+      console.log("received DW event : " + JSON.stringify(req.body))
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
       res.status(200).send();
       // process event based on type

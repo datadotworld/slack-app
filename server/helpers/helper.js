@@ -17,52 +17,96 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const Subscription = require("../models").Subscription;
 const FILES_LIMIT = 5;
 const LINKED_DATASET_LIMIT = 5;
-const helper = {
-  extractDatasetOrProjectParams(link) {
-    let params = {};
-    const cleanLink = link.replace(/(https\:\/\/data.world\/|)/g, "");
-    const pathNames = cleanLink.split("/");
+const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
+  process.env.DW_CLIENT_ID
+}&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
 
-    params.owner = pathNames[0];
-    params.datasetId = pathNames[1];
-    params.link = link;
+const extractParamsFromCommand = (command, isAccountCommand) => {
+  const params = {};
+  const parts = command.split(" ");
+  const datasetInfo = parts[parts.length - 1];
+  const data = datasetInfo.split("/");
 
-    return params;
-  },
+  params.owner = isAccountCommand ? null : data[data.length - 2];
+  params.id = data[data.length - 1];
 
-  extractInsightParams(link) {
-    let params = {};
-    let parts = link.split("/");
+  return params;
+};
 
-    params.insightId = parts[parts.length - 1];
-    params.projectId = parts[parts.length - 3];
-    params.owner = parts[parts.length - 4];
-    params.link = link;
+const extractDatasetOrProjectParamsFromLink = link => {
+  let params = {};
+  const cleanLink = link.replace(/(https\:\/\/data.world\/|)/g, "");
+  const pathNames = cleanLink.split("/");
 
-    return params;
-  },
+  params.owner = pathNames[0];
+  params.datasetId = pathNames[1];
+  params.link = link;
 
-  extractInsightsParams(link) {
-    let params = {};
-    let parts = link.split("/");
+  return params;
+};
 
-    params.projectId = parts[parts.length - 2];
-    params.owner = parts[parts.length - 3];
-    params.link = link;
+const extractInsightParams = link => {
+  let params = {};
+  let parts = link.split("/");
 
-    return params;
-  },
+  params.insightId = parts.pop();
+  parts.pop();
+  params.projectId = parts.pop();
+  params.owner = parts.pop();
+  params.link = link;
 
-  extractIdFromLink(link) {
-    let data = link.split("/");
-    return data[data.length - 1];
-  },
+  return params;
+};
 
-  cleanSlackLinkInput(link) {
-    return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
+const extractInsightsParams = link => {
+  const params = {};
+  const parts = link.split("/");
+
+  parts.pop();
+  params.projectId = parts.pop();
+  params.owner = parts.pop();
+  params.link = link;
+
+  return params;
+};
+
+const extractIdFromLink = link => {
+  const data = link.split("/");
+  return data.pop();
+};
+
+const cleanSlackLinkInput = link => {
+  return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
+};
+
+const belongsToChannelAndUser = async (resourceid, channelid, userId) => {
+  try {
+    const subscription = await Subscription.findOne({
+      where: {
+        resourceId: resourceid,
+        channelId: channelid,
+        slackUserId: userId
+      }
+    });
+    return subscription ? true : false;
+  } catch (error) {
+    console.error("Failed to fecth subscription from DB", error);
+    return false;
   }
 };
 
-module.exports = { helper, FILES_LIMIT, LINKED_DATASET_LIMIT };
+module.exports = {
+  FILES_LIMIT,
+  LINKED_DATASET_LIMIT,
+  DW_AUTH_URL,
+  extractParamsFromCommand,
+  extractDatasetOrProjectParamsFromLink,
+  extractInsightParams,
+  extractInsightsParams,
+  extractIdFromLink,
+  cleanSlackLinkInput,
+  belongsToChannelAndUser
+};

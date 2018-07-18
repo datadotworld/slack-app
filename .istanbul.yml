@@ -1,5 +1,0 @@
-verbose: false
-instrumentation:
-    excludes: ['**/src/**', '**/build/**', '**/migrations/**']
-    include-all-sources: true
-    es-modules: true

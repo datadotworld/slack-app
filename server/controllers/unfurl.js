@@ -20,7 +20,6 @@
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
-const SlackWebClient = require("@slack/client").WebClient;
 
 const lang = require("lodash/lang");
 const collection = require("lodash/collection");
@@ -28,9 +27,10 @@ const object = require("lodash/object");
 const pretty = require("prettysize");
 const moment = require("moment");
 
-const { auth } = require("./auth");
-const { dataworld } = require("../api/dataworld");
-const { helper, FILES_LIMIT, LINKED_DATASET_LIMIT } = require("../helpers/helper");
+const auth = require("./auth");
+const dataworld = require("../api/dataworld");
+const helper = require("../helpers/helper");
+const slack = require("../api/slack");
 
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
@@ -44,7 +44,7 @@ const messageAttachmentFromLink = (token, channel, link) => {
     params.token = token;
     return unfurlInsight(params);
   } else if (dwLinkFormat.test(url)) {
-    params = helper.extractDatasetOrProjectParams(url);
+    params = helper.extractDatasetOrProjectParamsFromLink(url);
     params.token = token;
     return unfurlDatasetOrProject(params, channel);
   } else {
@@ -64,16 +64,16 @@ const unfurlDatasetOrProject = (params, channelId) => {
       const subscription = await Subscription.findOne({
         where: { resourceId: resourceId, channelId: channelId }
       });
-      const notSubscribed = subscription ? false : true;
+      const addSubcribeAction = subscription ? false : true;
       const ownerResponse = await dataworld.getDWUser(
         params.token,
         params.owner
       );
       const owner = ownerResponse.data;
       if (dataset.isProject) {
-        return unfurlProject(params, owner, notSubscribed);
+        return unfurlProject(params, owner, addSubcribeAction);
       } else {
-        return unfurlDataset(params, dataset, owner, notSubscribed);
+        return unfurlDataset(params, dataset, owner, addSubcribeAction);
       }
     })
     .catch(error => {
@@ -82,7 +82,7 @@ const unfurlDatasetOrProject = (params, channelId) => {
     });
 };
 
-const unfurlDataset = (params, dataset, owner, notSubscribed) => {
+const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
   const offset = moment(
@@ -117,7 +117,7 @@ const unfurlDataset = (params, dataset, owner, notSubscribed) => {
     url: params.link
   };
 
-  if (notSubscribed) {
+  if (addSubcribeAction) {
     attachment.actions.push({
       name: "subscribe",
       text: "Subscribe :nerd_face:",
@@ -144,7 +144,7 @@ const unfurlDataset = (params, dataset, owner, notSubscribed) => {
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
-      if (index < FILES_LIMIT) {
+      if (index < helper.FILES_LIMIT) {
         fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
           file.name
         }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
@@ -172,7 +172,7 @@ const unfurlDataset = (params, dataset, owner, notSubscribed) => {
   return attachment;
 };
 
-const unfurlProject = (params, owner, notSubscribed) => {
+const unfurlProject = (params, owner, addSubcribeAction) => {
   // Fetch resource info from DW
   return dataworld
     .getProject(params.datasetId, params.owner, params.token)
@@ -211,7 +211,7 @@ const unfurlProject = (params, owner, notSubscribed) => {
         url: params.link
       };
 
-      if (notSubscribed) {
+      if (addSubcribeAction) {
         attachment.actions.push({
           name: "subscribe",
           text: "Subscribe :nerd_face:",
@@ -240,7 +240,7 @@ const unfurlProject = (params, owner, notSubscribed) => {
         if (!lang.isEmpty(files)) {
           let fieldValue = "";
           collection.forEach(files, (file, index) => {
-            if (index < FILES_LIMIT) {
+            if (index < helper.FILES_LIMIT) {
               fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
                 file.name
               }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
@@ -265,8 +265,8 @@ const unfurlProject = (params, owner, notSubscribed) => {
         // there are linked datasets
         const linkedDatasets = project.linkedDatasets;
         let fieldValue = "";
-        collection.forEach(linkedDatasets, linkedDataset => {
-          if (index < LINKED_DATASET_LIMIT) {
+        collection.forEach(linkedDatasets, (linkedDataset, index) => {
+          if (index < helper.LINKED_DATASET_LIMIT) {
             fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
               linkedDataset.id
             }|${linkedDataset.description || linkedDataset.title}>\n`;
@@ -357,9 +357,7 @@ const handleLinkSharedEvent = async (event, teamId) => {
       // User is associated, carry on and unfold url
       let token = user.dwAccessToken;
       const team = await Team.findOne({ where: { teamId: teamId } });
-      const slack = new SlackWebClient(
-        process.env.SLACK_TEAM_TOKEN || team.accessToken
-      );
+      const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
       // retrieve user dw access token
       Promise.all(
         event.links.map(
@@ -375,7 +373,12 @@ const handleLinkSharedEvent = async (event, teamId) => {
         ) // remove url from attachment object
         // Invoke the Slack Web API to append the attachment
         .then(unfurls =>
-          slack.chat.unfurl(event.message_ts, event.channel, unfurls)
+          slack.sendUnfurlAttachments(
+            event.message_ts,
+            event.channel,
+            unfurls,
+            teamToken
+          )
         )
         .catch(console.error);
     } else {

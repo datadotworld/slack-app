@@ -60,92 +60,107 @@ const del = (url, token) => {
   return axios.delete(url, { headers: headers });
 };
 
-const dataworld = {
-  exchangeAuthCode(code) {
-    let requestUrl = `${accessTokenUrl}${code}`;
-    return post(requestUrl, {}, null);
-  },
+const exchangeAuthCode = code => {
+  const requestUrl = `${accessTokenUrl}${code}`;
+  return post(requestUrl, {}, null);
+};
 
-  getActiveDWUser(token) {
-    let requestUrl = `${baseUrl}/user`;
-    return get(requestUrl, token);
-  },
+const getActiveDWUser = token => {
+  const requestUrl = `${baseUrl}/user`;
+  return get(requestUrl, token);
+};
 
-  getDWUser(token, account) {
-    let requestUrl = `${baseUrl}/users/${account}`;
-    return get(requestUrl, token);
-  },
+const getDWUser = (token, account) => {
+  const requestUrl = `${baseUrl}/users/${account}`;
+  return get(requestUrl, token);
+};
 
-  getDataset(id, owner, token) {
-    let requestUrl = `${baseUrl}/datasets/${owner}/${id}`;
-    return get(requestUrl, token);
-  },
+const getDataset = (id, owner, token) => {
+  const requestUrl = `${baseUrl}/datasets/${owner}/${id}`;
+  return get(requestUrl, token);
+};
 
-  getProject(id, owner, token) {
-    let requestUrl = `${baseUrl}/projects/${owner}/${id}`;
-    return get(requestUrl, token);
-  },
+const getProject = (id, owner, token) => {
+  const requestUrl = `${baseUrl}/projects/${owner}/${id}`;
+  return get(requestUrl, token);
+};
 
-  getProjectByVersion(id, owner, versionId, token) {
-    let requestUrl = `${baseUrl}/projects/${owner}/${id}/v/${versionId}`;
-    return get(requestUrl, token);
-  },
+const getProjectByVersion = (id, owner, versionId, token) => {
+  const requestUrl = `${baseUrl}/projects/${owner}/${id}/v/${versionId}`;
+  return get(requestUrl, token);
+};
 
-  getInsight(id, projectId, owner, token) {
-    let requestUrl = `${baseUrl}/insights/${owner}/${projectId}/${id}`;
-    return get(requestUrl, token);
-  },
+const getInsight = (id, projectId, owner, token) => {
+  const requestUrl = `${baseUrl}/insights/${owner}/${projectId}/${id}`;
+  return get(requestUrl, token);
+};
 
-  getInsights(projectId, owner, token) {
-    let requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
-    return get(requestUrl, token);
-  },
+const getInsights = (projectId, owner, token) => {
+  const requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
+  return get(requestUrl, token);
+};
 
-  getSubscriptions(token) {
-    let requestUrl = `${baseUrl}/user/webhooks`;
-    return get(requestUrl, token);
-  },
+const getSubscriptions = token => {
+  const requestUrl = `${baseUrl}/user/webhooks`;
+  return get(requestUrl, token);
+};
 
-  subscribeToDataset(owner, id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    return put(requestUrl, events, token);
-  },
+const subscribeToDataset = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
+  return put(requestUrl, events, token);
+};
 
-  subscribeToProject(owner, id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    return put(requestUrl, events, token);
-  },
+const subscribeToProject = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
+  return put(requestUrl, events, token);
+};
 
-  subscribeToAccount(id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    return put(requestUrl, events, token);
-  },
+const subscribeToAccount = (id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
+  return put(requestUrl, events, token);
+};
 
-  unsubscribeFromDataset(owner, id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
-    return del(requestUrl, token);
-  },
+const unsubscribeFromDataset = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
+  return del(requestUrl, token);
+};
 
-  unsubscribeFromProject(owner, id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
-    return del(requestUrl, token);
-  },
+const unsubscribeFromProject = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
+  return del(requestUrl, token);
+};
 
-  unsubscribeFromAccount(id, token) {
-    let requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
-    return del(requestUrl, token);
-  },
+const unsubscribeFromAccount = (id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
+  return del(requestUrl, token);
+};
 
-  async verifyDwToken(token) {
-    let requestUrl = `${baseUrl}/user`;
-    try {
-      let res = await get(requestUrl, token);
-      return res.data ? true : false;
-    } catch (error) {
-      console.error("DW token verification failed : ", error.message);
-      return false;
-    }
+const verifyDwToken = async token => {
+  const requestUrl = `${baseUrl}/user`;
+  try {
+    const res = await get(requestUrl, token);
+    return res.data ? true : false;
+  } catch (error) {
+    console.error("DW token verification failed : ", error);
+    return false;
   }
 };
 
-module.exports = { dataworld };
+module.exports = {
+  exchangeAuthCode,
+  getActiveDWUser,
+  getDWUser,
+  getDataset,
+  getProject,
+  getProjectByVersion,
+  getInsight,
+  getInsights,
+  getSubscriptions,
+  subscribeToDataset,
+  subscribeToProject,
+  subscribeToAccount,
+  unsubscribeFromDataset,
+  unsubscribeFromProject,
+  unsubscribeFromAccount,
+  verifyDwToken
+};
