@@ -267,7 +267,7 @@ describe("Test Auth controller methods", () => {
     const responseUrl = "responseUrl";
     const token = "token";
 
-    helper.getSubscriptionStatus = jest.fn(() => [ false, false ]);
+    helper.getSubscriptionStatus = jest.fn(() => [false, false]);
     slack.sendResponse = jest.fn(() => Promise.resolve());
 
     await command.unsubscribeFromDatasetOrProject(
@@ -355,7 +355,13 @@ describe("Test Auth controller methods", () => {
       );
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
-      await command.unsubscribeFromProject(channelId, userid, cmd, responseUrl, token);
+      await command.unsubscribeFromProject(
+        channelId,
+        userid,
+        cmd,
+        responseUrl,
+        token
+      );
 
       expect(Subscription.destroy).toHaveBeenCalledTimes(1);
       expect(dataworld.unsubscribeFromProject).toHaveBeenCalledTimes(1);
@@ -381,7 +387,7 @@ describe("Test Auth controller methods", () => {
       };
 
       Subscription.destroy = jest.fn(() => Promise.resolve());
-      helper.getSubscriptionStatus = jest.fn(() => [ true, true]);
+      helper.getSubscriptionStatus = jest.fn(() => [true, true]);
       dataworld.unsubscribeFromAccount = jest.fn(() =>
         Promise.resolve({ data })
       );
@@ -456,7 +462,12 @@ describe("Test Auth controller methods", () => {
     slack.sendResponse = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() => subscriptions);
 
-    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
+    await command.listSubscription(
+      req.body.response_url,
+      req.body.channel_id,
+      req.body.user_id,
+      false
+    );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
@@ -481,7 +492,12 @@ describe("Test Auth controller methods", () => {
     slack.sendResponse = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() => []);
 
-    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
+    await command.listSubscription(
+      req.body.response_url,
+      req.body.channel_id,
+      req.body.user_id,
+      false
+    );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
@@ -507,7 +523,12 @@ describe("Test Auth controller methods", () => {
       Promise.reject(new Error("Test error"))
     );
 
-    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
+    await command.listSubscription(
+      req.body.response_url,
+      req.body.channel_id,
+      req.body.user_id,
+      false
+    );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
@@ -545,7 +566,7 @@ describe("Test Auth controller methods", () => {
       replace_original: false
     };
 
-    await command.showHelp(responseUrl)
+    await command.showHelp(responseUrl);
 
     expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
 

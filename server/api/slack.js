@@ -29,13 +29,13 @@ const DM_CHANNEL = "DM_CHANNEL";
 const GROUP_CHANNEL = "GROUP_CHANNEL";
 const PUBLIC_CHANNEL = "PUBLIC_CHANNEL"; // public or private channels.
 
-const getChannelType = (channelId) => {
+const getChannelType = channelId => {
   // determine type of channel
   if (channelId.startsWith("D")) {
     return DM_CHANNEL;
   } else if (channelId.startsWith("G")) {
     return GROUP_CHANNEL;
-  } else if(channelId.startsWith("C")) {
+  } else if (channelId.startsWith("C")) {
     return PUBLIC_CHANNEL;
   }
   console.error("Unknown channel type : ", channelId);
@@ -44,7 +44,7 @@ const getChannelType = (channelId) => {
 
 const isDMChannel = channelId => {
   return channelId.startsWith("D");
-}
+};
 
 // TODO: Handle channel list response pagination when checking bot presence in channels
 // https://api.slack.com/methods/channels.list
@@ -52,18 +52,20 @@ const isDMChannel = channelId => {
 const botBelongsToChannel = async (channelId, botAccessToken) => {
   const slackBot = new SlackWebClient(botAccessToken);
   const type = getChannelType(channelId);
-  switch(type) {
+  switch (type) {
     case DM_CHANNEL:
       const imsRes = await slackBot.im.list();
       return imsRes.ims.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
       const channelsRes = await slackBot.channels.list();
-      return channelsRes.channels.some(channel => channel.id === channelId && channel.is_member);
+      return channelsRes.channels.some(
+        channel => channel.id === channelId && channel.is_member
+      );
     case GROUP_CHANNEL:
       const groupsRes = await slackBot.groups.list();
       return groupsRes.groups.some(channel => channel.id === channelId);
-    default :
-      console.error("Unknown channel type.")
+    default:
+      console.error("Unknown channel type.");
       return;
   }
 };

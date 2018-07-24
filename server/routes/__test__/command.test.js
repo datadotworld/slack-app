@@ -220,8 +220,13 @@ describe("POST /api/v1/command/action - Process an action", () => {
           parts.shift(),
           dwAccessToken
         );
-        expect(slack.botBelongsToChannel).toBeCalledWith(payloadObject.channel.id, botAccessToken);
-        expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, { text: message });
+        expect(slack.botBelongsToChannel).toBeCalledWith(
+          payloadObject.channel.id,
+          botAccessToken
+        );
+        expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, {
+          text: message
+        });
         done();
       });
   });
@@ -242,7 +247,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
     const resourceId = action.value;
     const teamId = "teamId";
     const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
-    
+
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
@@ -267,7 +272,10 @@ describe("POST /api/v1/command/action - Process an action", () => {
         if (err) return done(err);
         expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
-        expect(slack.botBelongsToChannel).toBeCalledWith(payloadObject.channel.id, botAccessToken);
+        expect(slack.botBelongsToChannel).toBeCalledWith(
+          payloadObject.channel.id,
+          botAccessToken
+        );
         expect(auth.checkSlackAssociationStatus).toBeCalledWith(
           payloadObject.user.id
         );

@@ -17,13 +17,17 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-'use strict';
+"use strict";
 module.exports = (sequelize, DataTypes) => {
-  var Subscription = sequelize.define('Subscription', {
-    channelId: DataTypes.STRING,
-    slackUserId: DataTypes.STRING,
-    resourceId: DataTypes.STRING
-  }, {});
+  var Subscription = sequelize.define(
+    "Subscription",
+    {
+      channelId: DataTypes.STRING,
+      slackUserId: DataTypes.STRING,
+      resourceId: DataTypes.STRING
+    },
+    {}
+  );
   Subscription.associate = function(models) {
     // associations can be defined here
   };

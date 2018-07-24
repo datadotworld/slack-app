@@ -308,7 +308,12 @@ const unsubscribeFromAccount = async (
   }
 };
 
-const listSubscription = async (responseUrl, channelid, userId, replaceOriginal) => {
+const listSubscription = async (
+  responseUrl,
+  channelid,
+  userId,
+  replaceOriginal
+) => {
   try {
     //Get all subscriptions in this channel
     const subscriptions = await Subscription.findAll({
@@ -360,8 +365,10 @@ const listSubscription = async (responseUrl, channelid, userId, replaceOriginal)
       ];
     } else {
       const commandText = process.env.SLASH_COMMAND;
-      // when updating previous list of subscriptions, remove message completely if there no more subscriptions. 
-      message = replaceOriginal ? `All subscriptions have been removed from channel.` : `No subscription found. Use \`\/${commandText} help\` to see how to subscribe.`;
+      // when updating previous list of subscriptions, remove message completely if there no more subscriptions.
+      message = replaceOriginal
+        ? `All subscriptions have been removed from channel.`
+        : `No subscription found. Use \`\/${commandText} help\` to see how to subscribe.`;
     }
     await sendSlackMessage(responseUrl, message, attachments, replaceOriginal);
   } catch (error) {
@@ -445,7 +452,10 @@ const getType = (command, option) => {
 const subscribeOrUnsubscribe = (req, token) => {
   // Invalid / Unrecognized command is not expected to make it here.
   const command = req.body.command + helper.cleanSlackLinkInput(req.body.text);
-  const commandType = getType(command, helper.cleanSlackLinkInput(req.body.text));
+  const commandType = getType(
+    command,
+    helper.cleanSlackLinkInput(req.body.text)
+  );
   const responseUrl = req.body.response_url;
 
   switch (commandType) {
@@ -570,7 +580,12 @@ const handleMenuAction = async (payload, action, user) => {
         user.dwAccessToken
       );
     }
-    await listSubscription(payload.response_url, payload.channel.id, payload.user.id, true);
+    await listSubscription(
+      payload.response_url,
+      payload.channel.id,
+      payload.user.id,
+      true
+    );
   } else {
     // unknow action
     console.warn("Unknown callback_id in menu action event.");
@@ -708,7 +723,12 @@ const validateAndProcessCommand = async (req, res, next) => {
             dwSupportCommandRegex.test(req.body.command + option) &&
             option === "list"
           ) {
-            listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
+            listSubscription(
+              req.body.response_url,
+              req.body.channel_id,
+              req.body.user_id,
+              false
+            );
           } else {
             // Show help if there's no match found.
             showHelp(req.body.response_url);
@@ -746,14 +766,15 @@ const beginSlackAssociation = (
   teamId,
   responseUrl
 ) => {
-  if (!slack.isDMChannel(channelId)) { // Don't send this message if we're in bot DM channel
+  if (!slack.isDMChannel(channelId)) {
+    // Don't send this message if we're in bot DM channel
     const message = `Sorry <@${userId}>, authentication is required for this action. I can help you, just check my DM for the next step, and then you can try the command again.`;
     sendSlackMessage(responseUrl, message);
   }
   auth.beginSlackAssociation(userId, userName, teamId);
 };
 
-// Visible for testing 
+// Visible for testing
 module.exports = {
   isBotPresent,
   sendErrorMessage,

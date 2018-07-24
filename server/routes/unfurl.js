@@ -17,14 +17,14 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const express = require('express');
+const express = require("express");
 
-const auth = require('../controllers/auth');
-const { unfurl } = require('../controllers/unfurl');
+const auth = require("../controllers/auth");
+const { unfurl } = require("../controllers/unfurl");
 
 const router = express.Router();
 
 /* Slack incomming webhook. */
-router.post('/action', auth.verifySlackClient, unfurl.processRequest);
+router.post("/action", auth.verifySlackClient, unfurl.processRequest);
 
 module.exports = router;

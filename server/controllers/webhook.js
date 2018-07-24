@@ -587,7 +587,9 @@ const handleInsightEvent = async (
   dwActorId,
   actorSlackId
 ) => {
-  const params = helper.extractDatasetOrProjectParamsFromLink(event.links.web.project);
+  const params = helper.extractDatasetOrProjectParamsFromLink(
+    event.links.web.project
+  );
   const dwInsightId = helper.extractIdFromLink(event.links.web.insight);
   const response = await dataworld.getInsight(
     dwInsightId,
@@ -674,7 +676,7 @@ const sendEventToSlack = async (channelIds, attachment) => {
 const sendSlackMessage = async (channelId, attachment, teamId) => {
   const team = await Team.findOne({ where: { teamId: teamId } });
   const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-  slack.sendMessageWithAttachments(token, channelId, [ attachment ]);
+  slack.sendMessageWithAttachments(token, channelId, [attachment]);
 };
 
 const webhook = {
@@ -695,10 +697,7 @@ const webhook = {
         where: { dwUserId: subscriberId }
       });
       if (!subscriber) {
-        console.error(
-          "Active DW subscriber not found in DB : ",
-          subscriberId
-        );
+        console.error("Active DW subscriber not found in DB : ", subscriberId);
         return;
       }
       // Get subsciptions
@@ -708,16 +707,6 @@ const webhook = {
       if (!lang.isEmpty(subscriptions)) {
         // Get subscribed channelIds
         const channelIds = collection.map(subscriptions, "channelId");
-        // // Get subscribers
-        // const subscriberIds = collection.map(subscriptions, "slackUserId");
-        // // Get one user from list of subscribers
-        // const user = await User.findOne({
-        //   where: {
-        //     slackId: { [Op.in]: subscriberIds },
-        //     dwAccessToken: { [Op.ne]: null }
-        //   }
-        // });
-        // get actor object info
         const dwActorId = helper.extractIdFromLink(event.links.web.actor);
         const actor = await User.findOne({ where: { dwUserId: dwActorId } });
         const actorSlackId = actor ? actor.slackId : null;

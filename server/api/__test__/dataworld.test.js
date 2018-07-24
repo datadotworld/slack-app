@@ -14,7 +14,6 @@ const baseUrl = process.env.DW_BASE_URL;
 const events = { events: ["ALL"] };
 
 describe("Test dataworld api wrapper.", () => {
-
   it("should exchange authorization code for access token", done => {
     const authCode = "authCode";
     const requestUrl = `${accessTokenUrl}${authCode}`;
@@ -294,7 +293,9 @@ describe("Test dataworld api wrapper.", () => {
     const authHeader = headers;
     authHeader.authorization = `Bearer ${token}`;
 
-    axios.get = jest.fn(() => Promise.reject(new Error("Test - Invalid token")));
+    axios.get = jest.fn(() =>
+      Promise.reject(new Error("Test - Invalid token"))
+    );
 
     const response = await dataworld.verifyDwToken(token);
 

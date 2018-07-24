@@ -17,13 +17,13 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const express = require('express');
+const express = require("express");
 
-const { webhook } = require('../controllers/webhook');
+const { webhook } = require("../controllers/webhook");
 
 const router = express.Router();
 
 /* Listen for DW incomming webhook. */
-router.post('/dw/events', webhook.process);
+router.post("/dw/events", webhook.process);
 
 module.exports = router;

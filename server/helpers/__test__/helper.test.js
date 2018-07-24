@@ -106,11 +106,10 @@ describe("Test helper methods", () => {
       userId = "userId";
 
     Subscription.findAll = jest.fn(() => Promise.resolve([{ channelId }]));
-    const [hasSubscriptionInChannel, removeDWsubscription] = await helper.getSubscriptionStatus(
-      resourceid,
-      channelId,
-      userId
-    );
+    const [
+      hasSubscriptionInChannel,
+      removeDWsubscription
+    ] = await helper.getSubscriptionStatus(resourceid, channelId, userId);
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(hasSubscriptionInChannel).toBeTruthy();
@@ -127,11 +126,10 @@ describe("Test helper methods", () => {
     Subscription.findAll = jest.fn(() =>
       Promise.reject(new Error("Test error"))
     );
-    const [hasSubscriptionInChannel, removeDWsubscription] = await helper.getSubscriptionStatus(
-      resourceid,
-      channelid,
-      userId
-    );
+    const [
+      hasSubscriptionInChannel,
+      removeDWsubscription
+    ] = await helper.getSubscriptionStatus(resourceid, channelid, userId);
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(hasSubscriptionInChannel).toBeFalsy();

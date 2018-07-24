@@ -26,7 +26,6 @@ const User = require("../../models").User;
 const Team = require("../../models").Team;
 
 describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
-
   it("should handle error response from slack", async () => {
     const response = await request(server)
       .get("/api/v1/auth/oauth")

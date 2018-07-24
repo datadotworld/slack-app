@@ -17,10 +17,10 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const dotenv = require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
+const dotenv = require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+const Sequelize = require("sequelize");
 const basename = path.basename(module.filename);
 const db = {};
 
@@ -29,23 +29,25 @@ if (process.env.DATABASE_URL) {
   sequelize = new Sequelize(process.env.DATABASE_URL);
 } else {
   const options = {
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "operatorsAliases": {
-      "$ne": "Op.ne"
+    host: "127.0.0.1",
+    dialect: "postgres",
+    operatorsAliases: {
+      $ne: "Op.ne"
     }
-  }
+  };
   sequelize = new Sequelize(
-    process.env.PG_DATABASE, process.env.PG_USERNAME, process.env.PG_PASSWORD, options
+    process.env.PG_DATABASE,
+    process.env.PG_USERNAME,
+    process.env.PG_PASSWORD,
+    options
   );
 }
 
-fs
-  .readdirSync(__dirname)
-  .filter(file =>
-    (file.indexOf('.') !== 0) &&
-    (file !== basename) &&
-    (file.slice(-3) === '.js'))
+fs.readdirSync(__dirname)
+  .filter(
+    file =>
+      file.indexOf(".") !== 0 && file !== basename && file.slice(-3) === ".js"
+  )
   .forEach(file => {
     const model = sequelize.import(path.join(__dirname, file));
     db[model.name] = model;

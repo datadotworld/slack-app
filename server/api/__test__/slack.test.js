@@ -19,8 +19,11 @@ describe("Test slack api wrapper.", () => {
 
     slack.oauthAccess(code);
 
-    expect(axios.get).toHaveBeenCalledWith("https://slack.com/api/oauth.access", { headers, params });
-    
+    expect(axios.get).toHaveBeenCalledWith(
+      "https://slack.com/api/oauth.access",
+      { headers, params }
+    );
+
     done();
   });
 
@@ -29,13 +32,11 @@ describe("Test slack api wrapper.", () => {
     const responseUrl = "responseUrl";
 
     axios.post = jest.fn(() => Promise.resolve());
-    
+
     slack.sendResponse(responseUrl, data);
 
     expect(axios.post).toHaveBeenCalledWith(responseUrl, data, { headers });
-    
+
     done();
   });
-
-
 });

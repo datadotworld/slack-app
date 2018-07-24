@@ -419,13 +419,13 @@ const handleJoinedChannelEvent = async event => {
 const handleAppUninstalledEvent = async data => {
   // Do record clean up
   // get all users in this team
-    // get subscriptions for each user
-      // for each subscription
-      // delete from DW
-      // delete from DB
-  // Delete all team users 
+  // get subscriptions for each user
+  // for each subscription
+  // delete from DW
+  // delete from DB
+  // Delete all team users
   // Delete team record
-  console.log("App uninstalled : " + JSON.stringify(data)); 
+  console.log("App uninstalled : " + JSON.stringify(data));
 };
 
 // TODO; Clean up user record when they revoke slack access Token

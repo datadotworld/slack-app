@@ -91,15 +91,17 @@ const getSubscriptionStatus = async (resourceid, channelid, userId) => {
         slackUserId: userId
       }
     });
-    const channelSubscriptions = collection.filter(subscriptions, function(o) { return o.channelId === channelid });
+    const channelSubscriptions = collection.filter(subscriptions, function(o) {
+      return o.channelId === channelid;
+    });
 
     const removeDWSubscription = subscriptions.length === 1;
     const hasChannelSubscription = channelSubscriptions.length > 0;
-    
-    return [ hasChannelSubscription, removeDWSubscription ];
+
+    return [hasChannelSubscription, removeDWSubscription];
   } catch (error) {
     console.error("Failed to fecth subscription from DB", error);
-    return [ false, false ];
+    return [false, false];
   }
 };
 
