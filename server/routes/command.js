@@ -25,7 +25,7 @@ const command = require('../controllers/command');
 const router = express.Router();
 
 /* Slack command. */
-router.post('/', auth.verifySlackClient, command.validate);
+router.post('/', auth.verifySlackClient, command.validateAndProcessCommand);
 
 /* Slack action button events. */
 router.post('/action', command.performAction);

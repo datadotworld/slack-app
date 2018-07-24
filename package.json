@@ -34,7 +34,7 @@
     "dev": "npm run heroku-prebuild && npm run start",
     "heroku-prebuild": "npm install && npm run build",
     "build": "react-scripts build",
-    "test": "jest --silent --notify --forceExit  --clearMocks",
+    "test": "jest --notify --forceExit  --clearMocks",
     "eject": "react-scripts eject"
   },
   "devDependencies": {

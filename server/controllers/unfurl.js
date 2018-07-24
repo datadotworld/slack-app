@@ -35,7 +35,7 @@ const slack = require("../api/slack");
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
-const messageAttachmentFromLink = (token, channel, link) => {
+const messageAttachmentFromLink = async (token, channel, link) => {
   const url = link.url;
   let params = {};
 
@@ -46,40 +46,39 @@ const messageAttachmentFromLink = (token, channel, link) => {
   } else if (dwLinkFormat.test(url)) {
     params = helper.extractDatasetOrProjectParamsFromLink(url);
     params.token = token;
-    return unfurlDatasetOrProject(params, channel);
+    return await unfurlDatasetOrProject(params, channel);
   } else {
     console.warn("Can't unfold unsupported link type : ", url);
     return;
   }
 };
 
-const unfurlDatasetOrProject = (params, channelId) => {
+const unfurlDatasetOrProject = async (params, channelId) => {
   // Fetch resource info from DW
-  return dataworld
-    .getDataset(params.datasetId, params.owner, params.token)
-    .then(async response => {
-      const dataset = response.data;
-      const resourceId = `${params.owner}/${params.datasetId}`;
-      //check if there's an active subscription for this resource in the channel
-      const subscription = await Subscription.findOne({
-        where: { resourceId: resourceId, channelId: channelId }
-      });
-      const addSubcribeAction = subscription ? false : true;
-      const ownerResponse = await dataworld.getDWUser(
-        params.token,
-        params.owner
-      );
-      const owner = ownerResponse.data;
-      if (dataset.isProject) {
-        return unfurlProject(params, owner, addSubcribeAction);
-      } else {
-        return unfurlDataset(params, dataset, owner, addSubcribeAction);
-      }
-    })
-    .catch(error => {
-      console.error("failed to get dataset attachment : ", error.message);
-      return;
+  try {
+    const response = await dataworld.getDataset(
+      params.datasetId,
+      params.owner,
+      params.token
+    );
+    const dataset = response.data;
+    const resourceId = `${params.owner}/${params.datasetId}`;
+    //check if there's an active subscription for this resource in the channel
+    const subscription = await Subscription.findOne({
+      where: { resourceId: resourceId, channelId: channelId }
     });
+    const addSubcribeAction = subscription ? false : true;
+    const ownerResponse = await dataworld.getDWUser(params.token, params.owner);
+    const owner = ownerResponse.data;
+    if (dataset.isProject) {
+      return await unfurlProject(params, owner, addSubcribeAction);
+    } else {
+      return unfurlDataset(params, dataset, owner, addSubcribeAction);
+    }
+  } catch (error) {
+    console.error("failed to get dataset attachment : ", error.message);
+    return;
+  }
 };
 
 const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
@@ -172,104 +171,81 @@ const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
   return attachment;
 };
 
-const unfurlProject = (params, owner, addSubcribeAction) => {
+const unfurlProject = async (params, owner, addSubcribeAction) => {
   // Fetch resource info from DW
-  return dataworld
-    .getProject(params.datasetId, params.owner, params.token)
-    .then(async response => {
-      const project = response.data;
-      const resourceId = `${params.owner}/${params.datasetId}`;
+  try {
+    const response = await dataworld.getProject(
+      params.datasetId,
+      params.owner,
+      params.token
+    );
+    const project = response.data;
+    const resourceId = `${params.owner}/${params.datasetId}`;
 
-      const offset = moment(
-        project.updated,
-        "YYYY-MM-DDTHH:mm:ss.SSSSZ"
-      ).utcOffset();
-      const ts = moment(project.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
-        .utcOffset(offset)
-        .unix();
-      const attachment = {
-        fallback: project.title,
-        color: "#F6BD68",
-        title: project.title,
-        title_link: params.link,
-        text: project.objective,
-        footer: `${resourceId}`,
-        footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
-        thumb_url:
-          owner.avatarUrl ||
-          "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
-        ts: ts,
-        mrkdwn_in: ["fields"],
-        callback_id: "dataset_subscribe_button",
-        actions: [
-          {
-            type: "button",
-            text: "Explore :microscope:",
-            url: `https://data.world/${resourceId}/workspace`
-          }
-        ],
-        url: params.link
-      };
-
-      if (addSubcribeAction) {
-        attachment.actions.push({
-          name: "subscribe",
-          text: "Subscribe :nerd_face:",
-          style: "primary",
+    const offset = moment(
+      project.updated,
+      "YYYY-MM-DDTHH:mm:ss.SSSSZ"
+    ).utcOffset();
+    const ts = moment(project.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+      .utcOffset(offset)
+      .unix();
+    const attachment = {
+      fallback: project.title,
+      color: "#F6BD68",
+      title: project.title,
+      title_link: params.link,
+      text: project.objective,
+      footer: `${resourceId}`,
+      footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+      thumb_url:
+        owner.avatarUrl ||
+        "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      ts: ts,
+      mrkdwn_in: ["fields"],
+      callback_id: "dataset_subscribe_button",
+      actions: [
+        {
           type: "button",
-          value: `${resourceId}`
-        });
-      }
-
-      const fields = [];
-
-      const tags = project.tags;
-      if (!lang.isEmpty(tags)) {
-        let fieldValue = "";
-        collection.forEach(tags, tag => {
-          fieldValue += `\`${tag}\` `;
-        });
-        fields.push({
-          value: fieldValue,
-          short: false
-        });
-      }
-
-      if (lang.isEmpty(project.linkedDatasets)) {
-        const files = project.files;
-        if (!lang.isEmpty(files)) {
-          let fieldValue = "";
-          collection.forEach(files, (file, index) => {
-            if (index < helper.FILES_LIMIT) {
-              fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
-                file.name
-              }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
-            } else {
-              fieldValue += `<https://data.world/${resourceId}|See more>\n`;
-              return false;
-            }
-          });
-
-          fields.push({
-            title: files.length > 1 ? "Files" : "File",
-            value: fieldValue,
-            short: false
-          });
-        } else {
-          fields.push({
-            title: "File(s)",
-            value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
-          });
+          text: "Explore :microscope:",
+          url: `https://data.world/${resourceId}/workspace`
         }
-      } else {
-        // there are linked datasets
-        const linkedDatasets = project.linkedDatasets;
+      ],
+      url: params.link
+    };
+
+    if (addSubcribeAction) {
+      attachment.actions.push({
+        name: "subscribe",
+        text: "Subscribe :nerd_face:",
+        style: "primary",
+        type: "button",
+        value: `${resourceId}`
+      });
+    }
+
+    const fields = [];
+
+    const tags = project.tags;
+    if (!lang.isEmpty(tags)) {
+      let fieldValue = "";
+      collection.forEach(tags, tag => {
+        fieldValue += `\`${tag}\` `;
+      });
+      fields.push({
+        value: fieldValue,
+        short: false
+      });
+    }
+
+    if (lang.isEmpty(project.linkedDatasets)) {
+      const files = project.files;
+      if (!lang.isEmpty(files)) {
         let fieldValue = "";
-        collection.forEach(linkedDatasets, (linkedDataset, index) => {
-          if (index < helper.LINKED_DATASET_LIMIT) {
-            fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
-              linkedDataset.id
-            }|${linkedDataset.description || linkedDataset.title}>\n`;
+        collection.forEach(files, (file, index) => {
+          if (index < helper.FILES_LIMIT) {
+            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+              file.name
+            }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
           } else {
             fieldValue += `<https://data.world/${resourceId}|See more>\n`;
             return false;
@@ -277,23 +253,46 @@ const unfurlProject = (params, owner, addSubcribeAction) => {
         });
 
         fields.push({
-          title:
-            linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
+          title: files.length > 1 ? "Files" : "File",
           value: fieldValue,
           short: false
         });
+      } else {
+        fields.push({
+          title: "File(s)",
+          value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+        });
       }
+    } else {
+      // there are linked datasets
+      const linkedDatasets = project.linkedDatasets;
+      let fieldValue = "";
+      collection.forEach(linkedDatasets, (linkedDataset, index) => {
+        if (index < helper.LINKED_DATASET_LIMIT) {
+          fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
+            linkedDataset.id
+          }|${linkedDataset.description || linkedDataset.title}>\n`;
+        } else {
+          fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+          return false;
+        }
+      });
 
-      if (fields.length > 0) {
-        attachment.fields = fields;
-      }
+      fields.push({
+        title: linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
+        value: fieldValue,
+        short: false
+      });
+    }
 
-      return attachment;
-    })
-    .catch(error => {
-      console.error("failed to get project attachment : ", error.message);
-      throw error;
-    });
+    if (fields.length > 0) {
+      attachment.fields = fields;
+    }
+    return attachment;
+  } catch (error) {
+    console.error("failed to get project attachment : ", error.message);
+    return;
+  }
 };
 
 const unfurlInsight = params => {
@@ -398,39 +397,59 @@ const handleLinkSharedEvent = async (event, teamId) => {
   }
 };
 
-const handleJoinedChannelEvent = event => {
+const handleJoinedChannelEvent = async event => {
   // Update known channel
   // Add channel if not existing
   // create user with nonce and the slackdata
-  Channel.findOrCreate({
-    where: { channelId: event.channel },
-    defaults: { teamId: event.team, slackUserId: event.inviter }
-  })
-    .spread((channel, created) => {
-      if (!created) {
-        // Channel record already exits.
-        console.warn("Channel record already exists : ", event);
-      }
-    })
-    .catch(error => {
-      // error creating user
-      console.error("Failed to create new channel record : " + error.message);
-      throw error;
+  try {
+    const [channel, created] = await Channel.findOrCreate({
+      where: { channelId: event.channel },
+      defaults: { teamId: event.team, slackUserId: event.inviter }
     });
+    if (!created) {
+      // Channel record already exits.
+      console.warn("Channel record already exists : ", event);
+    }
+  } catch (error) {
+    console.error("Failed to create new channel record : " + error.message);
+  }
+};
+
+// TODO: Clean up records when app is uninstalled.
+const handleAppUninstalledEvent = async data => {
+  // Do record clean up
+  // get all users in this team
+    // get subscriptions for each user
+      // for each subscription
+      // delete from DW
+      // delete from DB
+  // Delete all team users 
+  // Delete team record
+  console.log("App uninstalled : " + JSON.stringify(data)); 
+};
+
+// TODO; Clean up user record when they revoke slack access Token
+const handleTokensRevoked = async data => {
+  console.log("Token revoked : " + JSON.stringify(data));
 };
 
 const unfurl = {
-  processRequest(req, res) {
+  async processRequest(req, res) {
     // respond to request immediately no need to wait.
     res.json({ response_type: "in_channel" });
-
     const event = req.body.event;
     switch (event.type) {
       case "link_shared":
-        handleLinkSharedEvent(event, req.body.team_id);
+        await handleLinkSharedEvent(event, req.body.team_id);
         break;
       case "member_joined_channel":
-        handleJoinedChannelEvent(event);
+        await handleJoinedChannelEvent(event);
+        break;
+      case "app_uninstalled":
+        await handleAppUninstalledEvent(req.body);
+        break;
+      case "tokens_revoked":
+        await handleTokensRevoked(req.body);
         break;
       default:
         break;

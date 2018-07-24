@@ -94,7 +94,7 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     const teamId = "teamId";
     const id = "dwUserId";
     const access_token = "access_token";
-    const botAccessToken = "botAccessToken";
+    const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
     const slackId = "slackId";
 
     dataworld.exchangeAuthCode = jest.fn(() =>

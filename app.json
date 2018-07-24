@@ -39,6 +39,9 @@
       },
       "SLACK_VERIFICATION_TOKEN": {
         "required": true
+      },
+      "SLASH_COMMAND": {
+        "required": true
       }
     },
     "formation": {

@@ -83,7 +83,6 @@ function onError(error) {
 }
 
 function onRejection(error) {
-  console.log('##### caught rejection error!');
   console.error(error);
 }
 

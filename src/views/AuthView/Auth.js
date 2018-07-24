@@ -40,7 +40,7 @@ class Auth extends Component {
           : this.redirectFailed();
       })
       .catch(error => {
-        console.log(error);
+        console.error(error);
         this.redirectFailed();
       });
   };

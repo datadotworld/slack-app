@@ -27,13 +27,10 @@ const collection = require("lodash/collection");
 const lang = require("lodash/lang");
 const pretty = require("prettysize");
 const moment = require("moment");
-const Sequelize = require("sequelize");
-const SlackWebClient = require("@slack/client").WebClient;
 
 const dataworld = require("../api/dataworld");
+const slack = require("../api/slack");
 const helper = require("../helpers/helper");
-
-const Op = Sequelize.Op;
 
 // Possible event actions
 const CREATE = "create";
@@ -290,7 +287,7 @@ const getNewProjectAttachment = (
     // there are linked datasets
     const linkedDatasets = project.linkedDatasets;
     let fieldValue = "";
-    collection.forEach(linkedDatasets, linkedDataset => {
+    collection.forEach(linkedDatasets, (linkedDataset, index) => {
       if (index < helper.LINKED_DATASET_LIMIT) {
         fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
           linkedDataset.id
@@ -449,18 +446,6 @@ const extractResouceIdFromWebLink = (webLink, action) => {
   return action === CREATE ? owner : `${owner}/${id}`;
 };
 
-const getEventSubscribedChannels = async (resourceId, subscriberId) => {
-  const subscriber = await User.findOne({ where: { dwUserId: subscriberId } });
-  if (subscriber) {
-    const subscriptions = await Subscription.findAll({
-      where: { resourceId: resourceId, slackUserId: subscriber.slackId }
-    });
-    return collection.map(subscriptions, "channelId");
-  }
-  console.error("ERROR: Active DW subscriber not found in DB : ", subscriberId);
-  return;
-};
-
 const handleDatasetEvent = async (
   resourceId,
   channelIds,
@@ -546,7 +531,7 @@ const handleDatasetEvent = async (
             actorSlackId,
             isProject
           );
-          return sendEventToSlack(resourceId, channelIds, fileAttachment);
+          return sendEventToSlack(channelIds, fileAttachment);
         }
 
         // Check size diff to ensure we send notification only when dataset are linked not removed.
@@ -571,7 +556,7 @@ const handleDatasetEvent = async (
               dwActor,
               actorSlackId
             );
-            sendEventToSlack(resourceId, channelIds, attachment);
+            sendEventToSlack(channelIds, attachment);
           });
           return;
         }
@@ -587,10 +572,10 @@ const handleDatasetEvent = async (
     }
     if (attachment) {
       // Send message
-      sendEventToSlack(resourceId, channelIds, attachment);
+      sendEventToSlack(channelIds, attachment);
     }
   } catch (error) {
-    console.error("Failed to handle dataset event : ", error.message);
+    console.error("Failed to handle dataset event : ", error);
   }
 };
 
@@ -623,7 +608,7 @@ const handleInsightEvent = async (
     dwActor,
     actorSlackId
   );
-  sendEventToSlack(resourceId, channelIds, attachment);
+  sendEventToSlack(channelIds, attachment);
 };
 
 const handleFileEvents = async (
@@ -675,37 +660,26 @@ const handleFileEvents = async (
     actorSlackId,
     isProjectFiles
   );
-  sendEventToSlack(resourceId, channelIds, attachment);
+  sendEventToSlack(channelIds, attachment);
 };
 
-const sendEventToSlack = async (resourceId, channelIds, attachment) => {
+const sendEventToSlack = async (channelIds, attachment) => {
   //send attachment to all subscribed channels
   collection.forEach(channelIds, async channelId => {
     const channel = await Channel.findOne({ where: { channelId: channelId } });
-    sendSlackMessage(channelId, channel.slackUserId, attachment, channel.teamId);
+    sendSlackMessage(channelId, attachment, channel.teamId);
   });
 };
 
-const sendSlackMessage = async (channelId, slackUserId, attachment, teamId) => {
+const sendSlackMessage = async (channelId, attachment, teamId) => {
   const team = await Team.findOne({ where: { teamId: teamId } });
-  const slackBot = new SlackWebClient(
-    process.env.SLACK_BOT_TOKEN || team.botAccessToken
-  );
-
-  if(channelId.startsWith("D")) { // if subscription was added in DM channel, we should reach user via bot DM channel 
-    const botResponse = await slackBot.im.open(slackUserId);
-    channelId = botResponse.channel.id;
-  }
-
-  slackBot.chat.postMessage(channelId, "", {
-    attachments: [attachment]
-  });
+  const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+  slack.sendMessageWithAttachments(token, channelId, [ attachment ]);
 };
 
 const webhook = {
   async process(req, res) {
     try {
-      console.log("received DW event : " + JSON.stringify(req.body))
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
       res.status(200).send();
       // process event based on type
@@ -722,7 +696,7 @@ const webhook = {
       });
       if (!subscriber) {
         console.error(
-          "ERROR: Active DW subscriber not found in DB : ",
+          "Active DW subscriber not found in DB : ",
           subscriberId
         );
         return;
@@ -734,26 +708,26 @@ const webhook = {
       if (!lang.isEmpty(subscriptions)) {
         // Get subscribed channelIds
         const channelIds = collection.map(subscriptions, "channelId");
-        // Get subscribers
-        const subscriberIds = collection.map(subscriptions, "slackUserId");
-        // Get one user from list of subscribers
-        const user = await User.findOne({
-          where: {
-            slackId: { [Op.in]: subscriberIds },
-            dwAccessToken: { [Op.ne]: null }
-          }
-        });
+        // // Get subscribers
+        // const subscriberIds = collection.map(subscriptions, "slackUserId");
+        // // Get one user from list of subscribers
+        // const user = await User.findOne({
+        //   where: {
+        //     slackId: { [Op.in]: subscriberIds },
+        //     dwAccessToken: { [Op.ne]: null }
+        //   }
+        // });
         // get actor object info
         const dwActorId = helper.extractIdFromLink(event.links.web.actor);
         const actor = await User.findOne({ where: { dwUserId: dwActorId } });
-        const actorSlackId = actor ? actor.slackUserId : null;
+        const actorSlackId = actor ? actor.slackId : null;
 
         switch (getEntityType(event)) {
           case DATASET:
             handleDatasetEvent(
               resourceId,
               channelIds,
-              user,
+              subscriber,
               req.body,
               dwActorId,
               actorSlackId
@@ -763,7 +737,7 @@ const webhook = {
             handleInsightEvent(
               resourceId,
               channelIds,
-              user,
+              subscriber,
               req.body,
               dwActorId,
               actorSlackId
@@ -773,7 +747,7 @@ const webhook = {
             handleFileEvents(
               resourceId,
               channelIds,
-              user,
+              subscriber,
               req.body,
               dwActorId,
               actorSlackId

@@ -1,3 +1,4 @@
+const collection = require("lodash/collection");
 const dataworld = require("../../api/dataworld");
 const helper = require("../../helpers/helper");
 const slack = require("../../api/slack");
@@ -247,7 +248,7 @@ describe("Test Auth controller methods", () => {
     const responseUrl = "responseUrl";
     const token = "token";
 
-    helper.belongsToChannelAndUser = jest.fn(() => Promise.resolve(false));
+    helper.getSubscriptionStatus = jest.fn(() => [ false, false ]);
     slack.sendResponse = jest.fn(() => Promise.resolve());
 
     await command.unsubscribeFromDatasetOrProject(
@@ -258,7 +259,7 @@ describe("Test Auth controller methods", () => {
       token
     );
 
-    expect(helper.belongsToChannelAndUser).toBeCalledWith(
+    expect(helper.getSubscriptionStatus).toBeCalledWith(
       "owner/datasetid",
       channelid,
       userid
@@ -286,7 +287,7 @@ describe("Test Auth controller methods", () => {
       };
 
       slack.sendResponse = jest.fn(() => Promise.resolve());
-      helper.belongsToChannelAndUser = jest.fn(() => Promise.reject(error));
+      helper.getSubscriptionStatus = jest.fn(() => Promise.reject(error));
       dataworld.unsubscribeFromProject = jest.fn(() => Promise.reject(error));
 
       await command.unsubscribeFromDatasetOrProject(
@@ -297,7 +298,7 @@ describe("Test Auth controller methods", () => {
         token
       );
 
-      expect(helper.belongsToChannelAndUser).toBeCalledWith(
+      expect(helper.getSubscriptionStatus).toBeCalledWith(
         "owner/datasetid",
         channelid,
         userid
@@ -314,53 +315,221 @@ describe("Test Auth controller methods", () => {
     10000
   );
 
-  it("should unsubscribe from project", async done => {
-    const userid = "userid";
-    const cmd = "subscribe owner/datasetid";
-    const responseUrl = "responseUrl";
-    const token = "token";
-    const message = "Webhook subscription deleted successfully.";
-    const data = { message };
-    const slackData = {
-      replace_original: false,
-      text: message
+  it(
+    "should unsubscribe from project",
+    async done => {
+      const userid = "userid";
+      const channelId = "channelid";
+      const cmd = "subscribe owner/datasetid";
+      const responseUrl = "responseUrl";
+      const token = "token";
+      const message = "Webhook subscription deleted successfully.";
+      const data = { message };
+      const slackData = {
+        replace_original: false,
+        text: message
+      };
+
+      Subscription.destroy = jest.fn(() => Promise.resolve());
+      dataworld.unsubscribeFromProject = jest.fn(() =>
+        Promise.resolve({ data })
+      );
+      slack.sendResponse = jest.fn(() => Promise.resolve());
+
+      await command.unsubscribeFromProject(channelId, userid, cmd, responseUrl, token);
+
+      expect(Subscription.destroy).toHaveBeenCalledTimes(1);
+      expect(dataworld.unsubscribeFromProject).toHaveBeenCalledTimes(1);
+      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+      done();
+    },
+    10000
+  );
+
+  it(
+    "should unsubscribe from account",
+    async done => {
+      const userid = "userid";
+      const cmd = "subscribe agentid";
+      const responseUrl = "responseUrl";
+      const channelid = "channelid";
+      const token = "token";
+      const message = "Webhook subscription deleted successfully.";
+      const data = { message };
+      const slackData = {
+        replace_original: false,
+        text: message
+      };
+
+      Subscription.destroy = jest.fn(() => Promise.resolve());
+      helper.getSubscriptionStatus = jest.fn(() => [ true, true]);
+      dataworld.unsubscribeFromAccount = jest.fn(() =>
+        Promise.resolve({ data })
+      );
+      slack.sendResponse = jest.fn(() => Promise.resolve());
+
+      await command.unsubscribeFromAccount(
+        userid,
+        channelid,
+        cmd,
+        responseUrl,
+        token
+      );
+
+      expect(Subscription.destroy).toHaveBeenCalledTimes(1);
+      expect(dataworld.unsubscribeFromAccount).toHaveBeenCalledTimes(1);
+      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+      done();
+    },
+    10000
+  );
+
+  it("should list subscriptions", async done => {
+    const body = {
+      response_url: "response_url",
+      channel_id: "channel_id",
+      user_id: "user_id"
+    };
+    const req = { body };
+
+    const options = [];
+    options.push({
+      text: "resourceId",
+      value: "resourceId"
+    });
+    const message = `*Active Subscriptions*`;
+
+    const attachments = [
+      {
+        color: "#79B8FB",
+        text: `• https://data.world/resourceId \n *created by :* <@user_id> \n`,
+        callback_id: "unsubscribe_menu",
+        actions: [
+          {
+            name: "subscription_list",
+            text: "Unsubscribe from...",
+            type: "select",
+            style: "danger",
+            options: options,
+            confirm: {
+              title: "Confirm",
+              text: `Are you sure you want to unsubscribe from selected resource ?`,
+              ok_text: "Yes",
+              dismiss_text: "No"
+            }
+          }
+        ]
+      }
+    ];
+
+    const subscription = {
+      slackUserId: "user_id",
+      resourceId: "resourceId"
+    };
+    const subscriptions = [subscription];
+
+    const data = {
+      text: message,
+      attachments: attachments,
+      replace_original: false
     };
 
-    Subscription.destroy = jest.fn(() => Promise.resolve());
-    dataworld.unsubscribeFromProject = jest.fn(() => Promise.resolve({ data }));
     slack.sendResponse = jest.fn(() => Promise.resolve());
+    Subscription.findAll = jest.fn(() => subscriptions);
 
-    await command.unsubscribeFromProject(userid, cmd, responseUrl, token);
+    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
 
-    expect(Subscription.destroy).toHaveBeenCalledTimes(1);
-    expect(dataworld.unsubscribeFromProject).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+    expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+
     done();
-  }, 10000);
+  });
 
-  it("should unsubscribe from account", async done => {
-    const userid = "userid";
-    const cmd = "subscribe agentid";
-    const responseUrl = "responseUrl";
-    const channelid = "channelid";
-    const token = "token";
-    const message = "Webhook subscription deleted successfully.";
-    const data = { message };
-    const slackData = {
-      replace_original: true,
-      text: message
+  it("should send appropiate message to slack when there's no subscription", async done => {
+    const body = {
+      response_url: "response_url",
+      channel_id: "channel_id",
+      user_id: "user_id"
+    };
+    const req = { body };
+    const commandText = process.env.SLASH_COMMAND;
+    const message = `No subscription found. Use \`\/${commandText} help\` to see how to subscribe.`;
+    const data = {
+      text: message,
+      replace_original: false
     };
 
-    Subscription.destroy = jest.fn(() => Promise.resolve());
-    helper.belongsToChannelAndUser = jest.fn(() => Promise.resolve(true));
-    dataworld.unsubscribeFromAccount = jest.fn(() => Promise.resolve({ data }));
     slack.sendResponse = jest.fn(() => Promise.resolve());
+    Subscription.findAll = jest.fn(() => []);
 
-    await command.unsubscribeFromAccount(userid, channelid, cmd, responseUrl, token);
+    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
 
-    expect(Subscription.destroy).toHaveBeenCalledTimes(1);
-    expect(dataworld.unsubscribeFromAccount).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+    expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+
     done();
-  }, 10000);
+  });
+
+  it("should send appropiate message to slack when list subscriptions command fails", async done => {
+    const body = {
+      response_url: "response_url",
+      channel_id: "channel_id",
+      user_id: "user_id"
+    };
+    const req = { body };
+    const message = `Failed to get subscriptions.`;
+    const data = {
+      text: message,
+      replace_original: false
+    };
+
+    slack.sendResponse = jest.fn(() => Promise.resolve());
+    Subscription.findAll = jest.fn(() =>
+      Promise.reject(new Error("Test error"))
+    );
+
+    await command.listSubscription(req.body.response_url, req.body.channel_id, req.body.user_id, false);
+
+    expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+
+    done();
+  });
+
+  it("should build and send help message to slack.", async done => {
+    const message = `*Commands*`;
+    const attachments = [];
+    const responseUrl = "response_url";
+    const commandText = process.env.SLASH_COMMAND;
+
+    const commandsInfo = [
+      `_Subscribe to a data.world dataset :_ \n \`/${commandText} subscribe [owner/datasetid]\``,
+      `_Subscribe to a data.world project._ : \n \`/${commandText} subscribe [owner/projectid]\``,
+      `_Subscribe to a data.world account._ : \n \`/${commandText} subscribe [account]\``,
+      `_Unsubscribe from a data.world dataset._ : \n \`/${commandText} unsubscribe [owner/datasetid]\``,
+      `_Unsubscribe from a data.world project._ : \n \`/${commandText} unsubscribe [owner/projectid]\``,
+      `_Unsubscribe from a data.world account._ : \n \`/${commandText} unsubscribe [account]\``,
+      `_List active subscriptions._ : \n \`/${commandText} list\``,
+      `_Show this help message_ : \n \`/${commandText} help\``
+    ];
+
+    collection.forEach(commandsInfo, value => {
+      attachments.push({
+        color: "#79B8FB",
+        text: value
+      });
+    });
+
+    const data = {
+      text: message,
+      attachments: attachments,
+      replace_original: false
+    };
+
+    await command.showHelp(responseUrl)
+
+    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+
+    done();
+  });
 });

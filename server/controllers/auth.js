@@ -95,7 +95,7 @@ const slackOauth = (req, res) => {
     .catch(error => {
       console.error("Slack oauth failed : ", error);
       // redirect to failure page
-      res.redirect(`${baseUrl}failed`);
+      res.redirect(`${baseUrl}/failed`);
     });
 };
 

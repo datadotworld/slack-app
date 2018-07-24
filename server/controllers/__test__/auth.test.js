@@ -57,7 +57,7 @@ describe("Test Auth controller methods", () => {
     const messageTs = "messageTs";
     const channel = "channel";
     const teamId = "teamId";
-    const accessToken = "accessToken";
+    const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
 
     const update = jest.fn(() => Promise.resolve());
     const user = { update };

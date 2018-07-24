@@ -83,18 +83,19 @@ describe("Test helper methods", () => {
 
   it("should return true when subscription belongs to Channel and User", async done => {
     const resourceid = "resourceId",
-      channelid = "channelId",
+      channelId = "channelId",
       userId = "userId";
 
-    Subscription.findOne = jest.fn(() => Promise.resolve({}));
-    const result = await helper.belongsToChannelAndUser(
+    Subscription.findAll = jest.fn(() => Promise.resolve([{ channelId }]));
+    const [hasSubscriptionInChannel, removeDWsubscription] = await helper.getSubscriptionStatus(
       resourceid,
-      channelid,
+      channelId,
       userId
     );
 
-    expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-    expect(result).toBeTruthy();
+    expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+    expect(hasSubscriptionInChannel).toBeTruthy();
+    expect(removeDWsubscription).toBeTruthy();
 
     done();
   });
@@ -104,18 +105,18 @@ describe("Test helper methods", () => {
       channelid = "channelId",
       userId = "userId";
 
-    Subscription.findOne = jest.fn(() =>
+    Subscription.findAll = jest.fn(() =>
       Promise.reject(new Error("Test error"))
     );
-    const result = await helper.belongsToChannelAndUser(
+    const [hasSubscriptionInChannel, removeDWsubscription] = await helper.getSubscriptionStatus(
       resourceid,
       channelid,
       userId
     );
 
-    expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-    expect(result).toBeFalsy();
-
+    expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+    expect(hasSubscriptionInChannel).toBeFalsy();
+    expect(removeDWsubscription).toBeFalsy();
     done();
   });
 });

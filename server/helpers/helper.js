@@ -17,6 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const collection = require("lodash/collection");
 const Subscription = require("../models").Subscription;
 const FILES_LIMIT = 5;
 const LINKED_DATASET_LIMIT = 5;
@@ -82,19 +83,23 @@ const cleanSlackLinkInput = link => {
   return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
 };
 
-const belongsToChannelAndUser = async (resourceid, channelid, userId) => {
+const getSubscriptionStatus = async (resourceid, channelid, userId) => {
   try {
-    const subscription = await Subscription.findOne({
+    const subscriptions = await Subscription.findAll({
       where: {
         resourceId: resourceid,
-        channelId: channelid,
         slackUserId: userId
       }
     });
-    return subscription ? true : false;
+    const channelSubscriptions = collection.filter(subscriptions, function(o) { return o.channelId === channelid });
+
+    const removeDWSubscription = subscriptions.length === 1;
+    const hasChannelSubscription = channelSubscriptions.length > 0;
+    
+    return [ hasChannelSubscription, removeDWSubscription ];
   } catch (error) {
     console.error("Failed to fecth subscription from DB", error);
-    return false;
+    return [ false, false ];
   }
 };
 
@@ -108,5 +113,5 @@ module.exports = {
   extractInsightsParams,
   extractIdFromLink,
   cleanSlackLinkInput,
-  belongsToChannelAndUser
+  getSubscriptionStatus
 };
