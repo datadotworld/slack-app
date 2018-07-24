@@ -157,4 +157,8 @@
 
     2. Now you can click the heroku button below to deploy and fill in the env variables. 
 
+### 11. Running Test
+
+    From the root directory run : yarn test
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master) 
