@@ -213,7 +213,7 @@ const unsubscribeFromDatasetOrProject = async (
       const message = "Webhook subscription deleted successfully.";
       await sendSlackMessage(responseUrl, message);
     } else {
-      sendSlackMessage(
+      await sendSlackMessage(
         responseUrl,
         `Specified subscription \`${resourceId}\` not found in this channel.`
       );

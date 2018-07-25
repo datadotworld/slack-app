@@ -204,14 +204,18 @@ describe("POST /api/v1/command/action - Process an action", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
+        expect(slack.botBelongsToChannel).toBeCalledWith(
+          payloadObject.channel.id,
+          botAccessToken
+        );
         expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(auth.checkSlackAssociationStatus).toBeCalledWith(
+          payloadObject.user.id
+        );
         expect(helper.getSubscriptionStatus).toBeCalledWith(
           resourceId,
           payloadObject.channel.id,
-          payloadObject.user.id
-        );
-        expect(auth.checkSlackAssociationStatus).toBeCalledWith(
           payloadObject.user.id
         );
         const parts = resourceId.split("/");
@@ -220,13 +224,6 @@ describe("POST /api/v1/command/action - Process an action", () => {
           parts.shift(),
           dwAccessToken
         );
-        expect(slack.botBelongsToChannel).toBeCalledWith(
-          payloadObject.channel.id,
-          botAccessToken
-        );
-        expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, {
-          text: message
-        });
         done();
       });
   });
