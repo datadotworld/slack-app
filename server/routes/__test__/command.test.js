@@ -190,6 +190,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
 
     Team.findOne = jest.fn(() => Promise.resolve({ teamId, botAccessToken }));
     Channel.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
+    Subscription.destroy = jest.fn(() => Promise.resolve());
     auth.checkSlackAssociationStatus = jest.fn(() =>
       Promise.resolve([isAssociated, user])
     );
@@ -210,6 +211,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         );
         expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(Subscription.destroy).toHaveBeenCalledTimes(1);
         expect(auth.checkSlackAssociationStatus).toBeCalledWith(
           payloadObject.user.id
         );
@@ -224,6 +226,10 @@ describe("POST /api/v1/command/action - Process an action", () => {
           parts.shift(),
           dwAccessToken
         );
+        expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, {
+          replace_original: false,
+          text: message
+        });
         done();
       });
   });
