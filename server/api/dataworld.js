@@ -25,8 +25,8 @@ const baseTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${
   process.env.DW_CLIENT_SECRET
 }&grant_type=`;
 
-const accessTokenUrl = `${baseTokenUrl}=authorization_code&code=`;
-const refreshTokenUrl = `${baseTokenUrl}=refresh_token&refresh_token=`;
+const accessTokenUrl = `${baseTokenUrl}authorization_code&code=`;
+const refreshTokenUrl = `${baseTokenUrl}refresh_token&refresh_token=`;
 
 const baseUrl = process.env.DW_BASE_URL;
 const events = { events: ["ALL"] };

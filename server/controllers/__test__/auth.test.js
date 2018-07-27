@@ -102,4 +102,5 @@ describe("Test Auth controller methods", () => {
     },
     10000
   );
+  // it('should refresh expired DW token', done => {});
 });

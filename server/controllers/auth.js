@@ -129,7 +129,6 @@ const checkSlackAssociationStatus = async slackId => {
         // Attempt to refresh token  
         const response = await dataworld.refreshToken(user.dwRefreshToken);
         if (!response.error) {
-          console.log("### Refresh token Response : " + JSON.stringify(response.data));
           const token = response.data.access_token;
           const refreshToken = response.data.refesh_token;
 
@@ -219,7 +218,6 @@ const completeSlackAssociation = async (req, res) => {
     if (response.error) {
       return res.status(400).send("failed");
     } else {
-      console.log("### Response : " + JSON.stringify(response.data));
       const token = response.data.access_token;
       const refreshToken = response.data.refesh_token;
       const nonce = req.query.state;
