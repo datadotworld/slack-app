@@ -19,11 +19,14 @@
  */
 const axios = require("axios");
 
-const accessTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${
+const baseTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${
   process.env.DW_CLIENT_ID
 }&client_secret=${
   process.env.DW_CLIENT_SECRET
-}&grant_type=authorization_code&code=`;
+}&grant_type=`;
+
+const accessTokenUrl = `${baseTokenUrl}=authorization_code&code=`;
+const refreshTokenUrl = `${baseTokenUrl}=refresh_token&refresh_token=`;
 
 const baseUrl = process.env.DW_BASE_URL;
 const events = { events: ["ALL"] };
@@ -62,6 +65,11 @@ const del = (url, token) => {
 
 const exchangeAuthCode = code => {
   const requestUrl = `${accessTokenUrl}${code}`;
+  return post(requestUrl, {}, null);
+};
+
+const refreshToken = refreshToken => {
+  const requestUrl = `${refreshTokenUrl}${refreshToken}`;
   return post(requestUrl, {}, null);
 };
 

@@ -124,6 +124,23 @@ const checkSlackAssociationStatus = async slackId => {
       // Check user association
       // User found, now verify DW token is active/valid.
       isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
+
+      if(!isAssociated) { 
+        // Attempt to refresh token  
+        const response = await dataworld.refreshToken(user.dwRefreshToken);
+        if (!response.error) {
+          console.log("### Refresh token Response : " + JSON.stringify(response.data));
+          const token = response.data.access_token;
+          const refreshToken = response.data.refesh_token;
+
+          const [ rowsUpdate, [updatedUser] ] = await user.update(
+            { dwAccessToken: token, dwRefreshToken: refreshToken },
+            { fields: ["dwAccessToken", "dwRefreshToken"] }
+          );
+          user = updatedUser;
+          isAssociated = true;
+        }
+      }
     }
     return [isAssociated, user];
   } catch (error) {
@@ -202,7 +219,9 @@ const completeSlackAssociation = async (req, res) => {
     if (response.error) {
       return res.status(400).send("failed");
     } else {
+      console.log("### Response : " + JSON.stringify(response.data));
       const token = response.data.access_token;
+      const refreshToken = response.data.refesh_token;
       const nonce = req.query.state;
       // use nonce to retrieve user
       // Add returned token
@@ -210,8 +229,8 @@ const completeSlackAssociation = async (req, res) => {
       const user = await User.findOne({ where: { nonce: nonce } });
       const dwUserResponse = await dataworld.getActiveDWUser(token);
       await user.update(
-        { dwAccessToken: token, dwUserId: dwUserResponse.data.id },
-        { fields: ["dwAccessToken", "dwUserId"] }
+        { dwAccessToken: token, dwRefreshToken: refreshToken, dwUserId: dwUserResponse.data.id },
+        { fields: ["dwAccessToken", "dwRefreshToken", "dwUserId"] }
       );
 
       res.status(200).json({

@@ -43,6 +43,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT
       },
       dwRefreshToken: {
+        type: DataTypes.STRING
+      },
+      dwRefreshToken: {
         type: DataTypes.TEXT
       },
       dwTokenExpiresAt: {
