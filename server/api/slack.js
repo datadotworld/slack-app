@@ -97,16 +97,16 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
       slackBot.chat.postMessage(dmChannelId, "", {
         attachments: [
           {
-            color: "#79B8FB",
+            color: "#355D8A",
             text:
-              "You've successfully installed Data.World on this Slack workspace :tada: \n" +
+              "You've successfully installed data.world on this Slack workspace :tada: \n" +
               "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
               `• _/${commandText} subscribe account_ \n` +
-              `• _/${commandText} subscribe owner/dataset_ \n` +
-              `• _/${commandText} subscribe owner/project_`
+              `• _/${commandText} subscribe dataset_url_ \n` +
+              `• _/${commandText} subscribe project_url_`
           },
           {
-            color: "#79B8FB",
+            color: "#68BF70",
             text: `Looking for additional help? Try \`/${commandText} help\``
           }
         ]
@@ -133,7 +133,7 @@ const sendAuthRequiredMessage = async (
       const associationUrl = `${DW_AUTH_URL}${nonce}`;
       slackBot.chat.postMessage(
         dmChannelId,
-        `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you access your internal protected resources on data.world.`,
+        `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you stay up-to-date with data.world.`,
         {
           attachments: [
             {
@@ -174,7 +174,7 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
   const dmChannelId = botResponse.channel.id;
   slackBot.chat.postMessage(
     dmChannelId,
-    `Well, it\'s nice to meet you, <@${slackUserId}>!. Thanks for completing authentication.`
+    `Well, it\'s nice to meet you, <@${slackUserId}>! Thanks for completing authentication.`
   );
 };
 

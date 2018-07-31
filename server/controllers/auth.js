@@ -116,7 +116,7 @@ const verifySlackClient = (req, res, next) => {
 
 const checkSlackAssociationStatus = async slackId => {
   try {
-    const user = await User.findOne({
+    let user = await User.findOne({
       where: { slackId: slackId, dwAccessToken: { [Op.ne]: null } }
     });
     let isAssociated = false;
