@@ -24,7 +24,7 @@
 #### 4. DW Oauth Client configuration
 
     1. Create an oauth client on DW
-    2. set "allowedRoles" field to : [ "user_api_read", "user_api_write", "user_api_hooks" ]
+    2. set "allowedRoles" field to : [ "user_api_read", "user_api_write", "user_api_hooks", "user_api_offline" ]
     3. Set "webhookActive" field to : true
     4. Set the value of "redirect_url" to :  <ngrok url>/oauth/code_callback
     5. Set the value of "webhookUrl" to: <ngrok url>/api/v1/webhook/dw/events
@@ -95,7 +95,7 @@
         DW_BASE_URL=https://api.data.world/v0
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)
         DW_CLIENT_SECRET= (client secret from the DW Oauth Client created earlier in step 4.)
-        DW_AUTH_BASE_URL=https://data.world/embed/oauth-authorize
+        DW_AUTH_BASE_URL=https://data.world/oauth/authorize
         DW_GET_TOKEN_BASE_URL=https://data.world/oauth/access_token
         DW_REDIRECT_URI= <ngrok url>/oauth/code_callback
 
@@ -118,7 +118,7 @@
     3. Add request url <ngrok url>/api/v1/unfurl/action (Challenge should be successful).
     4. Click save changes.
 
-    Add request url for Interactive component
+    Add request url for Interactive Components
 
     1. Go to interactive components section
     2. Ensure interactivity is enabled
