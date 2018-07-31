@@ -170,5 +170,6 @@ module.exports = {
   unsubscribeFromDataset,
   unsubscribeFromProject,
   unsubscribeFromAccount,
-  verifyDwToken
+  verifyDwToken,
+  refreshToken
 };
