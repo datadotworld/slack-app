@@ -17,6 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const Subscription = require("../models").Subscription;
 const User = require("../models").User;
 const Team = require("../models").Team;
 
@@ -137,6 +138,12 @@ const checkSlackAssociationStatus = async slackId => {
             { fields: ["dwAccessToken", "dwRefreshToken"] }
           );
           isAssociated = true;
+        } else {
+          // Access was revoked, this means all DW subscriptions for this user were removed
+          // We should do the same 
+          await Subscription.destroy({
+            where: { slackUserId: slackId }
+          });
         }
       }
     }

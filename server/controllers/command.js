@@ -77,7 +77,7 @@ const subscribeToProjectOrDataset = async (
       }
     });
     let message = "Subscription already exists in this channel. No further action required!";
-    if (!subscription) {
+    if (!channelSubscription) {
       // subscription not found in channel
 
       // check if same user has an existing DW subscription for this resource
@@ -130,7 +130,6 @@ const subscribeToDataset = async (
         slackUserId: userid
       }
     });
-    let message = "";
     if (!existingDwSubscription) {
       const response = await dataworld.subscribeToDataset(
         commandParams.owner,
@@ -168,11 +167,11 @@ const subscribeToAccount = async (
   // use dataworld wrapper to subscribe to account
   const commandParams = helper.extractParamsFromCommand(command, true);
   try {
-    const subscription = await Subscription.findOne({
+    const channelSubscription = await Subscription.findOne({
       where: { resourceId: commandParams.id, channelId: channelid }
     });
     let message = "Subscription already exists in this channel. No further action required!";
-    if (!subscription) {
+    if (!channelSubscription) {
       const existingDwSubscription = await Subscription.findOne({
         where: {
           resourceId: `${commandParams.owner}/${commandParams.id}`,
@@ -349,7 +348,8 @@ const listSubscription = async (
   responseUrl,
   channelid,
   userId,
-  replaceOriginal
+  replaceOriginal,
+  deleteOriginal
 ) => {
   try {
     //Get all subscriptions in this channel
@@ -403,11 +403,9 @@ const listSubscription = async (
     } else {
       const commandText = process.env.SLASH_COMMAND;
       // when updating previous list of subscriptions, remove message completely if there no more subscriptions.
-      message = replaceOriginal
-        ? `All subscriptions have been removed from channel.`
-        : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
+      message = deleteOriginal ? "" : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
     }
-    await sendSlackMessage(responseUrl, message, attachments, replaceOriginal);
+    await sendSlackMessage(responseUrl, message, attachments, replaceOriginal, deleteOriginal);
   } catch (error) {
     console.error("Error getting subscriptions : ", error.message);
     await sendSlackMessage(responseUrl, "Failed to get subscriptions.");
@@ -439,13 +437,15 @@ const sendSlackMessage = async (
   responseUrl,
   message,
   attachments,
-  replaceOriginal
+  replaceOriginal,
+  deleteOriginal
 ) => {
   let data = { text: message };
   if (attachments && !lang.isEmpty(attachments)) {
     data.attachments = attachments;
   }
   data.replace_original = replaceOriginal ? replaceOriginal : false;
+  data.delete_original = deleteOriginal ? deleteOriginal : false;
   try {
     await slack.sendResponse(responseUrl, data);
   } catch (error) {
@@ -617,10 +617,12 @@ const handleMenuAction = async (payload, action, user) => {
         user.dwAccessToken
       );
     }
+    // Update list of subscriptions
     await listSubscription(
       payload.response_url,
       payload.channel.id,
       payload.user.id,
+      true,
       true
     );
   } else {
