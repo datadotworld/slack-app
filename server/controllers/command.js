@@ -70,21 +70,31 @@ const subscribeToProjectOrDataset = async (
   const commandParams = helper.extractParamsFromCommand(command, false);
   try {
     // check if subscription already exist in channel
-    const subscription = await Subscription.findOne({
+    const channelSubscription = await Subscription.findOne({
       where: {
         resourceId: `${commandParams.owner}/${commandParams.id}`,
         channelId: channelid
       }
     });
     let message = "Subscription already exists in this channel.";
-    if (!subscription) {
+    if (!channelSubscription) {
       // subscription not found in channel
+
+      // check if same user has an existing DW subscription for this resource
+      const existingDwSubscription = await Subscription.findOne({
+        where: {
+          resourceId: `${commandParams.owner}/${commandParams.id}`,
+          slackUserId: userid
+        }
+      });
       // use dataworld wrapper to subscribe to project
-      const response = await dataworld.subscribeToProject(
-        commandParams.owner,
-        commandParams.id,
-        token
-      );
+      if (!existingDwSubscription) {
+        await dataworld.subscribeToProject(
+          commandParams.owner,
+          commandParams.id,
+          token
+        );
+      }
       // Add subscription record to DB.
       await addSubscriptionRecord(
         commandParams.owner,
@@ -92,7 +102,7 @@ const subscribeToProjectOrDataset = async (
         userid,
         channelid
       );
-      message = response.data.message;
+      message = "Webhook subscription created successfully.";
     }
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
@@ -113,11 +123,22 @@ const subscribeToDataset = async (
   // use dataworld wrapper to subscribe to dataset
   let commandParams = helper.extractParamsFromCommand(command, false);
   try {
-    const response = await dataworld.subscribeToDataset(
-      commandParams.owner,
-      commandParams.id,
-      token
-    );
+    // check if same user has an existing DW subscription for this resource
+    const existingDwSubscription = await Subscription.findOne({
+      where: {
+        resourceId: `${commandParams.owner}/${commandParams.id}`,
+        slackUserId: userid
+      }
+    });
+    let message = "";
+    if (!existingDwSubscription) {
+      const response = await dataworld.subscribeToDataset(
+        commandParams.owner,
+        commandParams.id,
+        token
+      );
+      message = response.data.message;
+    }
     addSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
@@ -125,7 +146,8 @@ const subscribeToDataset = async (
       channelid
     );
     // send successful subscription message to Slack
-    sendSlackMessage(responseUrl, response.data.message);
+    message = message || "Webhook subscription created successfully.";
+    sendSlackMessage(responseUrl, message);
   } catch (error) {
     console.warn("Failed to subscribe to dataset : ", error.message);
     sendSlackMessage(
@@ -151,17 +173,25 @@ const subscribeToAccount = async (
     });
     let message = "Subscription already exists in this channel.";
     if (!subscription) {
-      const response = await dataworld.subscribeToAccount(
-        commandParams.id,
-        token
-      );
+      const existingDwSubscription = await Subscription.findOne({
+        where: {
+          resourceId: `${commandParams.owner}/${commandParams.id}`,
+          slackUserId: userid
+        }
+      });
+      if (!existingDwSubscription) {
+        await dataworld.subscribeToAccount(
+          commandParams.id,
+          token
+        );
+      }
       addSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
         userid,
         channelid
       );
-      message = response.data.message;
+      message = "Webhook subscription created successfully.";
     }
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);

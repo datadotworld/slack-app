@@ -282,7 +282,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         expect(auth.checkSlackAssociationStatus).toBeCalledWith(
           payloadObject.user.id
         );
-        expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+        expect(Subscription.findOne).toHaveBeenCalledTimes(2);
         expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
         const parts = resourceId.split("/");
         expect(dataworld.subscribeToProject).toBeCalledWith(

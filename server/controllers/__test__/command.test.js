@@ -49,7 +49,7 @@ describe("Test Auth controller methods", () => {
         token
       );
 
-      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+      expect(Subscription.findOne).toHaveBeenCalledTimes(2);
       expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
       expect(dataworld.subscribeToProject).toHaveBeenCalledWith(
         "owner",
@@ -123,7 +123,7 @@ describe("Test Auth controller methods", () => {
         token
       );
 
-      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+      expect(Subscription.findOne).toHaveBeenCalledTimes(3);
       expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
       expect(dataworld.subscribeToProject).toHaveBeenCalledWith(
         "owner",
@@ -194,7 +194,7 @@ describe("Test Auth controller methods", () => {
       token
     );
 
-    expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+    expect(Subscription.findOne).toHaveBeenCalledTimes(2);
     expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
     expect(dataworld.subscribeToAccount).toHaveBeenCalledWith("agentid", token);
     expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {

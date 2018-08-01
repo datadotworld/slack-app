@@ -116,7 +116,7 @@ const verifySlackClient = (req, res, next) => {
 
 const checkSlackAssociationStatus = async slackId => {
   try {
-    const user = await User.findOne({
+    let user = await User.findOne({
       where: { slackId: slackId, dwAccessToken: { [Op.ne]: null } }
     });
     let isAssociated = false;
@@ -128,7 +128,7 @@ const checkSlackAssociationStatus = async slackId => {
       if(!isAssociated) { 
         // Attempt to refresh token  
         const response = await dataworld.refreshToken(user.dwRefreshToken);
-        if (!response.error) {
+        if (!response.data.error) {
           const token = response.data.access_token;
           const refreshToken = response.data.refesh_token;
 

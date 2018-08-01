@@ -34,6 +34,7 @@ const helper = require("../helpers/helper");
 
 // Possible event actions
 const CREATE = "create";
+const UPDATE = "update";
 
 // Possible event entities
 const DATASET = "dataset";
@@ -686,9 +687,12 @@ const webhook = {
       res.status(200).send();
       // process event based on type
       // Get resource id
+
+      // When insigts are added the action in event payload is Create not Update (of project as expected), this help nomalize things.
+      const action = event.links.web.insight ? UPDATE : event.action; 
       const resourceId = extractResouceIdFromWebLink(
         event.links.web.project || event.links.web.dataset,
-        event.action
+        action
       );
       // Get DW subscriber id
       const subscriberId = event.subscriberid.split(":")[1];
