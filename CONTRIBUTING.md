@@ -147,6 +147,8 @@
 #### 10. Deploy to heroku
     You can deploy to Heroku using the heroku deploy button but before that ensure you do the following:
 
+    At this point if you don't have your <heroku app base url> yet, it's okay to skip the environment variables that're dependent on it for now, but ensure you update once the app is created.
+
     1. Replace <ngrok url> with <heroku app base url> in your .env and slack app settings dashboard : 
     
         a. DW Oauth Client redirect_url
