@@ -125,7 +125,6 @@ const checkSlackAssociationStatus = async slackId => {
       // Check user association
       // User found, now verify DW token is active/valid.
       isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
-
       if(!isAssociated) { 
         // Attempt to refresh token  
         const response = await dataworld.refreshToken(user.dwRefreshToken);

@@ -18,8 +18,9 @@
  * data.world, Inc. (http://data.world/).
  */
 const Channel = require("../models").Channel;
-const Team = require("../models").Team;
 const Subscription = require("../models").Subscription;
+const Team = require("../models").Team;
+const User = require("../models").User;
 
 const array = require("lodash/array");
 const collection = require("lodash/collection");
@@ -69,6 +70,19 @@ const subscribeToProjectOrDataset = async (
   // extract params from command
   const commandParams = helper.extractParamsFromCommand(command, false);
   try {
+    // check if same user has an existing / active subscription for this resource in DW
+    const existsInDW = await dataworld.verifySubscriptionExists(
+      `${commandParams.owner}/${commandParams.id}`,
+      token
+    );
+    if (!existsInDW) {
+      // use dataworld wrapper to subscribe to project
+      await dataworld.subscribeToProject(
+        commandParams.owner,
+        commandParams.id,
+        token
+      );
+    }
     // check if subscription already exist in channel
     const channelSubscription = await Subscription.findOne({
       where: {
@@ -76,25 +90,16 @@ const subscribeToProjectOrDataset = async (
         channelId: channelid
       }
     });
-    let message = "Subscription already exists in this channel. No further action required!";
+    // This check will help ensure the appropiate message is sent to Slack in situations where
+    // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
+    let message =
+      !existsInDW || !channelSubscription
+        ? `All set! You'll now receive notifications about *${
+            commandParams.id
+          }* here.`
+        : "Subscription already exists in this channel. No further action required!";
     if (!channelSubscription) {
       // subscription not found in channel
-
-      // check if same user has an existing DW subscription for this resource
-      const existingDwSubscription = await Subscription.findOne({
-        where: {
-          resourceId: `${commandParams.owner}/${commandParams.id}`,
-          slackUserId: userid
-        }
-      });
-      // use dataworld wrapper to subscribe to project
-      if (!existingDwSubscription) {
-        await dataworld.subscribeToProject(
-          commandParams.owner,
-          commandParams.id,
-          token
-        );
-      }
       // Add subscription record to DB.
       await addSubscriptionRecord(
         commandParams.owner,
@@ -102,12 +107,11 @@ const subscribeToProjectOrDataset = async (
         userid,
         channelid
       );
-      message = `All set! You'll now receive notifications about *${commandParams.id}* here.`;
     }
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
   } catch (error) {
-    console.warn("Failed to subscribe to project: ", error.message);
+    console.warn("Failed to subscribe to project: ", error);
     // Failed ot subscribe as project, Handle as dataset
     subscribeToDataset(userid, channelid, command, responseUrl, token);
   }
@@ -123,35 +127,49 @@ const subscribeToDataset = async (
   // use dataworld wrapper to subscribe to dataset
   let commandParams = helper.extractParamsFromCommand(command, false);
   try {
-    // check if same user has an existing DW subscription for this resource
-    const existingDwSubscription = await Subscription.findOne({
-      where: {
-        resourceId: `${commandParams.owner}/${commandParams.id}`,
-        slackUserId: userid
-      }
-    });
-    if (!existingDwSubscription) {
-      const response = await dataworld.subscribeToDataset(
+    // check if same user has an existing / active subscription for this resource in DW
+    const existsInDW = await dataworld.verifySubscriptionExists(
+      `${commandParams.owner}/${commandParams.id}`,
+      token
+    );
+    if (!existsInDW) {
+      await dataworld.subscribeToDataset(
         commandParams.owner,
         commandParams.id,
         token
       );
-      message = response.data.message;
     }
-    addSubscriptionRecord(
-      commandParams.owner,
-      commandParams.id,
-      userid,
-      channelid
-    );
-    // send successful subscription message to Slack
-    sendSlackMessage(responseUrl,
-      `All set! You'll now receive notifications about *${commandParams.id}* here.`);
+    // check if subscription already exist in channel
+    const channelSubscription = await Subscription.findOne({
+      where: {
+        resourceId: `${commandParams.owner}/${commandParams.id}`,
+        channelId: channelid
+      }
+    });
+    // This check will help ensure the appropiate message is sent to Slack in situations where
+    // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
+    let message =
+      !existsInDW || !channelSubscription
+        ? `All set! You'll now receive notifications about *${
+            commandParams.id
+          }* here.`
+        : "Subscription already exists in this channel. No further action required!";
+    if (!channelSubscription) {
+      addSubscriptionRecord(
+        commandParams.owner,
+        commandParams.id,
+        userid,
+        channelid
+      );
+    }
+    sendSlackMessage(responseUrl, message);
   } catch (error) {
-    console.warn("Failed to subscribe to dataset : ", error.message);
+    console.warn("Failed to subscribe to dataset : ", error);
     sendSlackMessage(
       responseUrl,
-      `Failed to subscribe to *${commandParams.id}*. Please make sure to subscribe using a valid dataset URL.`
+      `Failed to subscribe to *${
+        commandParams.id
+      }*. Please make sure to subscribe using a valid dataset URL.`
     );
   }
 };
@@ -167,30 +185,33 @@ const subscribeToAccount = async (
   // use dataworld wrapper to subscribe to account
   const commandParams = helper.extractParamsFromCommand(command, true);
   try {
+    // check if same user has an existing / active subscription for this resource in DW
+    const existsInDW = await dataworld.verifySubscriptionExists(
+      commandParams.id,
+      token
+    );
+    if (!existsInDW) {
+      await dataworld.subscribeToAccount(commandParams.id, token);
+    }
+
     const channelSubscription = await Subscription.findOne({
       where: { resourceId: commandParams.id, channelId: channelid }
     });
-    let message = "Subscription already exists in this channel. No further action required!";
+    // This `response.data.user` check will help ensure the appropiate message is sent to Slack in situations where
+    // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
+    let message =
+      !existsInDW || !channelSubscription
+        ? `All set! You'll now receive notifications about *${
+            commandParams.id
+          }* here.`
+        : "Subscription already exists in this channel. No further action required!";
     if (!channelSubscription) {
-      const existingDwSubscription = await Subscription.findOne({
-        where: {
-          resourceId: `${commandParams.owner}/${commandParams.id}`,
-          slackUserId: userid
-        }
-      });
-      if (!existingDwSubscription) {
-        await dataworld.subscribeToAccount(
-          commandParams.id,
-          token
-        );
-      }
       addSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
         userid,
         channelid
       );
-      message = `All set! You'll now receive notifications about *${commandParams.id}* here.`;
     }
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
@@ -198,7 +219,9 @@ const subscribeToAccount = async (
     console.error("Error subscribing to account: ", error.message);
     sendSlackMessage(
       responseUrl,
-      `Failed to subscribe to *${commandParams.id}*. Is that a valid data.world account ID?`
+      `Failed to subscribe to *${
+        commandParams.id
+      }*. Is that a valid data.world account ID?`
     );
   }
 };
@@ -241,7 +264,9 @@ const unsubscribeFromDatasetOrProject = async (
         channelid
       );
       // send successful unsubscription message to Slack
-      const message = `No problem! You'll no longer receive notifications about *${commandParams.id}* here.`;
+      const message = `No problem! You'll no longer receive notifications about *${
+        commandParams.id
+      }* here.`;
       await sendSlackMessage(responseUrl, message);
     } else {
       await sendSlackMessage(
@@ -287,8 +312,12 @@ const unsubscribeFromProject = async (
       channelId
     );
     // send successful unsubscription message to Slack
-    await sendSlackMessage(responseUrl,
-      `No problem! You'll no longer receive notifications about *${commandParams.id}* here.`);
+    await sendSlackMessage(
+      responseUrl,
+      `No problem! You'll no longer receive notifications about *${
+        commandParams.id
+      }* here.`
+    );
   } catch (error) {
     console.error("Error unsubscribing from project : ", error.message);
     await sendSlackMessage(
@@ -326,7 +355,9 @@ const unsubscribeFromAccount = async (
         channelid
       );
       // send successful unsubscription message to Slack
-      const message = `No problem! You'll no longer receive notifications about *${commandParams.id}* here.`;
+      const message = `No problem! You'll no longer receive notifications about *${
+        commandParams.id
+      }* here.`;
       await sendSlackMessage(responseUrl, message);
     } catch (error) {
       console.error("Error unsubscribing from account : ", error.message);
@@ -357,6 +388,10 @@ const listSubscription = async (
       where: { channelId: channelid }
     });
 
+    const user = await User.findOne({
+      where: { slackId: userId }
+    });
+
     let message;
     let attachments;
     let options = [];
@@ -365,18 +400,30 @@ const listSubscription = async (
     if (!lang.isEmpty(subscriptions)) {
       message = `*Active Subscriptions*`;
       let attachmentText = "";
-
-      collection.forEach(subscriptions, subscription => {
-        if (subscription.slackUserId === userId) {
-          options.push({
-            text: subscription.resourceId,
-            value: subscription.resourceId
-          });
+      // files.map(async (file) => {
+      await Promise.all(subscriptions.map(async (subscription) => {
+        // Verify that subscription exists in DW, if not remove subscription from our DB
+        const existsInDW = await dataworld.verifySubscriptionExists(
+          subscription.resourceId,
+          user.dwAccessToken
+        );
+        if(existsInDW) {
+          if (subscription.slackUserId === userId) {
+            options.push({
+              text: subscription.resourceId,
+              value: subscription.resourceId
+            });
+          }
+          attachmentText += `• ${baseUrl}/${subscription.resourceId} \n *created by :* <@${subscription.slackUserId}> \n`;
         }
-        attachmentText += `• ${baseUrl}/${
-          subscription.resourceId
-        } \n *created by :* <@${subscription.slackUserId}> \n`;
-      });
+      }));
+
+      // check if we have valid subscriptions i.e subscriptions that exists in DB and DW
+      if (lang.isEmpty(options) && lang.isEmpty(attachmentText)) {
+        message = deleteOriginal
+          ? ""
+          : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
+      }
 
       attachments = [
         {
@@ -403,9 +450,17 @@ const listSubscription = async (
     } else {
       const commandText = process.env.SLASH_COMMAND;
       // when updating previous list of subscriptions, remove message completely if there no more subscriptions.
-      message = deleteOriginal ? "" : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
+      message = deleteOriginal
+        ? ""
+        : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
     }
-    await sendSlackMessage(responseUrl, message, attachments, replaceOriginal, deleteOriginal);
+    await sendSlackMessage(
+      responseUrl,
+      message,
+      attachments,
+      replaceOriginal,
+      deleteOriginal
+    );
   } catch (error) {
     console.error("Error getting subscriptions : ", error.message);
     await sendSlackMessage(responseUrl, "Failed to get subscriptions.");
@@ -669,7 +724,7 @@ const performAction = async (req, res) => {
         });
       } else {
         // User is not associated begin association process.
-        beginSlackAssociation(
+        await beginSlackAssociation(
           payload.user.id,
           payload.user.name,
           payload.channel.id,
@@ -715,8 +770,8 @@ const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
       : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${
           team.botUserId
         }> to this channel. Run \`/invite <@${
-      team.botUserId
-      }>\`, then try again.`;
+          team.botUserId
+        }>\`, then try again.`;
     sendSlackMessage(responseUrl, message);
   }
   return isPresent;
@@ -776,7 +831,7 @@ const validateAndProcessCommand = async (req, res, next) => {
           }
         } else {
           // User is not associated begin association process.
-          beginSlackAssociation(
+          await beginSlackAssociation(
             req.body.user_id,
             req.body.user_name,
             req.body.channel_id,
@@ -800,7 +855,7 @@ const sendErrorMessage = req => {
   sendSlackMessage(req.body.response_url, message);
 };
 
-const beginSlackAssociation = (
+const beginSlackAssociation = async (
   userId,
   userName,
   channelId,
@@ -808,12 +863,15 @@ const beginSlackAssociation = (
   responseUrl
 ) => {
   if (!slack.isDMChannel(channelId)) {
+    const team = await Team.findOne({
+      where: { teamId: teamId }
+    });
     // Don't send this message if we're in bot DM channel
     const message = `Not so fast! Please authenticate first. Follow instructions in 
     <@${team.botUserId}>, then try \`/${commandText}\` again.`;
     sendSlackMessage(responseUrl, message);
   }
-  auth.beginSlackAssociation(userId, userName, teamId);
+  await auth.beginSlackAssociation(userId, userName, teamId);
 };
 
 // Visible for testing

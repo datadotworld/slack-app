@@ -118,14 +118,29 @@ const subscribeToDataset = (owner, id, token) => {
   return put(requestUrl, events, token);
 };
 
+const getDatasetSubscription = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/datasets/${owner}/${id}`;
+  return get(requestUrl, token);
+};
+
 const subscribeToProject = (owner, id, token) => {
   const requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
   return put(requestUrl, events, token);
 };
 
+const getProjectSubscription = (owner, id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/projects/${owner}/${id}`;
+  return get(requestUrl, token);
+};
+
 const subscribeToAccount = (id, token) => {
   const requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
   return put(requestUrl, events, token);
+};
+
+const getAccountSubscription = (id, token) => {
+  const requestUrl = `${baseUrl}/user/webhooks/users/${id}`;
+  return get(requestUrl, token);
 };
 
 const unsubscribeFromDataset = (owner, id, token) => {
@@ -154,6 +169,33 @@ const verifyDwToken = async token => {
   }
 };
 
+const verifySubscriptionExists = async (resourseId, token) => {
+  try {
+    let isSubscribed = false;
+    if (resourseId.includes("/")) {
+      const data = resourseId.split("/");
+      const id = data.pop();
+      const owner = data.pop();
+      let response;
+      try{
+        // checks if project exist
+        response = await getProjectSubscription(owner, id, token);
+        isSubscribed = response.data.project ? true : false;
+      } catch (error) {
+        response = await getDatasetSubscription(owner, id, token);
+        isSubscribed = response.data.dataset ? true : false;
+      }
+    } else {
+      const response = await getAccountSubscription(resourseId, token);
+      isSubscribed = response.data.user ? true : false;
+    }
+    return isSubscribed;
+ } catch (error) {
+   console.error(`Failed to verify subscription to ${resourseId} in DW `, error.message);
+   return false;
+ }
+};
+
 module.exports = {
   exchangeAuthCode,
   getActiveDWUser,
@@ -167,9 +209,13 @@ module.exports = {
   subscribeToDataset,
   subscribeToProject,
   subscribeToAccount,
+  getDatasetSubscription,
+  getProjectSubscription,
+  getAccountSubscription,
   unsubscribeFromDataset,
   unsubscribeFromProject,
   unsubscribeFromAccount,
   verifyDwToken,
-  refreshToken
+  refreshToken,
+  verifySubscriptionExists
 };
