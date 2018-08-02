@@ -5,31 +5,31 @@
     "scripts": {},
     "env": {
       "DW_AUTH_BASE_URL": {
-        "required": true
+        "required": false
       },      
       "DW_BASE_URL": {
-        "required": true
+        "required": false
       },      
       "DW_CLIENT_ID": {
-        "required": true
+        "required": false
       },      
       "DW_CLIENT_SECRET": {
-        "required": true
+        "required": false
       },      
       "DW_GET_TOKEN_BASE_URL": {
-        "required": true
+        "required": false
       },      
       "DW_REDIRECT_URI": {
-        "required": true
+        "required": false
       },
       "SLACK_APP_ID": {
-        "required": true
+        "required": false
       },
       "SLACK_CLIENT_ID": {
-        "required": true
+        "required": false
       },
       "SLACK_CLIENT_SECRET": {
-        "required": true
+        "required": false
       },
       "SLACK_BOT_TOKEN": {
         "required": false
@@ -38,10 +38,10 @@
         "required": false
       },
       "SLACK_VERIFICATION_TOKEN": {
-        "required": true
+        "required": false
       },
       "SLASH_COMMAND": {
-        "required": true
+        "required": false
       }
     },
     "formation": {
