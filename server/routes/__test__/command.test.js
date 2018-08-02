@@ -179,13 +179,15 @@ describe("POST /api/v1/command/action - Process an action", () => {
     const payloadObject = JSON.parse(menu_action_payload);
     const action = payloadObject.actions[0];
     const resourceId = action.selected_options[0].value;
+    const data = resourceId.split("/");
+    const dwDatasetId = data.pop();
     const teamId = "teamId";
     const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
 
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const message = "Webhook subscription deleted successfully.";
+    const message = `No problem! You'll no longer receive notifications about *${dwDatasetId}* here.`;
     const response = { data: { message } };
 
     Team.findOne = jest.fn(() => Promise.resolve({ teamId, botAccessToken }));
@@ -228,6 +230,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         );
         expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, {
           replace_original: false,
+          delete_original: false,
           text: message
         });
         done();
@@ -254,7 +257,10 @@ describe("POST /api/v1/command/action - Process an action", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const message = "Webhook subscription created successfully.";
+    const parts = resourceId.split("/");
+    const owner = parts.shift();
+    const id = parts.shift();
+    const message = `All set! You'll now receive notifications about *${id}* here.`;
     const response = { data: { message } };
 
     Team.findOne = jest.fn(() => Promise.resolve({ teamId, botAccessToken }));
@@ -265,7 +271,9 @@ describe("POST /api/v1/command/action - Process an action", () => {
     Subscription.findOne = jest.fn(() => Promise.resolve());
     Subscription.findOrCreate = jest.fn(() => [{}, true]);
     dataworld.subscribeToProject = jest.fn(() => Promise.resolve(response));
+    dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
     slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
+    slack.sendResponse = jest.fn(() => Promise.resolve());
 
     request(server)
       .post("/api/v1/command/action")
@@ -282,13 +290,20 @@ describe("POST /api/v1/command/action - Process an action", () => {
         expect(auth.checkSlackAssociationStatus).toBeCalledWith(
           payloadObject.user.id
         );
-        expect(Subscription.findOne).toHaveBeenCalledTimes(2);
+        expect(Subscription.findOne).toHaveBeenCalledTimes(1);
         expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
-        const parts = resourceId.split("/");
         expect(dataworld.subscribeToProject).toBeCalledWith(
-          parts.shift(),
-          parts.shift(),
+          owner,
+          id,
           dwAccessToken
+        );
+        expect(slack.sendResponse).toBeCalledWith(
+          payloadObject.response_url,
+          {
+            delete_original: false, 
+            replace_original: false, 
+            text: message
+          }
         );
         done();
       });

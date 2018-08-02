@@ -113,7 +113,7 @@ const subscribeToProjectOrDataset = async (
   } catch (error) {
     console.warn("Failed to subscribe to project: ", error);
     // Failed ot subscribe as project, Handle as dataset
-    subscribeToDataset(userid, channelid, command, responseUrl, token);
+    await subscribeToDataset(userid, channelid, command, responseUrl, token);
   }
 };
 
@@ -155,17 +155,17 @@ const subscribeToDataset = async (
           }* here.`
         : "Subscription already exists in this channel. No further action required!";
     if (!channelSubscription) {
-      addSubscriptionRecord(
+      await addSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
         userid,
         channelid
       );
     }
-    sendSlackMessage(responseUrl, message);
+    await sendSlackMessage(responseUrl, message);
   } catch (error) {
     console.warn("Failed to subscribe to dataset : ", error);
-    sendSlackMessage(
+    await sendSlackMessage(
       responseUrl,
       `Failed to subscribe to *${
         commandParams.id
@@ -295,16 +295,23 @@ const unsubscribeFromProject = async (
   responseUrl,
   token
 ) => {
-  const commandText = process.env.SLASH_COMMAND;
-
   // use dataworld wrapper to unsubscribe to project
   let commandParams = helper.extractParamsFromCommand(command, false);
   try {
-    const response = await dataworld.unsubscribeFromProject(
-      commandParams.owner,
-      commandParams.id,
-      token
-    );
+    const resourceId = `${commandParams.owner}/${commandParams.id}`;
+    const [
+      hasSubscriptionInChannel,
+      removeDWSubscription
+    ] = await helper.getSubscriptionStatus(resourceId, channelId, userId);
+
+    if (removeDWSubscription) {
+      await dataworld.unsubscribeFromProject(
+        commandParams.owner,
+        commandParams.id,
+        token
+      );
+    }
+
     await removeSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
