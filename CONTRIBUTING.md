@@ -147,20 +147,29 @@
 #### 10. Deploy to heroku
     You can deploy to Heroku using the heroku deploy button but before that ensure you do the following:
 
-    At this point if you don't have your <heroku app base url> yet, it's okay to skip the environment variables that're dependent on it for now, but ensure you update once the app is created.
+    A. Goto https://api.slack.com/apps
 
-    1. Replace <ngrok url> with <heroku app base url> in your .env and slack app settings dashboard : 
+    B. Click create slack app button (positioned top right corner).
+
+    C. Click the heroku deploy button [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master)
+
+    D. Fill in the environment variables, you can skip the DW_REDIRECT_URI and SLASH_COMMAND             variables for now.
+
+    E. Go ahead and create a DW Oauth Client following step 4 above (Replacing <ngrok url> with <heroku app base url>)
     
-        a. DW Oauth Client redirect_url
-        b. Interactive Components request url
-        c. Event subscription request url
-        d. Slash Commands request url
-        e. Oauth & Permission redirect url
+    F. Go back and complete Slack app setup, See step 5c above. (Replacing <ngrok url> with <heroku app base url>) 
 
-    2. Now you can click the heroku button below to deploy and fill in the env variables. 
+    G. Now, go to https://dashboard.heroku.com/apps/<your app name / id>/settings to add 
+       DW_REDIRECT_URI and SLASH_COMMAND env variables. 
+    
+    H. Click Reveal Config Vars and set value for DW_REDIRECT_URI and SLASH_COMMAND env variables.
+
+    I. Click the More button at the top right corner of the screen
+
+    J. Select Restart all dynos. 
+
+    You can now install the app by following the steps in 9b
 
 ### 11. Running Test
 
     From the root directory run : yarn test
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master) 

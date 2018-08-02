@@ -5,40 +5,34 @@
     "scripts": {},
     "env": {
       "DW_AUTH_BASE_URL": {
-        "required": false
+        "required": true
       },      
       "DW_BASE_URL": {
-        "required": false
+        "required": true
       },      
       "DW_CLIENT_ID": {
-        "required": false
+        "required": true
       },      
       "DW_CLIENT_SECRET": {
-        "required": false
+        "required": true
       },      
       "DW_GET_TOKEN_BASE_URL": {
-        "required": false
+        "required": true
       },      
       "DW_REDIRECT_URI": {
         "required": false
       },
       "SLACK_APP_ID": {
-        "required": false
+        "required": true
       },
       "SLACK_CLIENT_ID": {
-        "required": false
+        "required": true
       },
       "SLACK_CLIENT_SECRET": {
-        "required": false
-      },
-      "SLACK_BOT_TOKEN": {
-        "required": false
-      },
-      "SLACK_TEAM_TOKEN": {
-        "required": false
+        "required": true
       },
       "SLACK_VERIFICATION_TOKEN": {
-        "required": false
+        "required": true
       },
       "SLASH_COMMAND": {
         "required": false
