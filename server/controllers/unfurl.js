@@ -417,7 +417,6 @@ const handleJoinedChannelEvent = async event => {
 };
 
 const handleAppUninstalledEvent = async data => {
-  console.log("App uninstalled : " + JSON.stringify(data));
   // Do record clean up
   try{
   // get all users in this team
@@ -428,10 +427,9 @@ const handleAppUninstalledEvent = async data => {
   await Promise.all(users.map(async user => {
     // delete subscriptions for each user
 
-    // Will revoke access give to app by users in this workspace
-    // Will delete all active subscriptions by this user
-    const deletedRes = await dataworld.revokeDWToken(user.dwUserId, user.dwAccessToken);
-    console.log("DW deleted res : ", JSON.stringify(deletedRes.data));
+    // TODO : Should revoke access given to app by users in this workspace
+    // TODO : Should delete all DW active subscriptions by this user
+
     // delete from DB
     await Subscription.destroy({
       where: { slackUserId: user.slackId }
