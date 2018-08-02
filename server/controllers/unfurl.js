@@ -20,6 +20,7 @@
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
+const User = require("../models").User;
 
 const lang = require("lodash/lang");
 const collection = require("lodash/collection");
@@ -415,22 +416,37 @@ const handleJoinedChannelEvent = async event => {
   }
 };
 
-// TODO: Clean up records when app is uninstalled.
 const handleAppUninstalledEvent = async data => {
-  // Do record clean up
-  // get all users in this team
-  // get subscriptions for each user
-  // for each subscription
-  // delete from DW
-  // delete from DB
-  // Delete all team users
-  // Delete team record
   console.log("App uninstalled : " + JSON.stringify(data));
-};
+  // Do record clean up
+  try{
+  // get all users in this team
+  const users = await User.findAll({
+    where: { teamId: data.team_id }
+  });
 
-// TODO; Clean up user record when they revoke slack access Token
-const handleTokensRevoked = async data => {
-  console.log("Token revoked : " + JSON.stringify(data));
+  await Promise.all(users.map(async user => {
+    // delete subscriptions for each user
+
+    // Will revoke access give to app by users in this workspace
+    // Will delete all active subscriptions by this user
+    const deletedRes = await dataworld.revokeDWToken(user.dwUserId, user.dwAccessToken);
+    console.log("DW deleted res : ", JSON.stringify(deletedRes.data));
+    // delete from DB
+    await Subscription.destroy({
+      where: { slackUserId: user.slackId }
+    });
+    // delete the user
+    await User.destroy({
+      where: { slackId: user.slackId }
+    });
+  }));
+  // Delete team record
+  await Team.destroy({ where: { teamId: data.team_id } });
+  console.log("Successfully cleaned up data!!!")
+  } catch(error) {
+    console.error("Clean up failed after app was uninstalled!", error);
+  }
 };
 
 const unfurl = {
@@ -447,9 +463,6 @@ const unfurl = {
         break;
       case "app_uninstalled":
         await handleAppUninstalledEvent(req.body);
-        break;
-      case "tokens_revoked":
-        await handleTokensRevoked(req.body);
         break;
       default:
         break;

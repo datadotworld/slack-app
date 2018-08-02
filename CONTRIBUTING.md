@@ -66,7 +66,7 @@
 
             a. Enable events 
             b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
-            c. Add workspace event : link_shared, app_uninstalled and tokens_revoked
+            c. Add workspace event : link_shared, app_uninstalled
             d. Add bot events : link_shared, member_joined_channel
             e. Add app unfurl domain : data.world
             f. Click save changes
@@ -96,7 +96,7 @@
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)
         DW_CLIENT_SECRET= (client secret from the DW Oauth Client created earlier in step 4.)
         DW_AUTH_BASE_URL=https://data.world/oauth/authorize
-        DW_GET_TOKEN_BASE_URL=https://data.world/oauth/access_token
+        DW_GET_TOKEN_BASE_URL=https://data.world/oauth
         DW_REDIRECT_URI= <ngrok url>/oauth/code_callback
 
     4. Set Other env variables :

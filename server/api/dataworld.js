@@ -25,6 +25,10 @@ const baseTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${
   process.env.DW_CLIENT_SECRET
 }&grant_type=`;
 
+const baseRevokeUrl = `${process.env.DW_REVOKE_TOKEN_BASE_URL}/${
+  process.env.DW_CLIENT_ID
+}`;
+
 const accessTokenUrl = `${baseTokenUrl}authorization_code&code=`;
 const refreshTokenUrl = `${baseTokenUrl}refresh_token&refresh_token=`;
 
@@ -158,6 +162,20 @@ const unsubscribeFromAccount = (id, token) => {
   return del(requestUrl, token);
 };
 
+const revokeDWToken = (agentId, token) => {
+  return del(`https://pdw-dwapi.prod.data.world/api/v0/oauths/token/${process.env.DW_CLIENT_ID}/${agentId}`, token);
+  // const revokeHeaders = {
+  //   Accept: "application/json",
+  //   "Content-Type": "application/json",
+  //   "Accept-Encoding": "gzip, deflate, br",
+  //   "x-csrf-token": "id1dsk.fky9j",
+  //   "Origin": "https://data.world",
+  //   Cookie: `_csrf=id1dsk.fky9j; token=${token}`
+  // } 
+  // // id1dsk.fky9j
+  // return axios.delete(`https://pdw-dwapi.prod.data.world/oauths/token/{clientid}/{agentid}`, { headers: revokeHeaders });
+};
+
 const verifyDwToken = async token => {
   const requestUrl = `${baseUrl}/user`;
   try {
@@ -196,6 +214,33 @@ const verifySubscriptionExists = async (resourseId, token) => {
  }
 };
 
+const deleteSubscription = async (resourseId, token) => {
+  try {
+    let isDeleted = false;
+    if (resourseId.includes("/")) {
+      const data = resourseId.split("/");
+      const id = data.pop();
+      const owner = data.pop();
+      let response;
+      try{
+        // handle as project
+        response = await unsubscribeFromProject(owner, id, token);
+        isDeleted = response.data.code ? false : true;
+      } catch (error) {
+        response = await unsubscribeFromDataset(owner, id, token);
+        isDeleted = response.data.code ? false : true;
+      }
+    } else {
+      const response = await unsubscribeFromAccount(resourseId, token);
+      isSubscribed = response.data.code ? false : true;
+    }
+    return isDeleted;
+ } catch (error) {
+   console.error(`Failed to delete subscription ${resourseId} in DW `, error.message);
+   return false;
+ }
+};
+
 module.exports = {
   exchangeAuthCode,
   getActiveDWUser,
@@ -217,5 +262,6 @@ module.exports = {
   unsubscribeFromAccount,
   verifyDwToken,
   refreshToken,
-  verifySubscriptionExists
+  verifySubscriptionExists,
+  revokeDWToken
 };
