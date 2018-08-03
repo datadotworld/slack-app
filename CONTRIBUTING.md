@@ -151,7 +151,7 @@
 
     B. Click create slack app button (positioned top right corner).
 
-    C. Click the heroku deploy button [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master)
+    C. Click the heroku deploy button at the bottom of this doc .
 
     D. Fill in the environment variables, you can skip the DW_REDIRECT_URI and SLASH_COMMAND             variables for now.
 
@@ -173,3 +173,5 @@
 ### 11. Running Test
 
     From the root directory run : yarn test
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master)
