@@ -376,38 +376,47 @@ const listSubscription = async (
       // files.map(async (file) => {
       await Promise.all(
         subscriptions.map(async subscription => {
-          let isProject = false;
-          
-          if (subscription.resourceId.includes("/")) {
-            const data = subscription.resourceId.split("/");
-            const id = data.pop();
-            const owner = data.pop();
+          try {
+            let isProject = false;
+            if (subscription.resourceId.includes("/")) {
+              const data = subscription.resourceId.split("/");
+              const id = data.pop();
+              const owner = data.pop();
 
-            const response = await dataworld.getDataset(
-              id,
-              owner,
-              user.dwAccessToken
-            );
-            const dataset = response.data;
-            isProject = dataset.isProject;
-          }
-
-          // Verify that subscription exists in DW, if not remove subscription from our DB
-          const existsInDW = await dataworld.verifySubscriptionExists(
-            subscription.resourceId,
-            user.dwAccessToken,
-            isProject
-          );
-          if (existsInDW) {
-            if (subscription.slackUserId === userId) {
-              options.push({
-                text: subscription.resourceId,
-                value: subscription.resourceId
-              });
+              const response = await dataworld.getDataset(
+                id,
+                owner,
+                user.dwAccessToken
+              );
+              const dataset = response.data;
+              isProject = dataset.isProject;
             }
-            attachmentText += `• ${baseUrl}/${
-              subscription.resourceId
-            } \n *created by :* <@${subscription.slackUserId}> \n`;
+
+            // Verify that subscription exists in DW, if not remove subscription from our DB
+            const existsInDW = await dataworld.verifySubscriptionExists(
+              subscription.resourceId,
+              user.dwAccessToken,
+              isProject
+            );
+            if (existsInDW) {
+              if (subscription.slackUserId === userId) {
+                options.push({
+                  text: subscription.resourceId,
+                  value: subscription.resourceId
+                });
+              }
+              attachmentText += `• ${baseUrl}/${
+                subscription.resourceId
+              } \n *created by :* <@${subscription.slackUserId}> \n`;
+            }
+          } catch (error) {
+            // This is expected to fail if the dataset is a private dataset
+            console.warn(
+              `Failed to retrieve dataset or project : ${
+                subscription.resourceId
+              }`,
+              error
+            );
           }
         })
       );
