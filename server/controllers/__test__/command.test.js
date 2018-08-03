@@ -35,11 +35,12 @@ describe("Test Auth controller methods", () => {
       const responseUrl = "responseUrl";
       const token = "token";
       const message = "All set! You'll now receive notifications about *datasetid* here.";
-      const data = { message };
+      const isProject = true;
 
       Subscription.findOne = jest.fn(() => Promise.resolve());
       Subscription.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
-      dataworld.subscribeToProject = jest.fn(() => Promise.resolve({ data }));
+      dataworld.subscribeToProject = jest.fn(() => Promise.resolve());
+      dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
@@ -53,6 +54,7 @@ describe("Test Auth controller methods", () => {
 
       expect(Subscription.findOne).toHaveBeenCalledTimes(1);
       expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
       expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
       expect(dataworld.subscribeToProject).toHaveBeenCalledWith(
         "owner",
@@ -78,9 +80,11 @@ describe("Test Auth controller methods", () => {
       const responseUrl = "responseUrl";
       const token = "token";
       const message = "Subscription already exists in this channel. No further action required!";
+      const isProject = true;
 
       Subscription.findOne = jest.fn(() => Promise.resolve({}));
       slack.sendResponse = jest.fn(() => Promise.resolve());
+      dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
       await command.subscribeToProjectOrDataset(
@@ -91,59 +95,9 @@ describe("Test Auth controller methods", () => {
         token
       );
 
+      expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
       expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
       expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-        replace_original: false,
-        delete_original: false,
-        text: message
-      });
-      done();
-    },
-    10000
-  );
-
-  it(
-    "should subscribe to dataset if project subscription fails.",
-    async done => {
-      const userid = "userid";
-      const channelid = "channelid";
-      const cmd = "subscribe owner/datasetid";
-      const responseUrl = "responseUrl";
-      const token = "token";
-      const message = "All set! You'll now receive notifications about *datasetid* here.";
-      const data = { message };
-
-      Subscription.findOne = jest.fn(() => Promise.resolve());
-      dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
-      dataworld.subscribeToProject = jest.fn(() =>
-        Promise.reject(new Error("Test - Failed DW project subscription"))
-      );
-      Subscription.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
-      dataworld.subscribeToDataset = jest.fn(() => Promise.resolve({ data }));
-      slack.sendResponse = jest.fn(() => Promise.resolve());
-
-      await command.subscribeToProjectOrDataset(
-        userid,
-        channelid,
-        cmd,
-        responseUrl,
-        token
-      );
-
-      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-      expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
-      expect(dataworld.subscribeToProject).toHaveBeenCalledWith(
-        "owner",
-        "datasetid",
-        token
-      );
-      expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(2);
-      expect(dataworld.subscribeToDataset).toHaveBeenCalledWith(
-        "owner",
-        "datasetid",
-        token
-      );
       expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
         replace_original: false,
         delete_original: false,
@@ -160,13 +114,15 @@ describe("Test Auth controller methods", () => {
     const cmd = "subscribe owner/datasetid";
     const responseUrl = "responseUrl";
     const token = "token";
+    const isProject = false;
 
+    dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
     dataworld.subscribeToDataset = jest.fn(() =>
       Promise.reject(new Error("Test - Failed DW dataset subscription"))
     );
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
 
-    await command.subscribeToDataset(
+    await command.subscribeToProjectOrDataset(
       userid,
       channelid,
       cmd,
@@ -174,11 +130,12 @@ describe("Test Auth controller methods", () => {
       token
     );
 
+    expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
     expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
       replace_original: false,
       delete_original: false,
-      text: "Failed to subscribe to *datasetid*. Please make sure to subscribe using a valid dataset URL."
+      text: "Failed to subscribe to *datasetid*. Please make sure to subscribe using a valid dataset or project URL."
     });
 
     done();

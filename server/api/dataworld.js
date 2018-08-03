@@ -169,7 +169,7 @@ const verifyDwToken = async token => {
   }
 };
 
-const verifySubscriptionExists = async (resourseId, token) => {
+const verifySubscriptionExists = async (resourseId, token, isProject) => {
   try {
     let isSubscribed = false;
     if (resourseId.includes("/")) {
@@ -177,11 +177,12 @@ const verifySubscriptionExists = async (resourseId, token) => {
       const id = data.pop();
       const owner = data.pop();
       let response;
-      try{
-        // checks if project exist
+      if(isProject) {
+        // checks if subscription to project exists
         response = await getProjectSubscription(owner, id, token);
         isSubscribed = response.data.project ? true : false;
-      } catch (error) {
+      } else {
+        // checks if subscription to dataset exists
         response = await getDatasetSubscription(owner, id, token);
         isSubscribed = response.data.dataset ? true : false;
       }

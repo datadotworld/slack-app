@@ -31,8 +31,8 @@
   },
   "scripts": {
     "start": "node --trace-warnings ./server/bin/www",
-    "dev": "npm run heroku-prebuild && npm run start",
-    "heroku-prebuild": "npm install && npm run build",
+    "dev": "yarn run heroku-prebuild && yarn run start",
+    "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
     "test": "jest --notify --forceExit  --clearMocks",
     "eject": "react-scripts eject"

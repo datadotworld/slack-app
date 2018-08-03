@@ -255,6 +255,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
     const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
 
     const isAssociated = true;
+    const isProject = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
     const parts = resourceId.split("/");
@@ -270,6 +271,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
     );
     Subscription.findOne = jest.fn(() => Promise.resolve());
     Subscription.findOrCreate = jest.fn(() => [{}, true]);
+    dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }))
     dataworld.subscribeToProject = jest.fn(() => Promise.resolve(response));
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
     slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
@@ -292,6 +294,8 @@ describe("POST /api/v1/command/action - Process an action", () => {
         );
         expect(Subscription.findOne).toHaveBeenCalledTimes(1);
         expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
+        expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
         expect(dataworld.subscribeToProject).toBeCalledWith(
           owner,
           id,

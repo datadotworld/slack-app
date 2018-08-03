@@ -70,18 +70,35 @@ const subscribeToProjectOrDataset = async (
   // extract params from command
   const commandParams = helper.extractParamsFromCommand(command, false);
   try {
+    // Get resource from DW to be able to confirm type
+    const response = await dataworld.getDataset(
+      commandParams.id,
+      commandParams.owner,
+      token
+    );
+    const dataset = response.data;
     // check if same user has an existing / active subscription for this resource in DW
     const existsInDW = await dataworld.verifySubscriptionExists(
       `${commandParams.owner}/${commandParams.id}`,
-      token
+      token,
+      dataset.isProject
     );
     if (!existsInDW) {
-      // use dataworld wrapper to subscribe to project
-      await dataworld.subscribeToProject(
-        commandParams.owner,
-        commandParams.id,
-        token
-      );
+      if (dataset.isProject) {
+        // use dataworld wrapper to subscribe to project
+        await dataworld.subscribeToProject(
+          commandParams.owner,
+          commandParams.id,
+          token
+        );
+      } else {
+        // use dataworld wrapper to subscribe to dataset
+        await dataworld.subscribeToDataset(
+          commandParams.owner,
+          commandParams.id,
+          token
+        );
+      }
     }
     // check if subscription already exist in channel
     const channelSubscription = await Subscription.findOne({
@@ -111,65 +128,13 @@ const subscribeToProjectOrDataset = async (
     // send subscription status message to Slack
     sendSlackMessage(responseUrl, message);
   } catch (error) {
-    console.warn("Failed to subscribe to project: ", error);
-    // Failed ot subscribe as project, Handle as dataset
-    await subscribeToDataset(userid, channelid, command, responseUrl, token);
-  }
-};
-
-const subscribeToDataset = async (
-  userid,
-  channelid,
-  command,
-  responseUrl,
-  token
-) => {
-  // use dataworld wrapper to subscribe to dataset
-  let commandParams = helper.extractParamsFromCommand(command, false);
-  try {
-    // check if same user has an existing / active subscription for this resource in DW
-    const existsInDW = await dataworld.verifySubscriptionExists(
-      `${commandParams.owner}/${commandParams.id}`,
-      token
-    );
-    if (!existsInDW) {
-      await dataworld.subscribeToDataset(
-        commandParams.owner,
-        commandParams.id,
-        token
-      );
-    }
-    // check if subscription already exist in channel
-    const channelSubscription = await Subscription.findOne({
-      where: {
-        resourceId: `${commandParams.owner}/${commandParams.id}`,
-        channelId: channelid
-      }
-    });
-    // This check will help ensure the appropiate message is sent to Slack in situations where
-    // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
-    let message =
-      !existsInDW || !channelSubscription
-        ? `All set! You'll now receive notifications about *${
-            commandParams.id
-          }* here.`
-        : "Subscription already exists in this channel. No further action required!";
-    if (!channelSubscription) {
-      await addSubscriptionRecord(
-        commandParams.owner,
-        commandParams.id,
-        userid,
-        channelid
-      );
-    }
-    await sendSlackMessage(responseUrl, message);
-  } catch (error) {
-    console.warn("Failed to subscribe to dataset : ", error);
+    // Failed to subscribe as project, Handle as dataset
+    console.warn("Failed to subscribe to Project or Dataset : ", error.message);
     await sendSlackMessage(
       responseUrl,
       `Failed to subscribe to *${
         commandParams.id
-      }*. Please make sure to subscribe using a valid dataset URL.`
+      }*. Please make sure to subscribe using a valid dataset or project URL.`
     );
   }
 };
@@ -188,7 +153,8 @@ const subscribeToAccount = async (
     // check if same user has an existing / active subscription for this resource in DW
     const existsInDW = await dataworld.verifySubscriptionExists(
       commandParams.id,
-      token
+      token,
+      false
     );
     if (!existsInDW) {
       await dataworld.subscribeToAccount(commandParams.id, token);
@@ -408,22 +374,43 @@ const listSubscription = async (
       message = `*Active Subscriptions*`;
       let attachmentText = "";
       // files.map(async (file) => {
-      await Promise.all(subscriptions.map(async (subscription) => {
-        // Verify that subscription exists in DW, if not remove subscription from our DB
-        const existsInDW = await dataworld.verifySubscriptionExists(
-          subscription.resourceId,
-          user.dwAccessToken
-        );
-        if(existsInDW) {
-          if (subscription.slackUserId === userId) {
-            options.push({
-              text: subscription.resourceId,
-              value: subscription.resourceId
-            });
+      await Promise.all(
+        subscriptions.map(async subscription => {
+          let isProject = false;
+          
+          if (subscription.resourceId.includes("/")) {
+            const data = subscription.resourceId.split("/");
+            const id = data.pop();
+            const owner = data.pop();
+
+            const response = await dataworld.getDataset(
+              id,
+              owner,
+              user.dwAccessToken
+            );
+            const dataset = response.data;
+            isProject = dataset.isProject;
           }
-          attachmentText += `• ${baseUrl}/${subscription.resourceId} \n *created by :* <@${subscription.slackUserId}> \n`;
-        }
-      }));
+
+          // Verify that subscription exists in DW, if not remove subscription from our DB
+          const existsInDW = await dataworld.verifySubscriptionExists(
+            subscription.resourceId,
+            user.dwAccessToken,
+            isProject
+          );
+          if (existsInDW) {
+            if (subscription.slackUserId === userId) {
+              options.push({
+                text: subscription.resourceId,
+                value: subscription.resourceId
+              });
+            }
+            attachmentText += `• ${baseUrl}/${
+              subscription.resourceId
+            } \n *created by :* <@${subscription.slackUserId}> \n`;
+          }
+        })
+      );
 
       // check if we have valid subscriptions i.e subscriptions that exists in DB and DW
       if (lang.isEmpty(options) && lang.isEmpty(attachmentText)) {
@@ -886,7 +873,6 @@ module.exports = {
   isBotPresent,
   sendErrorMessage,
   subscribeToProjectOrDataset,
-  subscribeToDataset,
   subscribeToAccount,
   unsubscribeFromDatasetOrProject,
   unsubscribeFromProject,

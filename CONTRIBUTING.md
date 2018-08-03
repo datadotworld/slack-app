@@ -122,7 +122,7 @@
 
     1. Go to interactive components section
     2. Ensure interactivity is enabled
-    3. Add request url <ngrok url>/api/v1/unfurl/action (Challenge should be successful).
+    3. Add request url <ngrok url>/api/v1/command/action (Challenge should be successful).
     4. Click save changes.
 
 #### 9. Install and Run app in workspace
