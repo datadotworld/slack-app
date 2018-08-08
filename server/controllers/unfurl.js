@@ -35,6 +35,7 @@ const slack = require("../api/slack");
 
 const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+const queryLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = async (token, channel, link) => {
   const url = link.url;
@@ -44,6 +45,9 @@ const messageAttachmentFromLink = async (token, channel, link) => {
     params = helper.extractInsightParams(url);
     params.token = token;
     return unfurlInsight(params);
+  }  else if(queryLinkFormat.test(url)) {
+    const params = helper.extractQueryParams(url);
+    return await unfurlQuery(params, token);
   } else if (dwLinkFormat.test(url)) {
     params = helper.extractDatasetOrProjectParamsFromLink(url);
     params.token = token;
@@ -85,13 +89,7 @@ const unfurlDatasetOrProject = async (params, channelId) => {
 const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
-  const offset = moment(
-    dataset.updated,
-    "YYYY-MM-DDTHH:mm:ss.SSSSZ"
-  ).utcOffset();
-  const ts = moment(dataset.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
-    .utcOffset(offset)
-    .unix();
+  const ts = getTimestamp(dataset);
 
   const attachment = {
     fallback: dataset.title,
@@ -183,13 +181,7 @@ const unfurlProject = async (params, owner, addSubcribeAction) => {
     const project = response.data;
     const resourceId = `${params.owner}/${params.datasetId}`;
 
-    const offset = moment(
-      project.updated,
-      "YYYY-MM-DDTHH:mm:ss.SSSSZ"
-    ).utcOffset();
-    const ts = moment(project.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
-      .utcOffset(offset)
-      .unix();
+    const ts = getTimestamp(project);
     const attachment = {
       fallback: project.title,
       color: "#F6BD68",
@@ -301,13 +293,13 @@ const unfurlInsight = params => {
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
     .then(async response => {
-      const ownerResponse = await dataworld.getDWUser(
-        params.token,
-        params.owner
-      );
-      const owner = ownerResponse.data;
       const insight = response.data;
-      return getInsightAttachment(insight, owner, params);
+      const authorResponse = await dataworld.getDWUser(
+        params.token,
+        insight.author
+      );
+      const author = authorResponse.data;
+      return getInsightAttachment(insight, author, params);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -315,34 +307,91 @@ const unfurlInsight = params => {
     });
 };
 
-const getInsightAttachment = (insight, owner, params) => {
-  let author = insight.author;
+const unfurlQuery = async (params, token) => {
+    // Fetch resource info from DW
+    try {
+      const response = await dataworld.getQuery(
+        params.queryId,
+        token
+      );
+      const query = response.data;
+
+      const ownerResponse = await dataworld.getDWUser(
+        params.token,
+        query.owner
+      );
+
+      const owner = ownerResponse.data;
+
+      return getQueryAttachment(query, owner, params);
+
+    } catch(error) {
+      console.error("failed to get query attachment : ", error.message);
+      return;
+    }
+}
+
+const getInsightAttachment = (insight, author, params) => {
+  const ts = getTimestamp(insight);
   const attachment = {
     fallback: insight.title,
     color: "#9581CA",
-    author_name: author,
-    author_link: `http://data.world/${author}`,
-    author_icon: owner.avatarUrl,
+    author_name: author.displayName,
+    author_link: `http://data.world/${author.id}`,
+    author_icon: author.avatarUrl,
     title: insight.title,
     title_link: params.link,
     text: insight.description,
     image_url: insight.thumbnail,
-    footer: `${params.owner}/${params.projectId}/insights/${insight.id}`,
+    footer: `${params.owner}/${params.projectId}`,
     footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
     url: params.link,
+    ts: ts,
     actions: [
       {
         type: "button",
         text: "Discuss :left_speech_bubble:",
-        url: `https://data.world/${params.owner}/${params.projectId}/insights/${
-          insight.id
-        }`
+        url: params.link
       }
     ]
   };
   if (insight.body.imageUrl) {
     attachment.imageUrl = insight.body.imageUrl;
   }
+
+  return attachment;
+};
+
+const getQueryAttachment = (query, owner, params) => {
+  const ts = getTimestamp(query);
+  const attachment = {
+    fallback: query.name,
+    color: "#9CD2A0",
+    author_name: owner.displayName,
+    author_link: `http://data.world/${owner.id}`,
+    author_icon: owner.avatarUrl,
+    title: query.name,
+    title_link: params.link,
+    text: `\`\`\`${query.body}\`\`\``,
+    footer: `${params.owner}/${params.datasetId}`,
+    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    url: params.link,
+    ts: ts,
+    actions: [
+      {
+        type: "button",
+        text: "View :eye-in-speech-bubble:",
+        url: params.link
+      }
+    ]
+  };
+
+  attachment.fields = [];
+  attachment.fields.push({
+    title: "Language",
+    value: `\`${query.language}\``,
+    short: false
+  });
 
   return attachment;
 };
@@ -445,6 +494,14 @@ const handleAppUninstalledEvent = async data => {
   } catch(error) {
     console.error("Clean up failed after app was uninstalled!", error);
   }
+};
+
+const getTimestamp = (resource) => {
+  const offset = moment(resource.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ").utcOffset();
+  const ts = moment(resource.updated, "YYYY-MM-DDTHH:mm:ss.SSSSZ")
+    .utcOffset(offset)
+    .unix();
+  return ts;
 };
 
 const unfurl = {
