@@ -1,5 +1,5 @@
 # Slack-app
-Data.World slack application.
+data.world slack application.
 
 ### Installation 
 
@@ -12,7 +12,7 @@ Click the button below to install data.world slack app in your workspace.
 Once you've the app up and running and installed in your workspace (See CONTRIBUTING.md for setup instructions) you can perform the following actions :
 
        1. OAuth handshake / User binding
-       2. Unfurling of Data.World links 
+       2. Unfurling of data.world links 
        3. Subscribe / Unsubscribe to Dataset, Project or Account using slash commands.
 
 ##### OAuth handshake / User account binding 
@@ -23,7 +23,7 @@ read, write and webhook operations on behalf of the user.User can revoke permiss
 Account binding is required to be able to run data.world slash commands. Hence, the data.world slack app will prompt the user
 to complete Account binding any time he/she tries to use any of the available commands in slack.
 
-##### Unfurling of Data.World links
+##### Unfurling of data.world links
 
 Any data.world link pasted in a slack channel will be automatically unfurled, this requires at least one slack user in the workspace to have completed account binding.
 For ambiguous urls like workspace url, the underlying dataset or project will be unfurled.
