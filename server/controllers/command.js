@@ -373,7 +373,6 @@ const listSubscription = async (
     if (!lang.isEmpty(subscriptions)) {
       message = `*Active Subscriptions*`;
       let attachmentText = "";
-      // files.map(async (file) => {
       await Promise.all(
         subscriptions.map(async subscription => {
           try {
