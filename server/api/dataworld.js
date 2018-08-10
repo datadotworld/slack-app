@@ -111,6 +111,11 @@ const getInsight = (id, projectId, owner, token) => {
   return get(requestUrl, token);
 };
 
+const getQuery = (id, token) => {
+  const requestUrl = `${baseUrl}/queries/${id}`;
+  return get(requestUrl, token);
+};
+
 const getInsights = (projectId, owner, token) => {
   const requestUrl = `${baseUrl}/insights/${owner}/${projectId}`;
   return get(requestUrl, token);
@@ -213,6 +218,7 @@ module.exports = {
   getProject,
   getProjectByVersion,
   getInsight,
+  getQuery,
   getInsights,
   getSubscriptions,
   subscribeToDataset,

@@ -49,6 +49,22 @@ const extractDatasetOrProjectParamsFromLink = link => {
   return params;
 };
 
+const extractQueryParams = link => {
+  const params = {};
+  const parts = link.split("=");
+
+  params.queryId =  parts.pop();
+
+  const baseUrl = parts.pop();
+  const paths = baseUrl.split("/");
+
+  params.owner = paths[3];
+  params.datasetId = paths[4];
+  params.link = link;
+
+  return params;
+};
+
 const extractInsightParams = link => {
   let params = {};
   let parts = link.split("/");
@@ -118,6 +134,7 @@ module.exports = {
   extractInsightParams,
   extractInsightsParams,
   extractIdFromLink,
+  extractQueryParams,
   cleanSlackLinkInput,
   getSubscriptionStatus,
   exponentialDelay
