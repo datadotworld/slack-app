@@ -684,7 +684,6 @@ const webhook = {
   async process(req, res) {
     try {
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
-      res.status(200).send();
       // process event based on type
       // Get resource id
 
@@ -702,7 +701,9 @@ const webhook = {
       });
       if (!subscriber) {
         console.error("Active DW subscriber not found in DB : ", subscriberId);
-        return;
+        return res.status(404).send();
+      } else {
+        res.status(200).send();
       }
       // Get subsciptions
       const subscriptions = await Subscription.findAll({
