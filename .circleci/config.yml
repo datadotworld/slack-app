@@ -8,9 +8,25 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build and run client
-          command: npm install && npm run build 
+          name: Install dependencies
+          command: yarn
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
-          name: Build and run server
-          working_directory: ~/slack-app/server
-          command: npm install && node ./bin/www
+          name: Build react app
+          command: yarn build
+      - run:
+          name: Run tests with JUnit as reporter
+          command: yarn test-with-reporter
+          environment:
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+      - store_artifacts:
+          path: test-results.xml
+          prefix: tests
+      - store_artifacts:
+          path: coverage
+          prefix: coverage
+      - store_test_results:
+          path: test-results.xml
