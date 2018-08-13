@@ -341,7 +341,7 @@ const getInsightAttachment = (insight, owner, params) => {
     ]
   };
   if (insight.body.imageUrl) {
-    attachment.imageUrl = insight.body.imageUrl;
+    attachment.image_url = insight.body.imageUrl;
   }
 
   return attachment;
