@@ -1,12 +1,6 @@
 # Slack-app
 data.world slack application.
 
-### Installation 
-
-Click the button below to install data.world slack app in your workspace.
-
-<a href="https://slack.com/oauth/authorize?client_id=373203963251.380938312853&scope=commands,bot,links:read,links:write"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
-
 ### How it works
 
 Once you've the app up and running and installed in your workspace (See CONTRIBUTING.md for setup instructions) you can perform the following actions :
