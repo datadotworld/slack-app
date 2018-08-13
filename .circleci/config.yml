@@ -21,12 +21,12 @@ jobs:
           name: Run tests with JUnit as reporter
           command: yarn test-with-reporter
           environment:
-            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT: "test-results/jest/results.xml"
       - store_artifacts:
-          path: test-results.xml
+          path: test-results/jest/results.xml
           prefix: tests
       - store_artifacts:
           path: coverage
           prefix: coverage
       - store_test_results:
-          path: test-results.xml
+          path: test-results/jest/results.xml
