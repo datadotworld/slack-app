@@ -3,13 +3,13 @@ jobs:
   build:
     working_directory: ~/slack-app
     docker:
-      - image: circleci/node:4.8.2
+      - image: circleci/node:8.9.4
       - image: postgres:10.4
     steps:
       - checkout
       - run:
           name: Install dependencies
-          command: yarn
+          command: yarn 
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
