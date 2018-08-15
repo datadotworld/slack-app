@@ -43,6 +43,8 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
     const userId = "userId";
     const botToken = "botToken";
     const code = "code";
+    const update =  jest.fn(() => Promise.resolve());
+    const team = { update , teamId, botAccessToken: botToken }
     const resp = {
       url: "https://slack.com/api/oauth.access",
       statusCode: 200,
@@ -61,6 +63,7 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
 
     slack.oauthAccess = jest.fn(() => Promise.resolve(resp));
     slack.sendWelcomeMessage = jest.fn(() => Promise.resolve());
+    Team.findOrCreate = jest.fn(() => Promise.resolve([team, false]));
 
     request(server)
       .get("/api/v1/auth/oauth")
@@ -76,6 +79,8 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
         );
         expect(slack.oauthAccess).toBeCalledWith(code);
         expect(slack.sendWelcomeMessage).toHaveBeenCalledTimes(1);
+        expect(Team.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledTimes(1);
         expect(slack.sendWelcomeMessage).toBeCalledWith(
           process.env.SLACK_BOT_TOKEN || botToken,
           userId

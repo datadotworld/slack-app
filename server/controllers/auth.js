@@ -41,9 +41,9 @@ const slackOauth = (req, res) => {
   // call slack api
   slack
     .oauthAccess(req.query.code)
-    .then(response => {
+    .then(async response => {
       // create team with returned data
-      Team.findOrCreate({
+      const [team, created] = await Team.findOrCreate({
         where: { teamId: response.data.team_id },
         defaults: {
           teamDomain: response.data.team_name,
@@ -51,47 +51,46 @@ const slackOauth = (req, res) => {
           botUserId: response.data.bot.bot_user_id,
           botAccessToken: response.data.bot.bot_access_token
         }
-      })
-        .spread(async (team, created) => {
-          if (!created) {
-            // Team record already exits.
-            // Update existing record with new data
-            team.update(
-              {
-                teamDomain: response.data.team_name,
-                accessToken: response.data.access_token,
-                botUserId: response.data.bot.bot_user_id,
-                botAccessToken: response.data.bot.bot_access_token
-              },
-              {
-                fields: [
-                  "teamDomain",
-                  "accessToken",
-                  "botUserId",
-                  "botAccessToken"
-                ]
-              }
-            );
-          }
-          //inform user via slack that installation was successful
-          const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-          await slack.sendWelcomeMessage(botToken, response.data.user_id);
+      });
+      try {
+        if (!created) {
+          // Team record already exits.
+          // Update existing record with new data
+          await team.update(
+            {
+              teamDomain: response.data.team_name,
+              accessToken: response.data.access_token,
+              botUserId: response.data.bot.bot_user_id,
+              botAccessToken: response.data.bot.bot_access_token
+            },
+            {
+              fields: [
+                "teamDomain",
+                "accessToken",
+                "botUserId",
+                "botAccessToken"
+              ]
+            }
+          );
+        }
+        //inform user via slack that installation was successful
+        const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+        await slack.sendWelcomeMessage(botToken, response.data.user_id);
 
-          // deep link to slack app or redirect to slack team in web.
-          res.redirect(
-            `https://slack.com/app_redirect?app=${
-              process.env.SLACK_APP_ID
-            }&team=${team.teamId}`
-          );
-        })
-        .catch(error => {
-          // error creating user
-          console.error(
-            "Failed complete new team creation process : " + error.message
-          );
-          // redirect to failure page
-          res.redirect(`${baseUrl}/failed`);
-        });
+        // deep link to slack app or redirect to slack team in web.
+        res.redirect(
+          `https://slack.com/app_redirect?app=${
+            process.env.SLACK_APP_ID
+          }&team=${team.teamId}`
+        );
+      } catch (error) {
+        // error creating user
+        console.error(
+          "Failed complete new team creation process : " + error.message
+        );
+        // redirect to failure page
+        res.redirect(`${baseUrl}/failed`);
+      }
     })
     .catch(error => {
       console.error("Slack oauth failed : ", error);
@@ -125,8 +124,8 @@ const checkSlackAssociationStatus = async slackId => {
       // Check user association
       // User found, now verify DW token is active/valid.
       isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
-      if(!isAssociated) { 
-        // Attempt to refresh token  
+      if (!isAssociated) {
+        // Attempt to refresh token
         const response = await dataworld.refreshToken(user.dwRefreshToken);
         if (!response.data.error) {
           const token = response.data.access_token;
@@ -139,7 +138,7 @@ const checkSlackAssociationStatus = async slackId => {
           isAssociated = true;
         } else {
           // Access was revoked, this means all DW subscriptions for this user were removed
-          // We should do the same 
+          // We should do the same
           await Subscription.destroy({
             where: { slackUserId: slackId }
           });
@@ -232,7 +231,11 @@ const completeSlackAssociation = async (req, res) => {
       const user = await User.findOne({ where: { nonce: nonce } });
       const dwUserResponse = await dataworld.getActiveDWUser(token);
       await user.update(
-        { dwAccessToken: token, dwRefreshToken: refreshToken, dwUserId: dwUserResponse.data.id },
+        {
+          dwAccessToken: token,
+          dwRefreshToken: refreshToken,
+          dwUserId: dwUserResponse.data.id
+        },
         { fields: ["dwAccessToken", "dwRefreshToken", "dwUserId"] }
       );
 
