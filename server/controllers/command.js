@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -373,7 +373,6 @@ const listSubscription = async (
     if (!lang.isEmpty(subscriptions)) {
       message = `*Active Subscriptions*`;
       let attachmentText = "";
-      // files.map(async (file) => {
       await Promise.all(
         subscriptions.map(async subscription => {
           try {
