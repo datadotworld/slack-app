@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ const getCompleteAssociationMessage = slackUserId => {
 
 const getWelcomeMessage = commandText => {
   return (
-    "You've successfully installed Data.World on this Slack workspace :tada: \n" +
+    "You've successfully installed data.world on this Slack workspace :tada: \n" +
     "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
     `• _/${commandText} subscribe account_ \n` +
     `• _/${commandText} subscribe owner/dataset_ \n` +
