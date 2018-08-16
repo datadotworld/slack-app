@@ -3,14 +3,30 @@ jobs:
   build:
     working_directory: ~/slack-app
     docker:
-      - image: circleci/node:4.8.2
+      - image: circleci/node:8.9.4
       - image: postgres:10.4
     steps:
       - checkout
       - run:
-          name: Build and run client
-          command: npm install && npm run build 
+          name: Install dependencies
+          command: yarn 
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
-          name: Build and run server
-          working_directory: ~/slack-app/server
-          command: npm install && node ./bin/www
+          name: Build react app
+          command: yarn build
+      - run:
+          name: Run tests with JUnit as reporter
+          command: yarn test-with-reporter
+          environment:
+            JEST_JUNIT_OUTPUT: "test-results/jest/results.xml"
+      - store_artifacts:
+          path: test-results/jest/results.xml
+          prefix: tests
+      - store_artifacts:
+          path: coverage
+          prefix: coverage
+      - store_test_results:
+          path: test-results

@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -522,10 +522,10 @@ describe("Test Auth controller methods", () => {
   });
 
   it("should build and send help message to slack.", async done => {
-    const message = "Not sure how to use `/badbot`? Here are some ideas:point_down:";
+    const commandText = process.env.SLASH_COMMAND;
+    const message = `Not sure how to use \`/${commandText}\`? Here are some ideas:point_down:`;
     const attachments = [];
     const responseUrl = "response_url";
-    const commandText = process.env.SLASH_COMMAND;
 
     const commandsInfo = [
         `_Subscribe to a data.world dataset:_ \n \`/${commandText} subscribe dataset_url\``,
