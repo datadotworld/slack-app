@@ -18,8 +18,8 @@
  * data.world, Inc. (http://data.world/).
  */
 const axios = require("axios");
-const collection = require("lodash/collection");
 const SlackWebClient = require("@slack/client").WebClient;
+const AuthMessage = require("../models").AuthMessage;
 const headers = {
   Accept: "application/json",
   "Content-Type": "application/json"
@@ -121,58 +121,98 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
 
 const sendAuthRequiredMessage = async (
   botAccessToken,
-  slackUserId,
   nonce,
-  slackUsername
+  channelId
 ) => {
   try {
+    const associationUrl = `${DW_AUTH_URL}${nonce}`;
+    const attachments = [
+      {
+        color: "#355D8A",
+        text: "Not so fast! Please connect your data.world account first",
+        actions: [
+          {
+            type: "button",
+            text: "Connect data.world account",
+            style: "primary",
+            url: `${associationUrl}`
+          }
+        ]
+      }
+    ];
     const slackBot = new SlackWebClient(botAccessToken);
-    const res = await slackBot.im.open(slackUserId);
-    if (res && res.channel) {
-      const dmChannelId = res.channel.id;
-      const associationUrl = `${DW_AUTH_URL}${nonce}`;
-      slackBot.chat.postMessage(
-        dmChannelId,
-        `Hello, ${slackUsername}! I think it\'s time we introduce ourselves. I\'m a bot that helps you stay up-to-date with data.world.`,
-        {
-          attachments: [
-            {
-              text: `<${associationUrl}|Click here> to introduce yourself to me by authenticating.`
-            }
-          ]
-        }
-      );
-    } else {
-      console.warn("Unable to start Bot DM chat with user.");
+    const res = await slackBot.chat.postMessage(channelId, "", {
+      attachments
+    });
+    if (res.ok) {
+      await AuthMessage.findOrCreate({
+        where: { nonce: nonce },
+        defaults: { channel: res.channel, ts: res.ts }
+      });
     }
   } catch (error) {
     console.error("SendAuthRequiredMessage failed : ", error);
   }
 };
 
-const startUnfurlAssociation = (
-  associationUrl,
-  teamAccessToken,
-  messageTs,
-  channel
-) => {
-  const opts = {};
-  const unfurls = {};
-  opts.user_auth_required = true;
-  opts.user_auth_url = associationUrl;
-  const slackWebApi = new SlackWebClient(teamAccessToken);
-  slackWebApi.chat
-    .unfurl(messageTs, channel, unfurls, opts) // With opts, this will prompt user to authenticate using the association Url above.
-    .catch(error => {
-      console.error("Failed to send begin unfurl message to slack : ", error);
-    });
+const dismissAuthRequiredMessage = async (botAccessToken, ts, channel) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  await slackBot.chat.delete(ts, channel, { as_user: true });
 };
 
-const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
+const startUnfurlAssociation = async (
+  nonce,
+  botAccessToken,
+  channel
+) => {
+  const associationUrl = `${DW_AUTH_URL}${nonce}`;
+  const slackBot = new SlackWebClient(botAccessToken);
+  const attachments = [
+    {
+      color: "#355D8A",
+      text:
+        "Hi there! Linking your data.world account to Slack will make it possible to show a rich preview for data.world links (and it only takes a click or two).\n*Would you like to set it up?*",
+      callback_id: "auth_required_message",
+      actions: [
+        {
+          type: "button",
+          text: "Connect data.world account",
+          style: "primary",
+          url: `${associationUrl}`
+        },
+        {
+          name: "dismiss",
+          text: "Dismiss",
+          type: "button",
+          value: `${nonce}`
+        }
+      ]
+    }
+  ];
+  try {
+    const res = await slackBot.chat.postMessage(channel, "", { attachments });
+    if (res.ok) {
+      await AuthMessage.findOrCreate({
+        where: { nonce: nonce },
+        defaults: { channel: res.channel, ts: res.ts }
+      });
+    }
+  } catch (error) {
+    console.error("Failed to send begin unfurl message to slack : ", error);
+  }
+};
+
+const sendCompletedAssociationMessage = async (
+  botAccessToken,
+  slackUserId,
+  channel,
+  ts
+) => {
   const slackBot = new SlackWebClient(botAccessToken);
   const botResponse = await slackBot.im.open(slackUserId);
   const dmChannelId = botResponse.channel.id;
-  slackBot.chat.postMessage(
+  await slackBot.chat.delete(ts, channel, { as_user: true });
+  await slackBot.chat.postMessage(
     dmChannelId,
     `Well, it\'s nice to meet you, <@${slackUserId}>! Thanks for completing authentication.`
   );
@@ -198,5 +238,6 @@ module.exports = {
   startUnfurlAssociation,
   sendCompletedAssociationMessage,
   sendUnfurlAttachments,
-  sendMessageWithAttachments
+  sendMessageWithAttachments,
+  dismissAuthRequiredMessage
 };

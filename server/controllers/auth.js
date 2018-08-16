@@ -19,6 +19,7 @@
  */
 const Subscription = require("../models").Subscription;
 const User = require("../models").User;
+const AuthMessage = require("../models").AuthMessage;
 const Team = require("../models").Team;
 
 const uuidv1 = require("uuid/v1");
@@ -26,7 +27,6 @@ const Sequelize = require("sequelize");
 
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
-const DW_AUTH_URL = require("../helpers/helper").DW_AUTH_URL;
 
 const Op = Sequelize.Op;
 
@@ -152,7 +152,7 @@ const checkSlackAssociationStatus = async slackId => {
   }
 };
 
-const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
+const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
   try {
     let nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
@@ -172,9 +172,8 @@ const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
     const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
     await slack.sendAuthRequiredMessage(
       botToken,
-      slackUserId,
       nonce,
-      slackUsername
+      channelId
     );
   } catch (error) {
     console.error("Begin slack association error : ", error.message);
@@ -183,7 +182,6 @@ const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
 
 const beginUnfurlSlackAssociation = async (
   userId,
-  messageTs,
   channel,
   teamId
 ) => {
@@ -198,17 +196,15 @@ const beginUnfurlSlackAssociation = async (
 
     if (!created) {
       // User record already exits.
-      //update nonce, reauthenticating existing user.
+      // update nonce, reauthenticating existing user.
       user.update({ nonce: nonce }, { fields: ["nonce"] });
     }
 
     const team = await Team.findOne({ where: { teamId: teamId } });
-    const associationUrl = `${DW_AUTH_URL}${nonce}`;
-    const teamAccessToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-    slack.startUnfurlAssociation(
-      associationUrl,
-      teamAccessToken,
-      messageTs,
+    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+    await slack.startUnfurlAssociation(
+      nonce,
+      botAccessToken,
       channel
     );
   } catch (error) {
@@ -229,7 +225,11 @@ const completeSlackAssociation = async (req, res) => {
       // Add returned token
       // redirect to success / homepage
       const user = await User.findOne({ where: { nonce: nonce } });
+      const authMessage = await AuthMessage.findOne({ where: { nonce: nonce }});
+      const { channel, ts } = authMessage;
       const dwUserResponse = await dataworld.getActiveDWUser(token);
+
+      await authMessage.destroy();
       await user.update(
         {
           dwAccessToken: token,
@@ -248,7 +248,7 @@ const completeSlackAssociation = async (req, res) => {
       //inform user via slack that authentication was successful
       const team = await Team.findOne({ where: { teamId: user.teamId } });
       const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-      await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId);
+      await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId, channel, ts);
     }
   } catch (error) {
     console.error(error);
