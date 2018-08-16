@@ -22,6 +22,7 @@ const slack = require("../../api/slack");
 const dataworld = require("../../api/dataworld");
 const server = require("../../app");
 
+const AuthMessage = require("../../models").AuthMessage;
 const User = require("../../models").User;
 const Team = require("../../models").Team;
 
@@ -110,10 +111,13 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     const code = "code";
     const state = "state";
     const teamId = "teamId";
+    const channel = "channelId";
+    const ts = "ts";
     const id = "dwUserId";
     const access_token = "access_token";
     const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
     const slackId = "slackId";
+    const destroy =    jest.fn(() => Promise.resolve());
 
     dataworld.exchangeAuthCode = jest.fn(() =>
       Promise.resolve({ data: { access_token } })
@@ -126,6 +130,7 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     const update = jest.fn(() => Promise.resolve({}));
     User.findOne = jest.fn(() => Promise.resolve({ teamId, slackId, update }));
     Team.findOne = jest.fn(() => Promise.resolve({ botAccessToken }));
+    AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
     request(server)
       .get("/api/v1/auth/exchange")
@@ -142,12 +147,13 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
         expect(dataworld.exchangeAuthCode).toBeCalledWith(code);
         expect(dataworld.getActiveDWUser).toBeCalledWith(access_token);
         expect(User.findOne).toHaveBeenCalledTimes(1);
+        expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+        expect(destroy).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledTimes(1);
 
         expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(slack.sendCompletedAssociationMessage).toBeCalledWith(
-          botAccessToken,
-          slackId
+          botAccessToken, slackId, channel, ts
         );
 
         done();

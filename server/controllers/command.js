@@ -17,6 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const AuthMessage = require("../models").AuthMessage;
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
@@ -699,6 +700,23 @@ const performAction = async (req, res) => {
   }
   const payload = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
   try {
+    if (payload.callback_id === "auth_required_message") {
+      // Handle auth_required_message dismiss button action
+      const nonce = payload.actions.shift().value;
+      const team = await Team.findOne({
+        where: { teamId: payload.team.id }
+      });
+      const authMessage = await AuthMessage.findOne({
+        where: { nonce: nonce }
+      });
+      const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+      const { channel, ts } = authMessage;
+
+      await authMessage.destroy();
+      await slack.dismissAuthRequiredMessage(botAccessToken, ts, channel);
+      return;
+    }
+
     if (
       await isBotPresent(
         payload.team.id,
@@ -729,17 +747,15 @@ const performAction = async (req, res) => {
         // User is not associated begin association process.
         await beginSlackAssociation(
           payload.user.id,
-          payload.user.name,
           payload.channel.id,
-          payload.team.id,
-          payload.response_url
+          payload.team.id
         );
       }
     }
   } catch (error) {
     // An internal error has occured send a descriptive message
     console.error("Failed to perform action : ", error);
-    sendErrorMessage(req);
+    sendErrorMessage(payload);
   }
 };
 
@@ -836,10 +852,8 @@ const validateAndProcessCommand = async (req, res, next) => {
           // User is not associated begin association process.
           await beginSlackAssociation(
             req.body.user_id,
-            req.body.user_name,
             req.body.channel_id,
-            req.body.team_id,
-            req.body.response_url
+            req.body.team_id
           );
         }
       }
@@ -851,30 +865,19 @@ const validateAndProcessCommand = async (req, res, next) => {
   }
 };
 
-const sendErrorMessage = req => {
-  message = `Sorry <@${req.body.user_id}>, I am unable to process command \`${
-    req.body.command
+const sendErrorMessage = payload => {
+  message = `Sorry <@${payload.user_id}>, I am unable to process command \`${
+    payload.command
   }\` right now. Please, try again later.`;
   sendSlackMessage(req.body.response_url, message);
 };
 
 const beginSlackAssociation = async (
   userId,
-  userName,
   channelId,
   teamId,
-  responseUrl
 ) => {
-  if (!slack.isDMChannel(channelId)) {
-    const team = await Team.findOne({
-      where: { teamId: teamId }
-    });
-    // Don't send this message if we're in bot DM channel
-    const message = `Not so fast! Please authenticate first. Follow instructions in 
-    <@${team.botUserId}>, then try \`/${commandText}\` again.`;
-    sendSlackMessage(responseUrl, message);
-  }
-  await auth.beginSlackAssociation(userId, userName, teamId);
+  await auth.beginSlackAssociation(userId, teamId, channelId);
 };
 
 // Visible for testing
