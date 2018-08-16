@@ -119,23 +119,27 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
   }
 };
 
-const sendAuthRequiredMessage = async (
-  botAccessToken,
-  nonce,
-  channelId
-) => {
+const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
+    const commandText = process.env.SLASH_COMMAND;
     const attachments = [
       {
         color: "#355D8A",
-        text: "Not so fast! Please connect your data.world account first",
+        text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
+        callback_id: "auth_required_message",
         actions: [
           {
             type: "button",
             text: "Connect data.world account",
             style: "primary",
             url: `${associationUrl}`
+          },
+          {
+            name: "dismiss",
+            text: "Dismiss",
+            type: "button",
+            value: `${nonce}`
           }
         ]
       }
@@ -160,18 +164,14 @@ const dismissAuthRequiredMessage = async (botAccessToken, ts, channel) => {
   await slackBot.chat.delete(ts, channel, { as_user: true });
 };
 
-const startUnfurlAssociation = async (
-  nonce,
-  botAccessToken,
-  channel
-) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel) => {
   const associationUrl = `${DW_AUTH_URL}${nonce}`;
   const slackBot = new SlackWebClient(botAccessToken);
+  const commandText = process.env.SLASH_COMMAND;
   const attachments = [
     {
       color: "#355D8A",
-      text:
-        "Hi there! Linking your data.world account to Slack will make it possible to show a rich preview for data.world links (and it only takes a click or two).\n*Would you like to set it up?*",
+      text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
       callback_id: "auth_required_message",
       actions: [
         {
@@ -211,11 +211,27 @@ const sendCompletedAssociationMessage = async (
   const slackBot = new SlackWebClient(botAccessToken);
   const botResponse = await slackBot.im.open(slackUserId);
   const dmChannelId = botResponse.channel.id;
+  const commandText = process.env.SLASH_COMMAND;
+  const attachments = [
+    {
+      color: "#355D8A",
+      text:
+        `Well, it's nice to meet you, <@${slackUserId}>! Thanks for completing authentication.\n` +
+        `You can tell me what you'd like me to do using the \`${commandText}\` command. ` +
+        `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
+        `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.\n` +
+        "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
+        `• _/${commandText} subscribe account_ \n` +
+        `• _/${commandText} subscribe dataset_url_ \n` +
+        `• _/${commandText} subscribe project_url_`
+    },
+    {
+      color: "#68BF70",
+      text: `Looking for additional help? Try \`/${commandText} help\``
+    }
+  ];
   await slackBot.chat.delete(ts, channel, { as_user: true });
-  await slackBot.chat.postMessage(
-    dmChannelId,
-    `Well, it\'s nice to meet you, <@${slackUserId}>! Thanks for completing authentication.`
-  );
+  await slackBot.chat.postMessage(dmChannelId, "", { attachments });
 };
 
 const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
