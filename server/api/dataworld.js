@@ -21,10 +21,10 @@ const axios = require("axios");
 const axiosRetry = require('axios-retry');
 const helper = require("../helpers/helper");
 
-// We can set number of retries with key `retries`, by default `retires` is 3
 axiosRetry(axios, { 
+  retries: 3,
   shouldResetTimeout: true,
-  retryDelay: helper.exponentialDelay
+  retryDelay: helper.getDelay
 });
 
 const baseTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${

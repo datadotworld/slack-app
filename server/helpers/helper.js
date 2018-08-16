@@ -83,7 +83,7 @@ const cleanSlackLinkInput = link => {
   return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
 };
 
-const exponentialDelay = (retryCount) => {
+const getDelay = (retryCount) => {
  return retryCount * 1000;
 }
 
@@ -120,5 +120,5 @@ module.exports = {
   extractIdFromLink,
   cleanSlackLinkInput,
   getSubscriptionStatus,
-  exponentialDelay
+  getDelay
 };
