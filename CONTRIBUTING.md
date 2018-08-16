@@ -90,7 +90,7 @@
         SLACK_TEAM_TOKEN= (only required When app is installed as internal integration.)
         SLACK_BOT_TOKEN= (only required When app is installed as internal integration.)
     
-    3. Set Data.World env variables :
+    3. Set data.world env variables :
 
         DW_BASE_URL=https://api.data.world/v0
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)

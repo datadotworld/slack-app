@@ -35,10 +35,12 @@
     "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
     "test": "jest --notify --forceExit  --clearMocks",
+    "test-with-reporter": "jest --forceExit --ci --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
     "jest": "^23.3.0",
+    "jest-junit": "^5.1.0",
     "supertest": "^3.1.0"
   }
 }
