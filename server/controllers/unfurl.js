@@ -33,14 +33,13 @@ const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
 
-const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).+/i;
+const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).*/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 const queryLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = async (token, channel, link) => {
   const url = link.url;
   let params = {};
-
   if (insightLinkFormat.test(url)) {
     params = helper.extractInsightParams(url);
     params.token = token;
@@ -465,8 +464,8 @@ const handleMessage = async data => {
   // Send helpful info to user whenever we receive any message that's not a valid slash command or DW link 
   try {
     const { event, team_id } = data;
-    const message =  event.text;
-    const dwLinkFormat = /^(<https:\/\/data.world\/[\w-]+\/[\w-]+).+>/i;
+    const message =  event.message ? event.message.text : "";
+    const dwLinkFormat = /((<https:\/\/data.world\/[\w-]+\/[\w-]+).*>)/i;
     const command = `/${process.env.SLASH_COMMAND}`;
     const isBotMessage = (event.subtype) && (event.subtype === "bot_message")
     if (isBotMessage || dwLinkFormat.test(message) || message.startsWith(command)){
