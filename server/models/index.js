@@ -26,7 +26,7 @@ const db = {};
 
 let sequelize;
 if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL);
+  sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false });
 } else {
   const options = {
     host: "127.0.0.1",

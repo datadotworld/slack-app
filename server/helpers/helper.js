@@ -99,6 +99,14 @@ const cleanSlackLinkInput = link => {
   return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
 };
 
+const getDelay = (retryCount) => {
+ return retryCount * 1000;
+}
+
+const shouldRetry = (error) => {
+  return error.response.status === 429;
+}
+
 const getSubscriptionStatus = async (resourceid, channelid, userId) => {
   try {
     const subscriptions = await Subscription.findAll({
@@ -132,5 +140,7 @@ module.exports = {
   extractIdFromLink,
   extractQueryParams,
   cleanSlackLinkInput,
-  getSubscriptionStatus
+  getSubscriptionStatus,
+  getDelay,
+  shouldRetry
 };
