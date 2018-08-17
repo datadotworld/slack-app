@@ -67,7 +67,7 @@
             a. Enable events 
             b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
             c. Add workspace event : link_shared, app_uninstalled
-            d. Add bot events : link_shared, member_joined_channel
+            d. Add bot events : link_shared, member_joined_channel, message.im
             e. Add app unfurl domain : data.world
             f. Click save changes
 

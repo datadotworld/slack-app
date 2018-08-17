@@ -411,6 +411,27 @@ const handleJoinedChannelEvent = async event => {
   }
 };
 
+const handleMessage = async data => {
+  // Send helpful info to user whenever we receive any message that's not a valid slash command or DW link 
+  try {
+    const { event, team_id } = data;
+    const message =  event.text;
+    const dwLinkFormat = /^(<https:\/\/data.world\/[\w-]+\/[\w-]+).+>/i;
+    const command = `/${process.env.SLASH_COMMAND}`;
+    const isBotMessage = (event.subtype) && (event.subtype === "bot_message")
+    if (isBotMessage || dwLinkFormat.test(message) || message.startsWith(command)){
+      return;
+    }
+
+    const team = await Team.findOne({ where: { teamId: team_id } });
+    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+    await slack.sendHowToUseMessage(botAccessToken, event.user);
+    
+  } catch (error) {
+    console.error("Failed to handle dm message event : " + error.message);
+  }
+};
+
 const handleAppUninstalledEvent = async data => {
   // Do record clean up
   try {
@@ -454,6 +475,9 @@ const unfurl = {
         break;
       case "app_uninstalled":
         await handleAppUninstalledEvent(req.body);
+        break;
+      case "message":
+        await handleMessage(req.body);
         break;
       default:
         break;

@@ -216,10 +216,7 @@ const sendCompletedAssociationMessage = async (
     {
       color: "#355D8A",
       text:
-        `Well, it's nice to meet you, <@${slackUserId}>! Thanks for completing authentication.\n` +
-        `You can tell me what you'd like me to do using the \`${commandText}\` command. ` +
-        `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
-        `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.\n` +
+        `Well, it's nice to meet you, <@${slackUserId}>! Thanks for completing authentication :tada: \n` +
         "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
         `• _/${commandText} subscribe account_ \n` +
         `• _/${commandText} subscribe dataset_url_ \n` +
@@ -231,6 +228,30 @@ const sendCompletedAssociationMessage = async (
     }
   ];
   await slackBot.chat.delete(ts, channel, { as_user: true });
+  await slackBot.chat.postMessage(dmChannelId, "", { attachments });
+};
+
+const sendHowToUseMessage = async (
+  botAccessToken,
+  slackUserId
+) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  const botResponse = await slackBot.im.open(slackUserId);
+  const dmChannelId = botResponse.channel.id;
+  const commandText = process.env.SLASH_COMMAND;
+  const attachments = [
+    {
+      color: "#355D8A",
+      text:
+        `Hi! You can tell me what you'd like me to do using the \`${commandText}\` command. ` +
+        `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
+        `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.`
+    },
+    {
+      color: "#68BF70",
+      text: `Try \`/${commandText} help\`, if you'd like help getting started`
+    }
+  ];
   await slackBot.chat.postMessage(dmChannelId, "", { attachments });
 };
 
@@ -255,5 +276,6 @@ module.exports = {
   sendCompletedAssociationMessage,
   sendUnfurlAttachments,
   sendMessageWithAttachments,
-  dismissAuthRequiredMessage
+  dismissAuthRequiredMessage,
+  sendHowToUseMessage
 };
