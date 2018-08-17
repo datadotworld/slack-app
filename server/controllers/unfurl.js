@@ -361,8 +361,8 @@ const getInsightAttachment = (insight, author, params) => {
       }
     ]
   };
-  if (insight.body.imageUrl) {
-    attachment.imageUrl = insight.body.imageUrl;
+  if (!attachment.image_url) {
+    attachment.image_url = insight.body.imageUrl;
   }
 
   return attachment;
