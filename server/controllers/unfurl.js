@@ -310,11 +310,17 @@ const unfurlInsight = params => {
 const unfurlQuery = async (params, token) => {
     // Fetch resource info from DW
     try {
-      const response = await dataworld.getQuery(
+      const datasetResponse = await dataworld.getDataset(
+        params.datasetId,
+        params.owner,
+        params.token
+      );
+      const queryResponse = await dataworld.getQuery(
         params.queryId,
         token
       );
-      const query = response.data;
+      const dataset = datasetResponse.data;
+      const query = queryResponse.data;
 
       const ownerResponse = await dataworld.getDWUser(
         params.token,
@@ -323,7 +329,7 @@ const unfurlQuery = async (params, token) => {
 
       const owner = ownerResponse.data;
 
-      return getQueryAttachment(query, owner, params);
+      return getQueryAttachment(query, owner, params, dataset.isProject);
 
     } catch(error) {
       console.error("failed to get query attachment : ", error.message);
@@ -362,36 +368,32 @@ const getInsightAttachment = (insight, author, params) => {
   return attachment;
 };
 
-const getQueryAttachment = (query, owner, params) => {
+const getQueryAttachment = (query, owner, params, isProject) => {
   const ts = getTimestamp(query);
+  const isSql = query.language === "SQL";
   const attachment = {
     fallback: query.name,
-    color: "#9CD2A0",
+    color: isSql ? "#0e33cb" : "#ac40be",
     author_name: owner.displayName,
     author_link: `http://data.world/${owner.id}`,
     author_icon: owner.avatarUrl,
+    thumb_url: isSql ? "https://cdn.filepicker.io/api/file/rywVO5wjTbiwifXYrrrw" : "https://cdn.filepicker.io/api/file/NlR3e9t6RQSp7RZMM1ZB",
     title: query.name,
     title_link: params.link,
     text: `\`\`\`${query.body}\`\`\``,
     footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    footer_icon: isProject ? "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr" : "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
     url: params.link,
     ts: ts,
     actions: [
       {
         type: "button",
-        text: "View :eye-in-speech-bubble:",
+        style: "primary",
+        text: "Run query :zap:",
         url: params.link
       }
     ]
   };
-
-  attachment.fields = [];
-  attachment.fields.push({
-    title: "Language",
-    value: `\`${query.language}\``,
-    short: false
-  });
 
   return attachment;
 };
