@@ -388,7 +388,6 @@ const getQueryAttachment = (query, owner, params, isProject) => {
     actions: [
       {
         type: "button",
-        style: "primary",
         text: "Run query :zap:",
         url: params.link
       }
