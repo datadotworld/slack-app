@@ -16,7 +16,7 @@
     <div class="jumbotron" style="background:#333D49;">
       
       <div class="container-lg p-responsive py-6 py-lg-10 text-center" style="color:#fff;">
-      <img src="/Users/sarakbarr/Dropbox/Personal/data.world/Screenshots/Slack/dw+slack_light.png" class="mb-3 mb-sm-5 col-6 col-sm-12" style="max-width:550px;">
+      <img src="dw+slack_light.png" class="mb-3 mb-sm-5 col-6 col-sm-12 img-fluid" style="max-width:550px;">
           <h1 class="display-4" style="font-family:Lato; margin-top:-40px;">Information & updates where you need them </h1>
           <h2 class="lead" style="font-weight: light ">Get updates on subscribed data sources and provide insight into shared links</h2>
 
@@ -31,8 +31,8 @@
     </div>
 <!-- first row/image right-->
     <div class="container">
-      <div class="row align-items-center" style="padding-bottom:20px;padding-top:20px;">
-        <div class="col-4 offset-1 form-group">
+      <div class="row align-items-center form-group" style="padding-bottom:20px;padding-top:20px;">
+        <div class="col-sm-5 form-group">
 
             <h2 class="font-weight-light"> Stay up to date</h2>
             <p class="font-weight-light"> Easily subscribe to data projects, datasets, and accounts to stay up to date with the data you're interested in. You'll get notifications in Slack, including:</p>
@@ -42,32 +42,33 @@
               <li><p class="font-weight-light"><b>Accounts:</b> When a user creates a new dataset or project</p></li>
             </ul>
         </div>
-        <div class="col-4 card shadow p-3 form-group offset-2" style="width:18rem; height:20rem;">
-           <img src="#">
+        <div style="padding-top:2em; padding-bottom:2em;">
+           <img src="slack_update.png" class="offset-sm-1 shadow card img-fluid col-sm-6" style="max-width:40em;">
+        </div>
         </div>
       </div>
     </div>
 <!-- second row/image left-->
     <div class="container">
       <div class="row align-items-center form-group" style="padding-bottom:20px;padding-top:20px;">
-      <div class="col-4 offset-1 card shadow p-3" style="width:18rem; height:20rem;">
-           <img src="#">
-        </div>
-        <div class="col-4 offset-2">
+      <div style="padding-top:2em; padding-bottom:2em;">
+           <img src="slack_subscribe.gif" style="max-width:40em;" class="shadow card img-fluid col-sm-5">
+      </div>
+        <div class="col-sm-4 form-group offset-sm-1">
            <h2 class="font-weight-light"> How to Subscribe</h2>
             <p class="font-weight-light"> Subscribing is easy! Simply <strong>use the following commands:</strong></p>
             <ul>
               <li>
                 <p class="font-weight-light"> Subscribe to a data project:</p>
-                <p class="text-monospace">/data.world subscribe [owner/projectid]</p>
+                <p class="text-monospace">/data.world subscribe project_url</p>
               </li>
               <li>
                 <p class="font-weight-light"> Subscribe to a dataset:</p>
-                <p class="text-monospace">/data.world subscribe [owner/datasetid]</p>
+                <p class="text-monospace">/data.world subscribe dataset_url</p>
               </li>
               <li>
                 <p class="font-weight-light"> Subscribe to an account:</p>
-                <p class="text-monospace">/data.world subscribe [account]</p>
+                <p class="text-monospace">/data.world subscribe account</p>
               </li>
             </ul>
         </div>
@@ -76,7 +77,7 @@
 <!-- third row/image right-->
     <div class="container">
       <div class="row align-items-center form-group" style="padding-bottom:20px;padding-top:20px;">
-        <div class="col-4 offset-1">
+        <div class="col-sm-5 form-group">
             <h2 class="font-weight-light"> View the Details</h2>
             <p class="font-weight-light"> Quickly expose important information on a dataset, project, or insight in your Slack conversations.</p>
             <ul>
@@ -85,9 +86,9 @@
               <li><p class="font-weight-light">Subscribe easily with one click</p></li>
             </ul>
         </div>
-        <div class="col-4 card shadow p-3 offset-2" style="width:18rem; height:20rem;">
-           <img src="#">
-        </div>
+        <div style="padding-top:2em; padding-bottom:2em;">
+           <img src="slack_richlink2.png" style="max-width:40em;" class="shadow offset-sm-1 img-fluid card col-sm-6">
+        <div>
       </div>
     </div>
 <!--second intro-->
@@ -99,10 +100,11 @@
 <!-- fourth row/image left-->
     <div class="container">
       <div class="row align-items-center form-group" style="padding-bottom:20px;padding-top:20px;">
-      <div class="col-4 offset-1 card shadow p-3" style="width:18rem; height:20rem;">
-           <img src="#">
+        <div style="padding-top:2em; padding-bottom:2em;">
+           <img src="slack_listsubs.png" style="max-width:40em;" class="shadow card img-fluid col-sm-6">
         </div>
-        <div class="col-4 offset-2">
+        
+        <div class="col-sm-4 offset-1">
             <h2 class="font-weight-light"> View your subscriptions</h2>
             <p class="font-weight-light"> You can quickly see what you're subscribed to <strong>using the command:</strong></p>
                 <p class="text-monospace">/data.world list</p>
@@ -112,7 +114,7 @@
 <!-- fifth row/image right-->
     <div class="container">
       <div class="row align-items-center form-group" style="padding-bottom:20px;padding-top:20px;">
-        <div class="col-4 offset-1">
+        <div class="col-sm-5 form-group">
             <h2 class="font-weight-light"> How to Unsubscribe</h2>
             <p class="font-weight-light"> Done following an account, project, or dataset? Unsubscribing is easy! Simply <strong>use the following commands:</strong></p>
             <ul>
@@ -130,21 +132,22 @@
               </li>
             </ul>
         </div>
-        <div class="col-4 card shadow p-3 offset-2" style="width:18rem; height:20rem;">
-           <img src="#">
+        <div style="padding-top:2em; padding-bottom:2em;">
+           <img src="slack_unsubscribe.gif" class="card shadow offset-sm-2 img-fluid col-sm-6" style="max-width:35em;">
+        </div>
         </div>
       </div>
     </div>
-
+</div>
 <!-- more info-->
 <div class="container align-items-center text-center form-group align-items-center" style="padding-bottom:20px;padding-top:20px;">
     <p class="lead"> Want to see more information on the data.world + Slack integration? <a href="https://github.com/datadotworld/slack-app" target="_blank">check it out here</a>.
     </p>
 </div>
-<!--jumbotron footer-->
-<div class="jumbotron" style="background:#333D49;">
+<!--footer-->
+<div class="footer" style="background:#333D49; padding-top:2em; padding-bottom:2em;">
       
-      <div class="container-lg p-responsive py-6 py-lg-10 text-center" style="color:#fff;">
+      <div class="container-fluid p-responsive py-6 py-lg-10 text-center container-lg" style="color:#fff;">
           <h1 class="display-4" style="font-family:Lato;">data.world & Slack </h1>
           <h2 class="lead" style="font-weight: light ">Get updates, expose important link details, and manage your subscriptions quickly and easily</h2>
 
