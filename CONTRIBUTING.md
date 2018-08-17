@@ -54,7 +54,7 @@
 
             a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
             b. Click save urls
-            c. Add the following scopes : bot, commands, link:read, link:write
+            c. Add the following scopes : bot, commands, link:read, link:write, chat:write:bot
             d. Click save changes
 
         3. Add Bot user 
@@ -90,7 +90,7 @@
         SLACK_TEAM_TOKEN= (only required When app is installed as internal integration.)
         SLACK_BOT_TOKEN= (only required When app is installed as internal integration.)
     
-    3. Set Data.World env variables :
+    3. Set data.world env variables :
 
         DW_BASE_URL=https://api.data.world/v0
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)

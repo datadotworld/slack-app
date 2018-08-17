@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -433,12 +433,7 @@ const handleLinkSharedEvent = async (event, teamId) => {
         .catch(console.error);
     } else {
       // User is not associated, begin association for unfurl
-      auth.beginUnfurlSlackAssociation(
-        event.user,
-        event.message_ts,
-        event.channel,
-        teamId
-      );
+      auth.beginUnfurlSlackAssociation(event.user, event.channel, teamId);
     }
   } catch (error) {
     console.error(
@@ -468,31 +463,29 @@ const handleJoinedChannelEvent = async event => {
 
 const handleAppUninstalledEvent = async data => {
   // Do record clean up
-  try{
-  // get all users in this team
-  const users = await User.findAll({
-    where: { teamId: data.team_id }
-  });
-
-  await Promise.all(users.map(async user => {
-    // delete subscriptions for each user
-
-    // TODO : Should revoke access given to app by users in this workspace
-    // TODO : Should delete all DW active subscriptions by this user
-
-    // delete from DB
-    await Subscription.destroy({
-      where: { slackUserId: user.slackId }
+  try {
+    // get all users in this team
+    const users = await User.findAll({
+      where: { teamId: data.team_id }
     });
-    // delete the user
-    await User.destroy({
-      where: { slackId: user.slackId }
-    });
-  }));
-  // Delete team record
-  await Team.destroy({ where: { teamId: data.team_id } });
-  console.log("Successfully cleaned up data!!!")
-  } catch(error) {
+
+    await Promise.all(
+      users.map(async user => {
+        // delete subscriptions for each user
+        // delete from DB
+        await Subscription.destroy({
+          where: { slackUserId: user.slackId }
+        });
+        // delete the user
+        await User.destroy({
+          where: { slackId: user.slackId }
+        });
+      })
+    );
+    // Delete team record
+    await Team.destroy({ where: { teamId: data.team_id } });
+    console.log("Successfully cleaned up data!!!");
+  } catch (error) {
     console.error("Clean up failed after app was uninstalled!", error);
   }
 };

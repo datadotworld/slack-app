@@ -1,5 +1,5 @@
 /*
- * data.world Slack Application
+ * data.World Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,15 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-}
+'use strict';
+module.exports = (sequelize, DataTypes) => {
+  var AuthMessage = sequelize.define('AuthMessage', {
+    channel: DataTypes.STRING,
+    nonce: DataTypes.STRING,
+    ts: DataTypes.STRING
+  }, {});
+  AuthMessage.associate = function(models) {
+    // associations can be defined here
+  };
+  return AuthMessage;
+};

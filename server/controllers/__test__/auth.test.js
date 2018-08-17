@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ describe("Test Auth controller methods", () => {
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
       slack.sendAuthRequiredMessage = jest.fn(() => Promise.resolve());
 
-      await auth.beginSlackAssociation(slackUserId, slackUsername, teamId);
+      await auth.beginSlackAssociation(slackUserId, teamId);
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
@@ -74,7 +74,6 @@ describe("Test Auth controller methods", () => {
     "should begin unfurl slack association",
     async done => {
       const userId = "userId";
-      const messageTs = "messageTs";
       const channel = "channel";
       const teamId = "teamId";
       const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
@@ -88,7 +87,6 @@ describe("Test Auth controller methods", () => {
 
       await auth.beginUnfurlSlackAssociation(
         userId,
-        messageTs,
         channel,
         teamId
       );

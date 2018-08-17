@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@
  */
 const Subscription = require("../models").Subscription;
 const User = require("../models").User;
+const AuthMessage = require("../models").AuthMessage;
 const Team = require("../models").Team;
 
 const uuidv1 = require("uuid/v1");
@@ -26,7 +27,6 @@ const Sequelize = require("sequelize");
 
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
-const DW_AUTH_URL = require("../helpers/helper").DW_AUTH_URL;
 
 const Op = Sequelize.Op;
 
@@ -41,9 +41,9 @@ const slackOauth = (req, res) => {
   // call slack api
   slack
     .oauthAccess(req.query.code)
-    .then(response => {
+    .then(async response => {
       // create team with returned data
-      Team.findOrCreate({
+      const [team, created] = await Team.findOrCreate({
         where: { teamId: response.data.team_id },
         defaults: {
           teamDomain: response.data.team_name,
@@ -51,47 +51,46 @@ const slackOauth = (req, res) => {
           botUserId: response.data.bot.bot_user_id,
           botAccessToken: response.data.bot.bot_access_token
         }
-      })
-        .spread(async (team, created) => {
-          if (!created) {
-            // Team record already exits.
-            // Update existing record with new data
-            team.update(
-              {
-                teamDomain: response.data.team_name,
-                accessToken: response.data.access_token,
-                botUserId: response.data.bot.bot_user_id,
-                botAccessToken: response.data.bot.bot_access_token
-              },
-              {
-                fields: [
-                  "teamDomain",
-                  "accessToken",
-                  "botUserId",
-                  "botAccessToken"
-                ]
-              }
-            );
-          }
-          //inform user via slack that installation was successful
-          const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-          await slack.sendWelcomeMessage(botToken, response.data.user_id);
+      });
+      try {
+        if (!created) {
+          // Team record already exits.
+          // Update existing record with new data
+          await team.update(
+            {
+              teamDomain: response.data.team_name,
+              accessToken: response.data.access_token,
+              botUserId: response.data.bot.bot_user_id,
+              botAccessToken: response.data.bot.bot_access_token
+            },
+            {
+              fields: [
+                "teamDomain",
+                "accessToken",
+                "botUserId",
+                "botAccessToken"
+              ]
+            }
+          );
+        }
+        //inform user via slack that installation was successful
+        const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+        await slack.sendWelcomeMessage(botToken, response.data.user_id);
 
-          // deep link to slack app or redirect to slack team in web.
-          res.redirect(
-            `https://slack.com/app_redirect?app=${
-              process.env.SLACK_APP_ID
-            }&team=${team.teamId}`
-          );
-        })
-        .catch(error => {
-          // error creating user
-          console.error(
-            "Failed complete new team creation process : " + error.message
-          );
-          // redirect to failure page
-          res.redirect(`${baseUrl}/failed`);
-        });
+        // deep link to slack app or redirect to slack team in web.
+        res.redirect(
+          `https://slack.com/app_redirect?app=${
+            process.env.SLACK_APP_ID
+          }&team=${team.teamId}`
+        );
+      } catch (error) {
+        // error creating user
+        console.error(
+          "Failed complete new team creation process : " + error.message
+        );
+        // redirect to failure page
+        res.redirect(`${baseUrl}/failed`);
+      }
     })
     .catch(error => {
       console.error("Slack oauth failed : ", error);
@@ -125,8 +124,8 @@ const checkSlackAssociationStatus = async slackId => {
       // Check user association
       // User found, now verify DW token is active/valid.
       isAssociated = await dataworld.verifyDwToken(user.dwAccessToken);
-      if(!isAssociated) { 
-        // Attempt to refresh token  
+      if (!isAssociated) {
+        // Attempt to refresh token
         const response = await dataworld.refreshToken(user.dwRefreshToken);
         if (!response.data.error) {
           const token = response.data.access_token;
@@ -139,7 +138,7 @@ const checkSlackAssociationStatus = async slackId => {
           isAssociated = true;
         } else {
           // Access was revoked, this means all DW subscriptions for this user were removed
-          // We should do the same 
+          // We should do the same
           await Subscription.destroy({
             where: { slackUserId: slackId }
           });
@@ -153,7 +152,7 @@ const checkSlackAssociationStatus = async slackId => {
   }
 };
 
-const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
+const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
   try {
     let nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
@@ -173,9 +172,8 @@ const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
     const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
     await slack.sendAuthRequiredMessage(
       botToken,
-      slackUserId,
       nonce,
-      slackUsername
+      channelId
     );
   } catch (error) {
     console.error("Begin slack association error : ", error.message);
@@ -184,7 +182,6 @@ const beginSlackAssociation = async (slackUserId, slackUsername, teamId) => {
 
 const beginUnfurlSlackAssociation = async (
   userId,
-  messageTs,
   channel,
   teamId
 ) => {
@@ -199,17 +196,15 @@ const beginUnfurlSlackAssociation = async (
 
     if (!created) {
       // User record already exits.
-      //update nonce, reauthenticating existing user.
+      // update nonce, reauthenticating existing user.
       user.update({ nonce: nonce }, { fields: ["nonce"] });
     }
 
     const team = await Team.findOne({ where: { teamId: teamId } });
-    const associationUrl = `${DW_AUTH_URL}${nonce}`;
-    const teamAccessToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-    slack.startUnfurlAssociation(
-      associationUrl,
-      teamAccessToken,
-      messageTs,
+    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+    await slack.startUnfurlAssociation(
+      nonce,
+      botAccessToken,
       channel
     );
   } catch (error) {
@@ -230,9 +225,17 @@ const completeSlackAssociation = async (req, res) => {
       // Add returned token
       // redirect to success / homepage
       const user = await User.findOne({ where: { nonce: nonce } });
+      const authMessage = await AuthMessage.findOne({ where: { nonce: nonce }});
+      const { channel, ts } = authMessage;
       const dwUserResponse = await dataworld.getActiveDWUser(token);
+
+      await authMessage.destroy();
       await user.update(
-        { dwAccessToken: token, dwRefreshToken: refreshToken, dwUserId: dwUserResponse.data.id },
+        {
+          dwAccessToken: token,
+          dwRefreshToken: refreshToken,
+          dwUserId: dwUserResponse.data.id
+        },
         { fields: ["dwAccessToken", "dwRefreshToken", "dwUserId"] }
       );
 
@@ -245,7 +248,7 @@ const completeSlackAssociation = async (req, res) => {
       //inform user via slack that authentication was successful
       const team = await Team.findOne({ where: { teamId: user.teamId } });
       const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-      await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId);
+      await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId, channel, ts);
     }
   } catch (error) {
     console.error(error);

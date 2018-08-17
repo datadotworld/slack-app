@@ -1,5 +1,5 @@
 /*
- * Data.World Slack Application
+ * data.world Slack Application
  * Copyright 2018 data.world, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ const slack = require("../../api/slack");
 const dataworld = require("../../api/dataworld");
 const server = require("../../app");
 
+const AuthMessage = require("../../models").AuthMessage;
 const User = require("../../models").User;
 const Team = require("../../models").Team;
 
@@ -43,6 +44,8 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
     const userId = "userId";
     const botToken = "botToken";
     const code = "code";
+    const update =  jest.fn(() => Promise.resolve());
+    const team = { update , teamId, botAccessToken: botToken }
     const resp = {
       url: "https://slack.com/api/oauth.access",
       statusCode: 200,
@@ -61,6 +64,7 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
 
     slack.oauthAccess = jest.fn(() => Promise.resolve(resp));
     slack.sendWelcomeMessage = jest.fn(() => Promise.resolve());
+    Team.findOrCreate = jest.fn(() => Promise.resolve([team, false]));
 
     request(server)
       .get("/api/v1/auth/oauth")
@@ -76,6 +80,8 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
         );
         expect(slack.oauthAccess).toBeCalledWith(code);
         expect(slack.sendWelcomeMessage).toHaveBeenCalledTimes(1);
+        expect(Team.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledTimes(1);
         expect(slack.sendWelcomeMessage).toBeCalledWith(
           process.env.SLACK_BOT_TOKEN || botToken,
           userId
@@ -110,10 +116,13 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     const code = "code";
     const state = "state";
     const teamId = "teamId";
+    const channel = "channelId";
+    const ts = "ts";
     const id = "dwUserId";
     const access_token = "access_token";
     const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
     const slackId = "slackId";
+    const destroy =    jest.fn(() => Promise.resolve());
 
     dataworld.exchangeAuthCode = jest.fn(() =>
       Promise.resolve({ data: { access_token } })
@@ -126,6 +135,7 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     const update = jest.fn(() => Promise.resolve({}));
     User.findOne = jest.fn(() => Promise.resolve({ teamId, slackId, update }));
     Team.findOne = jest.fn(() => Promise.resolve({ botAccessToken }));
+    AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
     request(server)
       .get("/api/v1/auth/exchange")
@@ -142,12 +152,13 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
         expect(dataworld.exchangeAuthCode).toBeCalledWith(code);
         expect(dataworld.getActiveDWUser).toBeCalledWith(access_token);
         expect(User.findOne).toHaveBeenCalledTimes(1);
+        expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+        expect(destroy).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledTimes(1);
 
         expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(slack.sendCompletedAssociationMessage).toBeCalledWith(
-          botAccessToken,
-          slackId
+          botAccessToken, slackId, channel, ts
         );
 
         done();
