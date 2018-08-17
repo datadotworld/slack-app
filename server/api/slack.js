@@ -243,7 +243,7 @@ const sendHowToUseMessage = async (
     {
       color: "#355D8A",
       text:
-        `Hi! You can tell me what you'd like me to do using the \`${commandText}\` command. ` +
+        `Hi! You can tell me what you'd like me to do using the \`/${commandText}\` command. ` +
         `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
         `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.`
     },
