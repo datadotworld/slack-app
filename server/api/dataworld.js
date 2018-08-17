@@ -24,7 +24,8 @@ const helper = require("../helpers/helper");
 axiosRetry(axios, { 
   retries: 3,
   shouldResetTimeout: true,
-  retryDelay: helper.getDelay
+  retryDelay: helper.getDelay,
+  retryCondition: helper.shouldRetry
 });
 
 const baseTokenUrl = `${process.env.DW_GET_TOKEN_BASE_URL}?client_id=${

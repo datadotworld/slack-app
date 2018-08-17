@@ -87,6 +87,10 @@ const getDelay = (retryCount) => {
  return retryCount * 1000;
 }
 
+const shouldRetry = (error) => {
+  return error.response.status === 429;
+}
+
 const getSubscriptionStatus = async (resourceid, channelid, userId) => {
   try {
     const subscriptions = await Subscription.findAll({
@@ -120,5 +124,6 @@ module.exports = {
   extractIdFromLink,
   cleanSlackLinkInput,
   getSubscriptionStatus,
-  getDelay
+  getDelay,
+  shouldRetry
 };
