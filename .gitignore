@@ -23,7 +23,7 @@ package-lock.json
 .env.test.local
 .env.production.local
 .env
-.junit.xml
+test-results
 
 npm-debug.log*
 yarn-debug.log*
