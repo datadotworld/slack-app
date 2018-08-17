@@ -108,6 +108,11 @@ const subscribeToProjectOrDataset = async (
         channelId: channelid
       }
     });
+    // If DW subscription was not found and subscription exists locally (Most likely cos user revoked access)
+    // Then update existing local record in this channel to correctly link to the new dw subscription
+    if(!existsInDW && channelSubscription) {
+      await channelSubscription.update({ slackUserId: userid }, { fields: [ "slackUserId" ] });
+    }
     // This check will help ensure the appropiate message is sent to Slack in situations where
     // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
     let message =
@@ -164,6 +169,11 @@ const subscribeToAccount = async (
     const channelSubscription = await Subscription.findOne({
       where: { resourceId: commandParams.id, channelId: channelid }
     });
+    // If dw subscription was not found and subscription exists locally (Most likely cos user revoked access) 
+    // Then update existing local record in this channel to correctly link to the new dw subscription
+    if(!existsInDW && channelSubscription) {
+      await channelSubscription.update({ slackUserId: userid }, { fields: [ "slackUserId" ] });
+    }
     // This `response.data.user` check will help ensure the appropiate message is sent to Slack in situations where
     // The subscription already exist locally in DB but not on DW api side, which means it wouldn't have showed up in a /data.world list command in channel.
     let message =
