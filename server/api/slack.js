@@ -204,9 +204,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel) => {
 
 const sendCompletedAssociationMessage = async (
   botAccessToken,
-  slackUserId,
-  channel,
-  ts
+  slackUserId
 ) => {
   const slackBot = new SlackWebClient(botAccessToken);
   const botResponse = await slackBot.im.open(slackUserId);
@@ -227,9 +225,13 @@ const sendCompletedAssociationMessage = async (
       text: `Looking for additional help? Try \`/${commandText} help\``
     }
   ];
-  await slackBot.chat.delete(ts, channel, { as_user: true });
   await slackBot.chat.postMessage(dmChannelId, "", { attachments });
 };
+
+const deleteSlackMessage = async (botAccessToken, channel, ts) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  await slackBot.chat.delete(ts, channel, { as_user: true });
+}
 
 const sendHowToUseMessage = async (
   botAccessToken,
@@ -277,5 +279,6 @@ module.exports = {
   sendUnfurlAttachments,
   sendMessageWithAttachments,
   dismissAuthRequiredMessage,
-  sendHowToUseMessage
+  sendHowToUseMessage,
+  deleteSlackMessage
 };

@@ -156,6 +156,7 @@ const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
   try {
     let nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
+    const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
 
     // create user with nonce and the slackdata
     const [user, created] = await User.findOrCreate({
@@ -164,12 +165,14 @@ const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
     });
 
     if (!created) {
+      // check if auth message for this old nonce still exists and delete
+      await deleteOldSlackAssociationMessage(user.nonce, botToken);
+      
       // User record already exits.
       user.update({ nonce: nonce }, { fields: ["nonce"] });
     }
 
     // Inform user that authentication is
-    const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
     await slack.sendAuthRequiredMessage(
       botToken,
       nonce,
@@ -180,6 +183,7 @@ const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
   }
 };
 
+// TODO: This can be merged with beginSlackAssociation and replaced across project.
 const beginUnfurlSlackAssociation = async (
   userId,
   channel,
@@ -187,6 +191,8 @@ const beginUnfurlSlackAssociation = async (
 ) => {
   try {
     const nonce = uuidv1();
+    const team = await Team.findOne({ where: { teamId: teamId } });
+    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
 
     // create user with nonce and the slackdata
     const [user, created] = await User.findOrCreate({
@@ -195,13 +201,14 @@ const beginUnfurlSlackAssociation = async (
     });
 
     if (!created) {
+      // check if auth message for this old nonce still exists and delete
+      await deleteOldSlackAssociationMessage(user.nonce, botAccessToken);
+
       // User record already exits.
       // update nonce, reauthenticating existing user.
       user.update({ nonce: nonce }, { fields: ["nonce"] });
     }
 
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
     await slack.startUnfurlAssociation(
       nonce,
       botAccessToken,
@@ -226,35 +233,52 @@ const completeSlackAssociation = async (req, res) => {
       // redirect to success / homepage
       const user = await User.findOne({ where: { nonce: nonce } });
       const authMessage = await AuthMessage.findOne({ where: { nonce: nonce }});
-      const { channel, ts } = authMessage;
-      const dwUserResponse = await dataworld.getActiveDWUser(token);
+      if (user) {
+        const { channel, ts } = authMessage;
+        const dwUserResponse = await dataworld.getActiveDWUser(token);
 
-      await authMessage.destroy();
-      await user.update(
-        {
-          dwAccessToken: token,
-          dwRefreshToken: refreshToken,
-          dwUserId: dwUserResponse.data.id
-        },
-        { fields: ["dwAccessToken", "dwRefreshToken", "dwUserId"] }
-      );
+        if (authMessage) {
+          await authMessage.destroy();
+        }
+        await user.update(
+          {
+            dwAccessToken: token,
+            dwRefreshToken: refreshToken,
+            dwUserId: dwUserResponse.data.id
+          },
+          { fields: ["dwAccessToken", "dwRefreshToken", "dwUserId"] }
+        );
 
-      res.status(200).json({
-        url: `https://slack.com/app_redirect?app=${
-          process.env.SLACK_APP_ID
-        }&team=${user.teamId}`
-      });
+        res.status(200).json({
+          url: `https://slack.com/app_redirect?app=${
+            process.env.SLACK_APP_ID
+          }&team=${user.teamId}`
+        });
 
-      //inform user via slack that authentication was successful
-      const team = await Team.findOne({ where: { teamId: user.teamId } });
-      const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-      await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId, channel, ts);
+        //inform user via slack that authentication was successful
+        const team = await Team.findOne({ where: { teamId: user.teamId } });
+        const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+        await slack.deleteSlackMessage(botAccessToken, channel, ts);
+        await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId);
+      } else {
+        console.warn("Received an invalid nonce, we should ensure stale auth links are cleaned up properly.");
+        return res.status(400).send("Provided nonce is invalid.");
+      }
     }
   } catch (error) {
     console.error(error);
     return res.status(500).send("Slack association failed.");
   }
 };
+
+const deleteOldSlackAssociationMessage = async (oldNonce, botAccessToken) => {
+  const authMessage = await AuthMessage.findOne({ where: { nonce: oldNonce } });
+  if (authMessage) { // remove auth message from slack, since adding new nonce to user will invalidate the oldNonce
+    const { channel, ts } = authMessage;
+    await slack.deleteSlackMessage(botAccessToken, channel, ts);
+    await authMessage.destroy();
+  }
+}
 
 module.exports = {
   slackOauth,
