@@ -130,6 +130,7 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
     dataworld.getActiveDWUser = jest.fn(() =>
       Promise.resolve({ data: { id } })
     );
+    slack.deleteSlackMessage = jest.fn(() => Promise.resolve());
     slack.sendCompletedAssociationMessage = jest.fn(() => Promise.resolve());
 
     const update = jest.fn(() => Promise.resolve({}));
@@ -155,10 +156,10 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
         expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
         expect(destroy).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledTimes(1);
-
         expect(Team.findOne).toHaveBeenCalledTimes(1);
+        expect(slack.deleteSlackMessage).toBeCalledWith(botAccessToken, channel, ts);
         expect(slack.sendCompletedAssociationMessage).toBeCalledWith(
-          botAccessToken, slackId, channel, ts
+          botAccessToken, slackId
         );
 
         done();
