@@ -881,6 +881,7 @@ const sendErrorMessage = payload => {
   sendSlackMessage(req.body.response_url, message);
 };
 
+// TODO: This has now become redundant, remove and use auth.beginSlackAssociation directly where necessary.
 const beginSlackAssociation = async (
   userId,
   channelId,

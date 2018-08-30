@@ -20,6 +20,7 @@
 const auth = require("../auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
+const AuthMessage = require("../../models").AuthMessage;
 const User = require("../../models").User;
 const Team = require("../../models").Team;
 
@@ -47,23 +48,30 @@ describe("Test Auth controller methods", () => {
     "should begin slack association",
     async done => {
       const slackUserId = "slackUserId";
-      const slackUsername = "slackUsername";
       const teamId = "teamId";
-      const botAccessToken = "botAccessToken";
+      const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
       const dwAccessToken = "dwAccessToken";
+      const channel = "channelId";
+      const ts = "ts";
+      const destroy =    jest.fn(() => Promise.resolve());
 
       const update = jest.fn(() => Promise.resolve());
       const user = { dwAccessToken, update };
 
       Team.findOne = jest.fn(() => Promise.resolve({ botAccessToken }));
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
+      slack.deleteSlackMessage = jest.fn(() => Promise.resolve());
       slack.sendAuthRequiredMessage = jest.fn(() => Promise.resolve());
+      AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
       await auth.beginSlackAssociation(slackUserId, teamId);
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
+      expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+      expect(destroy).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledTimes(1);
+      expect(slack.deleteSlackMessage).toBeCalledWith(botAccessToken, channel, ts);
       expect(slack.sendAuthRequiredMessage).toHaveBeenCalledTimes(1);
       done();
     },
@@ -77,13 +85,18 @@ describe("Test Auth controller methods", () => {
       const channel = "channel";
       const teamId = "teamId";
       const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
+      const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
+      const ts = "ts";
+      const destroy =    jest.fn(() => Promise.resolve());
 
       const update = jest.fn(() => Promise.resolve());
       const user = { update };
 
-      Team.findOne = jest.fn(() => Promise.resolve({ accessToken }));
+      Team.findOne = jest.fn(() => Promise.resolve({ accessToken, botAccessToken }));
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
       slack.startUnfurlAssociation = jest.fn(() => Promise.resolve());
+      slack.deleteSlackMessage = jest.fn(() => Promise.resolve());
+      AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
       await auth.beginUnfurlSlackAssociation(
         userId,
@@ -93,7 +106,10 @@ describe("Test Auth controller methods", () => {
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
+      expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+      expect(destroy).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledTimes(1);
+      expect(slack.deleteSlackMessage).toBeCalledWith(botAccessToken, channel, ts);
       expect(slack.startUnfurlAssociation).toHaveBeenCalledTimes(1);
 
       done();
