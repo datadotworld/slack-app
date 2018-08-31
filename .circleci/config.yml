@@ -7,11 +7,11 @@ jobs:
       - image: postgres:10.4
     steps:
       - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Install dependencies
           command: yarn 
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
