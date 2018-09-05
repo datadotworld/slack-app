@@ -198,6 +198,13 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     dataworld.getProject = jest.fn(() => Promise.resolve({ data: dwProject }));
     slack.sendUnfurlAttachments = jest.fn();
 
+    const agent = request(server)
+      .post("/api/v1/unfurl/action")
+      .send(linkSharedEvent);
+
+    const port = agent.app.address().port;
+    const serverBaseUrl = `http://127.0.0.1:${port}`;
+
     const expectedAttachment = {
       fallback: "An Example Project that Shows What To Put in data.world",
       color: "#F6BD68",
@@ -206,8 +213,8 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       text:
         "Link to a dataset, extract some data from a PDF, make some insights!",
       footer: "kehesjay/actors-proj",
-      footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
-      thumb_url: "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      footer_icon: `${serverBaseUrl}/assets/project.png`,
+      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
       ts: 1522193271,
       mrkdwn_in: ["fields"],
       callback_id: "dataset_subscribe_button",
@@ -240,34 +247,30 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       "https://data.world/kehesjay/actors-proj": expectedAttachment
     };
 
-    request(server)
-      .post("/api/v1/unfurl/action")
-      .send(linkSharedEvent)
-      .expect(200)
-      .end((err, res) => {
-        if (err) return done(err);
-        expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-        expect(Team.findOne).toHaveBeenCalledTimes(1);
-        expect(dataworld.getDataset).toBeCalledWith(
-          dwResourceId,
-          dwAgentId,
-          dwAccessToken
-        );
-        expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-        expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
-        expect(dataworld.getProject).toBeCalledWith(
-          dwResourceId,
-          dwAgentId,
-          dwAccessToken
-        );
-        expect(slack.sendUnfurlAttachments).toBeCalledWith(
-          event.message_ts,
-          event.channel,
-          expectedUnfurlObject,
-          accessToken
-        );
-        done();
-      });
+    agent.expect(200).end((err, res) => {
+      if (err) return done(err);
+      expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
+      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDataset).toBeCalledWith(
+        dwResourceId,
+        dwAgentId,
+        dwAccessToken
+      );
+      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
+      expect(dataworld.getProject).toBeCalledWith(
+        dwResourceId,
+        dwAgentId,
+        dwAccessToken
+      );
+      expect(slack.sendUnfurlAttachments).toBeCalledWith(
+        event.message_ts,
+        event.channel,
+        expectedUnfurlObject,
+        accessToken
+      );
+      done();
+    });
   });
 
   it("Should handle dataset unfurling", done => {
@@ -293,15 +296,22 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     dataworld.getDWUser = jest.fn(() => Promise.resolve(ownerResponse));
     slack.sendUnfurlAttachments = jest.fn();
 
+    const agent = request(server)
+      .post("/api/v1/unfurl/action")
+      .send(linkSharedEvent);
+
+    const port = agent.app.address().port;
+    const serverBaseUrl = `http://127.0.0.1:${port}`;
+
     const expectedAttachment = {
       fallback: "TrumpWorld",
       color: "#5CC0DE",
       title: "TrumpWorld",
       title_link: "https://data.world/kehesjay/actors-proj",
       text: "TrumpWorld Data",
-      thumb_url: "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
       footer: "kehesjay/actors-proj",
-      footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
       ts: 1486421719,
       callback_id: "dataset_subscribe_button",
       mrkdwn_in: ["fields"],
@@ -338,29 +348,25 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       "https://data.world/kehesjay/actors-proj": expectedAttachment
     };
 
-    request(server)
-      .post("/api/v1/unfurl/action")
-      .send(linkSharedEvent)
-      .expect(200)
-      .end((err, res) => {
-        if (err) return done(err);
-        expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-        expect(Team.findOne).toHaveBeenCalledTimes(1);
-        expect(dataworld.getDataset).toBeCalledWith(
-          dwResourceId,
-          dwAgentId,
-          dwAccessToken
-        );
-        expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-        expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
-        expect(slack.sendUnfurlAttachments).toBeCalledWith(
-          event.message_ts,
-          event.channel,
-          expectedUnfurlObject,
-          accessToken
-        );
-        done();
-      });
+    agent.expect(200).end((err, res) => {
+      if (err) return done(err);
+      expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
+      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDataset).toBeCalledWith(
+        dwResourceId,
+        dwAgentId,
+        dwAccessToken
+      );
+      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
+      expect(slack.sendUnfurlAttachments).toBeCalledWith(
+        event.message_ts,
+        event.channel,
+        expectedUnfurlObject,
+        accessToken
+      );
+      done();
+    });
   });
 });
 
