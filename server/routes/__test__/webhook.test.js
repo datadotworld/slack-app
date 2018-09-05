@@ -226,16 +226,24 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     const team = {
       botAccessToken
     };
+
+    const agent = request(server)
+      .post("/api/v1/webhook/dw/events")
+      .send(newDataset);
+
+    const port = agent.app.address().port;
+    const serverBaseUrl = `http://127.0.0.1:${port}`;
+
     const expectedAttachment = {
       fallback: "user8 created a new dataset",
       pretext: "<@slackId> created a *new dataset*",
       title: "TrumpWorld",
       title_link: "https://data.world/user8/cool-dog-pics",
-      thumb_url: "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
       color: "#5CC0DE",
       text: "TrumpWorld Data",
       footer: "user8/cool-dog-pics",
-      footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
       ts: 1508866583,
       mrkdwn_in: ["text", "pretext", "fields"],
       callback_id: "dataset_subscribe_button",
@@ -280,29 +288,25 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
 
     slack.sendMessageWithAttachments = jest.fn();
 
-    request(server)
-      .post("/api/v1/webhook/dw/events")
-      .send(newDataset)
-      .expect(200)
-      .end((err, res) => {
-        if (err) return done(err);
-        expect(User.findOne).toHaveBeenCalledTimes(2);
-        expect(Subscription.findAll).toHaveBeenCalledTimes(1);
-        expect(dataworld.getDataset).toBeCalledWith(
-          dwResourceId,
-          dwAgentId,
-          dwAccessToken
-        );
-        expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
-        expect(Team.findOne).toHaveBeenCalledTimes(1);
-        expect(Channel.findOne).toHaveBeenCalledTimes(1);
-        expect(slack.sendMessageWithAttachments).toBeCalledWith(
-          botAccessToken,
-          channelId,
-          [expectedAttachment]
-        );
-        done();
-      });
+    agent.expect(200).end((err, res) => {
+      if (err) return done(err);
+      expect(User.findOne).toHaveBeenCalledTimes(2);
+      expect(Subscription.findAll).toHaveBeenCalledTimes(1);
+      expect(dataworld.getDataset).toBeCalledWith(
+        dwResourceId,
+        dwAgentId,
+        dwAccessToken
+      );
+      expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
+      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Channel.findOne).toHaveBeenCalledTimes(1);
+      expect(slack.sendMessageWithAttachments).toBeCalledWith(
+        botAccessToken,
+        channelId,
+        [expectedAttachment]
+      );
+      done();
+    });
   });
 
   it("Should handle DW new dataset event", done => {

@@ -17,6 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const url = require('url');
 const collection = require("lodash/collection");
 const Subscription = require("../models").Subscription;
 const FILES_LIMIT = 5;
@@ -129,6 +130,13 @@ const getSubscriptionStatus = async (resourceid, channelid, userId) => {
   }
 };
 
+const getServerBaseUrl = (req) => {
+  return url.format({
+    protocol: req.protocol,
+    host: req.get('host')
+  });
+}
+
 module.exports = {
   FILES_LIMIT,
   LINKED_DATASET_LIMIT,
@@ -142,5 +150,6 @@ module.exports = {
   cleanSlackLinkInput,
   getSubscriptionStatus,
   getDelay,
-  shouldRetry
+  shouldRetry,
+  getServerBaseUrl
 };

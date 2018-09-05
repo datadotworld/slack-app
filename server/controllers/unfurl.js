@@ -37,27 +37,27 @@ const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).*/i;
 const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 const queryLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
-const messageAttachmentFromLink = async (token, channel, link) => {
+const messageAttachmentFromLink = async (token, channel, serverBaseUrl, link) => {
   const url = link.url;
   let params = {};
   if (insightLinkFormat.test(url)) {
     params = helper.extractInsightParams(url);
     params.token = token;
-    return unfurlInsight(params);
+    return unfurlInsight(params, serverBaseUrl);
   }  else if(queryLinkFormat.test(url)) {
     const params = helper.extractQueryParams(url);
-    return await unfurlQuery(params, token);
+    return await unfurlQuery(params, token, serverBaseUrl);
   } else if (dwLinkFormat.test(url)) {
     params = helper.extractDatasetOrProjectParamsFromLink(url);
     params.token = token;
-    return await unfurlDatasetOrProject(params, channel);
+    return await unfurlDatasetOrProject(params, channel, serverBaseUrl);
   } else {
     console.warn("Can't unfold unsupported link type : ", url);
     return;
   }
 };
 
-const unfurlDatasetOrProject = async (params, channelId) => {
+const unfurlDatasetOrProject = async (params, channelId, serverBaseUrl) => {
   // Fetch resource info from DW
   try {
     const response = await dataworld.getDataset(
@@ -75,9 +75,9 @@ const unfurlDatasetOrProject = async (params, channelId) => {
     const ownerResponse = await dataworld.getDWUser(params.token, params.owner);
     const owner = ownerResponse.data;
     if (dataset.isProject) {
-      return await unfurlProject(params, owner, addSubcribeAction);
+      return await unfurlProject(params, owner, addSubcribeAction, serverBaseUrl);
     } else {
-      return unfurlDataset(params, dataset, owner, addSubcribeAction);
+      return unfurlDataset(params, dataset, owner, addSubcribeAction, serverBaseUrl);
     }
   } catch (error) {
     console.error("failed to get dataset attachment : ", error.message);
@@ -85,7 +85,7 @@ const unfurlDatasetOrProject = async (params, channelId) => {
   }
 };
 
-const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
+const unfurlDataset = (params, dataset, owner, addSubcribeAction, serverBaseUrl) => {
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
   const ts = getTimestamp(dataset);
@@ -98,9 +98,9 @@ const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
     text: dataset.description,
     thumb_url:
       owner.avatarUrl ||
-      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      `${serverBaseUrl}/assets/avatar.png`,
     footer: `${resourceId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+    footer_icon: `${serverBaseUrl}/assets/dataset.png`,
     ts: ts,
     callback_id: "dataset_subscribe_button",
     mrkdwn_in: ["fields"],
@@ -169,7 +169,7 @@ const unfurlDataset = (params, dataset, owner, addSubcribeAction) => {
   return attachment;
 };
 
-const unfurlProject = async (params, owner, addSubcribeAction) => {
+const unfurlProject = async (params, owner, addSubcribeAction, serverBaseUrl) => {
   // Fetch resource info from DW
   try {
     const response = await dataworld.getProject(
@@ -188,10 +188,10 @@ const unfurlProject = async (params, owner, addSubcribeAction) => {
       title_link: params.link,
       text: project.objective,
       footer: `${resourceId}`,
-      footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+      footer_icon: `${serverBaseUrl}/assets/project.png`,
       thumb_url:
         owner.avatarUrl ||
-        "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+        `${serverBaseUrl}/assets/avatar.png`,
       ts: ts,
       mrkdwn_in: ["fields"],
       callback_id: "dataset_subscribe_button",
@@ -287,7 +287,7 @@ const unfurlProject = async (params, owner, addSubcribeAction) => {
   }
 };
 
-const unfurlInsight = params => {
+const unfurlInsight = (params, serverBaseUrl) => {
   // Fetch resource info from DW
   return dataworld
     .getInsight(params.insightId, params.projectId, params.owner, params.token)
@@ -298,7 +298,7 @@ const unfurlInsight = params => {
         insight.author
       );
       const author = authorResponse.data;
-      return getInsightAttachment(insight, author, params);
+      return getInsightAttachment(insight, author, params, serverBaseUrl);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -306,7 +306,7 @@ const unfurlInsight = params => {
     });
 };
 
-const unfurlQuery = async (params, token) => {
+const unfurlQuery = async (params, token, serverBaseUrl) => {
     // Fetch resource info from DW
     try {
       const datasetResponse = await dataworld.getDataset(
@@ -328,7 +328,7 @@ const unfurlQuery = async (params, token) => {
 
       const owner = ownerResponse.data;
 
-      return getQueryAttachment(query, owner, params, dataset.isProject);
+      return getQueryAttachment(query, owner, params, dataset.isProject, serverBaseUrl);
 
     } catch(error) {
       console.error("failed to get query attachment : ", error.message);
@@ -336,7 +336,7 @@ const unfurlQuery = async (params, token) => {
     }
 }
 
-const getInsightAttachment = (insight, author, params) => {
+const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
   const ts = getTimestamp(insight);
   const attachment = {
     fallback: insight.title,
@@ -349,7 +349,7 @@ const getInsightAttachment = (insight, author, params) => {
     text: insight.description,
     image_url: insight.thumbnail,
     footer: `${params.owner}/${params.projectId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    footer_icon: `${serverBaseUrl}/assets/project.png`,
     url: params.link,
     ts: ts,
     actions: [
@@ -367,7 +367,7 @@ const getInsightAttachment = (insight, author, params) => {
   return attachment;
 };
 
-const getQueryAttachment = (query, owner, params, isProject) => {
+const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
   const ts = getTimestamp(query);
   const isSql = query.language === "SQL";
   const attachment = {
@@ -376,12 +376,12 @@ const getQueryAttachment = (query, owner, params, isProject) => {
     author_name: owner.displayName,
     author_link: `http://data.world/${owner.id}`,
     author_icon: owner.avatarUrl,
-    thumb_url: isSql ? "https://cdn.filepicker.io/api/file/rywVO5wjTbiwifXYrrrw" : "https://cdn.filepicker.io/api/file/NlR3e9t6RQSp7RZMM1ZB",
+    thumb_url: isSql ? `${serverBaseUrl}/assets/icon-sql.png` : `${serverBaseUrl}/assets/icon-sparql.png`,
     title: query.name,
     title_link: params.link,
     text: `\`\`\`${query.body}\`\`\``,
     footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: isProject ? "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr" : "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+    footer_icon: isProject ? `${serverBaseUrl}/assets/project.png` : `${serverBaseUrl}/assets/dataset.png`,
     url: params.link,
     ts: ts,
     actions: [
@@ -396,7 +396,7 @@ const getQueryAttachment = (query, owner, params, isProject) => {
   return attachment;
 };
 
-const handleLinkSharedEvent = async (event, teamId) => {
+const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
   // verify slack associaton
   try {
     const [isAssociated, user] = await auth.checkSlackAssociationStatus(
@@ -407,10 +407,10 @@ const handleLinkSharedEvent = async (event, teamId) => {
       let token = user.dwAccessToken;
       const team = await Team.findOne({ where: { teamId: teamId } });
       const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-      // retrieve user dw access token
+      
       Promise.all(
         event.links.map(
-          messageAttachmentFromLink.bind(null, token, event.channel)
+          messageAttachmentFromLink.bind(null, token, event.channel, serverBaseUrl)
         )
       )
         // Transform the array of attachments to an unfurls object keyed by URL
@@ -523,9 +523,10 @@ const unfurl = {
     // respond to request immediately no need to wait.
     res.json({ response_type: "in_channel" });
     const event = req.body.event;
+    const serverBaseUrl = helper.getServerBaseUrl(req);
     switch (event.type) {
       case "link_shared":
-        await handleLinkSharedEvent(event, req.body.team_id);
+        await handleLinkSharedEvent(event, req.body.team_id, serverBaseUrl);
         break;
       case "member_joined_channel":
         await handleJoinedChannelEvent(event);

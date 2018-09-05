@@ -52,7 +52,8 @@ const getNewDatasetAttachment = (
   event,
   dwOwner,
   dwActorId,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   const offset = moment(
     event.timestamp,
@@ -71,12 +72,11 @@ const getNewDatasetAttachment = (
     title: dataset.title,
     title_link: event.links.web.dataset,
     thumb_url:
-      dwOwner.avatarUrl ||
-      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
     color: "#5CC0DE",
     text: dataset.description || "_No Description_",
     footer: `${resourceId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT",
+    footer_icon: `${serverBaseUrl}/assets/dataset.png`,
     ts: ts,
     mrkdwn_in: ["text", "pretext", "fields"],
     callback_id: "dataset_subscribe_button",
@@ -152,7 +152,8 @@ const getLinkedDatasetAttachment = (
   dataset,
   event,
   dwActor,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   const offset = moment(
     event.timestamp,
@@ -176,9 +177,9 @@ const getLinkedDatasetAttachment = (
     title: dataset.title,
     title_link: `${event.links.web.project}/workspace`,
     text: dataset.description || "_No Description_",
-    thumb_url: "https://cdn.filepicker.io/api/file/F4HMCtpTiqpfQltddbYg",
+    thumb_url: `${serverBaseUrl}/assets/link_dataset.png`,
     footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    footer_icon: `${serverBaseUrl}/assets/project.png`,
     ts: 123456789,
     mrkdwn_in: ["text", "pretext", "fields"]
   };
@@ -210,7 +211,8 @@ const getNewProjectAttachment = (
   event,
   dwOwner,
   dwActorId,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   const offset = moment(
     event.timestamp,
@@ -232,11 +234,11 @@ const getNewProjectAttachment = (
     title_link: event.links.web.project,
     thumb_url:
       dwOwner.avatarUrl ||
-      "https://cdn.filepicker.io/api/file/h9MLETR6Sv6Tq5WY1cyt",
+      `${serverBaseUrl}/assets/avatar.png`,
     color: "#F6BD68",
     text: project.objective || "_No Description_",
     footer: `${resourceId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    footer_icon: `${serverBaseUrl}/assets/project.png`,
     ts: ts,
     mrkdwn_in: ["text", "pretext", "fields"],
     callback_id: "dataset_subscribe_button",
@@ -330,7 +332,8 @@ const getNewInsightAttachment = (
   insight,
   event,
   dwActor,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   const offset = moment(
     event.timestamp,
@@ -352,12 +355,12 @@ const getNewInsightAttachment = (
     author_icon: dwActor.avatarUrl,
     title: insight.title,
     title_link: event.links.web.insight,
-    thumb_url: "https://cdn.filepicker.io/api/file/CQvuh91XRlqhTKEimEls",
+    thumb_url: `${serverBaseUrl}/assets/insight.png`,
     image_url: insight.thumbnail,
     color: "#9581CA",
     text: insight.description,
     footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr",
+    footer_icon: `${serverBaseUrl}/assets/project.png`,
     ts: ts,
     mrkdwn_in: ["text", "pretext"],
     actions: [
@@ -380,7 +383,8 @@ const getFileUploadAttachment = (
   event,
   dwActorId,
   actorSlackId,
-  isProjectFiles
+  isProjectFiles,
+  serverBaseUrl
 ) => {
   const offset = moment(
     event.timestamp,
@@ -407,12 +411,12 @@ const getFileUploadAttachment = (
     pretext: pretext,
     color: isProjectFiles ? "#F6BD68" : "#5CC0DE", // changes if it's project file upload
     thumb_url: isProjectFiles
-      ? "https://cdn.filepicker.io/api/file/y3pOY9LSCSETkcqcvUtX"
-      : "https://cdn.filepicker.io/api/file/KneqPAwARf6qJr5njc8Q", // changes if it's project file upload
+      ? `${serverBaseUrl}/assets/file_upload_project.png`
+      : `${serverBaseUrl}/assets/file_upload_dataset.png`, // changes if it's project file upload
     footer: `${params.owner}/${params.datasetId}`,
     footer_icon: isProjectFiles
-      ? "https://cdn.filepicker.io/api/file/N5PbEQQ2QbiuK3s5qhZr"
-      : "https://cdn.filepicker.io/api/file/QXyEdeNmSqun0Nfy4urT", // changes if it's project file upload
+      ? `${serverBaseUrl}/assets/project.png`
+      : `${serverBaseUrl}/assets/dataset.png`, // changes if it's project file upload
     ts: ts,
     mrkdwn_in: ["pretext", "fields"]
   };
@@ -453,7 +457,8 @@ const handleDatasetEvent = async (
   user,
   event,
   dwActorId,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   try {
     // Fetch necessary DW resources
@@ -493,7 +498,8 @@ const handleDatasetEvent = async (
             event,
             dwOwner,
             dwActorId,
-            actorSlackId
+            actorSlackId,
+            serverBaseUrl
           )
         : getNewDatasetAttachment(
             params,
@@ -501,7 +507,8 @@ const handleDatasetEvent = async (
             event,
             dwOwner,
             dwActorId,
-            actorSlackId
+            actorSlackId,
+            serverBaseUrl
           );
     } else {
       // handle dataset/project update events
@@ -530,7 +537,8 @@ const handleDatasetEvent = async (
             event,
             dwActorId,
             actorSlackId,
-            isProject
+            isProject,
+            serverBaseUrl
           );
           return sendEventToSlack(channelIds, fileAttachment);
         }
@@ -555,7 +563,8 @@ const handleDatasetEvent = async (
               linkedDataset,
               event,
               dwActor,
-              actorSlackId
+              actorSlackId,
+              serverBaseUrl
             );
             sendEventToSlack(channelIds, attachment);
           });
@@ -586,7 +595,8 @@ const handleInsightEvent = async (
   user,
   event,
   dwActorId,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   const params = helper.extractDatasetOrProjectParamsFromLink(
     event.links.web.project
@@ -609,7 +619,8 @@ const handleInsightEvent = async (
     insight,
     event,
     dwActor,
-    actorSlackId
+    actorSlackId,
+    serverBaseUrl
   );
   sendEventToSlack(channelIds, attachment);
 };
@@ -620,7 +631,8 @@ const handleFileEvents = async (
   user,
   events,
   dwActorId,
-  actorSlackId
+  actorSlackId,
+  serverBaseUrl
 ) => {
   // For files we always receive an array of event from the webhook api
   // I believe this to handle situations where multiple files were uploaded at once
@@ -661,7 +673,8 @@ const handleFileEvents = async (
     event,
     dwActorId,
     actorSlackId,
-    isProjectFiles
+    isProjectFiles,
+    serverBaseUrl
   );
   sendEventToSlack(channelIds, attachment);
 };
@@ -715,7 +728,7 @@ const webhook = {
         const dwActorId = helper.extractIdFromLink(event.links.web.actor);
         const actor = await User.findOne({ where: { dwUserId: dwActorId } });
         const actorSlackId = actor ? actor.slackId : null;
-
+        const serverBaseUrl = helper.getServerBaseUrl(req);
         switch (getEntityType(event)) {
           case DATASET:
             handleDatasetEvent(
@@ -724,7 +737,8 @@ const webhook = {
               subscriber,
               req.body,
               dwActorId,
-              actorSlackId
+              actorSlackId,
+              serverBaseUrl
             );
             break;
           case INSIGHT:
@@ -734,7 +748,8 @@ const webhook = {
               subscriber,
               req.body,
               dwActorId,
-              actorSlackId
+              actorSlackId,
+              serverBaseUrl
             );
             break;
           case FILE:
@@ -744,7 +759,8 @@ const webhook = {
               subscriber,
               req.body,
               dwActorId,
-              actorSlackId
+              actorSlackId,
+              serverBaseUrl
             );
             break;
           default:
