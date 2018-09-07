@@ -2,7 +2,7 @@
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
-directories="$(git diff --name-status --diff-filter=DR)"
+directories="$(git diff --staged --name-status --diff-filter=DR)"
 
 # Prevent direct commit to master branch
 if [ "$branch" = "master" ]; then
