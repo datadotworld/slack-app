@@ -105,7 +105,7 @@ const getDelay = (retryCount) => {
 }
 
 const shouldRetry = (error) => {
-  return error.response.status === 429;
+  return error.response && error.response.status === 429;
 }
 
 const getSubscriptionStatus = async (resourceid, channelid, userId) => {

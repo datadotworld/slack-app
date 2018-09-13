@@ -17,7 +17,6 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const AuthMessage = require("../models").AuthMessage;
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
 const Team = require("../models").Team;
@@ -711,18 +710,7 @@ const performAction = async (req, res) => {
   try {
     if (payload.callback_id === "auth_required_message") {
       // Handle auth_required_message dismiss button action
-      const nonce = payload.actions.shift().value;
-      const team = await Team.findOne({
-        where: { teamId: payload.team.id }
-      });
-      const authMessage = await AuthMessage.findOne({
-        where: { nonce: nonce }
-      });
-      const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-      const { channel, ts } = authMessage;
-
-      await authMessage.destroy();
-      await slack.dismissAuthRequiredMessage(botAccessToken, ts, channel);
+      await slack.dismissAuthRequiredMessage(payload.response_url);
       return;
     }
 

@@ -19,7 +19,6 @@
  */
 const axios = require("axios");
 const SlackWebClient = require("@slack/client").WebClient;
-const AuthMessage = require("../models").AuthMessage;
 const headers = {
   Accept: "application/json",
   "Content-Type": "application/json"
@@ -119,7 +118,7 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
   }
 };
 
-const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId) => {
+const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUserId) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
     const commandText = process.env.SLASH_COMMAND;
@@ -145,58 +144,50 @@ const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId) => {
       }
     ];
     const slackBot = new SlackWebClient(botAccessToken);
-    const res = await slackBot.chat.postMessage(channelId, "", {
+    await slackBot.chat.postEphemeral(channelId, "", slackUserId, {
       attachments
     });
-    if (res.ok) {
-      await AuthMessage.findOrCreate({
-        where: { nonce: nonce },
-        defaults: { channel: res.channel, ts: res.ts }
-      });
-    }
   } catch (error) {
     console.error("SendAuthRequiredMessage failed : ", error);
   }
 };
 
-const dismissAuthRequiredMessage = async (botAccessToken, ts, channel) => {
-  const slackBot = new SlackWebClient(botAccessToken);
-  await slackBot.chat.delete(ts, channel, { as_user: true });
+const dismissAuthRequiredMessage = async (responseUrl) => {
+  let data = { text: "", replace_original: true, delete_original: true };
+  try {
+    await sendResponse(responseUrl, data);
+  } catch (error) {
+    console.error("Failed to dismiss account binding message.", error.message);
+  }
 };
 
-const startUnfurlAssociation = async (nonce, botAccessToken, channel) => {
-  const associationUrl = `${DW_AUTH_URL}${nonce}`;
-  const slackBot = new SlackWebClient(botAccessToken);
-  const commandText = process.env.SLASH_COMMAND;
-  const attachments = [
-    {
-      color: "#355D8A",
-      text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
-      callback_id: "auth_required_message",
-      actions: [
-        {
-          type: "button",
-          text: "Connect data.world account",
-          style: "primary",
-          url: `${associationUrl}`
-        },
-        {
-          name: "dismiss",
-          text: "Dismiss",
-          type: "button",
-          value: `${nonce}`
-        }
-      ]
-    }
-  ];
+const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId) => {
   try {
-    const res = await slackBot.chat.postMessage(channel, "", { attachments });
-    if (res.ok) {
-      await AuthMessage.findOrCreate({
-        where: { nonce: nonce },
-        defaults: { channel: res.channel, ts: res.ts }
-      });
-    }
+    const associationUrl = `${DW_AUTH_URL}${nonce}`;
+    const slackBot = new SlackWebClient(botAccessToken);
+    const commandText = process.env.SLASH_COMMAND;
+    const attachments = [
+      {
+        color: "#355D8A",
+        text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
+        callback_id: "auth_required_message",
+        actions: [
+          {
+            type: "button",
+            text: "Connect data.world account",
+            style: "primary",
+            url: `${associationUrl}`
+          },
+          {
+            name: "dismiss",
+            text: "Dismiss",
+            type: "button",
+            value: `${nonce}`
+          }
+        ]
+      }
+    ];
+    await slackBot.chat.postEphemeral(channel, "", slackUserId, { attachments });
   } catch (error) {
     console.error("Failed to send begin unfurl message to slack : ", error);
   }

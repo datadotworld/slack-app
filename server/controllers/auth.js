@@ -19,7 +19,6 @@
  */
 const Subscription = require("../models").Subscription;
 const User = require("../models").User;
-const AuthMessage = require("../models").AuthMessage;
 const Team = require("../models").Team;
 
 const uuidv1 = require("uuid/v1");
@@ -164,19 +163,17 @@ const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
       defaults: { teamId: teamId, nonce: nonce }
     });
 
-    if (!created) {
-      // check if auth message for this old nonce still exists and delete
-      await deleteOldSlackAssociationMessage(user.nonce, botToken);
-      
-      // User record already exits.
-      user.update({ nonce: nonce }, { fields: ["nonce"] });
+    if (!created) {      
+      // User record already exits. use existing nonce if present
+      nonce = user.nonce ? user.nonce : nonce;
     }
 
     // Inform user that authentication is
     await slack.sendAuthRequiredMessage(
       botToken,
       nonce,
-      channelId
+      channelId,
+      slackUserId
     );
   } catch (error) {
     console.error("Begin slack association error : ", error.message);
@@ -201,9 +198,6 @@ const beginUnfurlSlackAssociation = async (
     });
 
     if (!created) {
-      // check if auth message for this old nonce still exists and delete
-      await deleteOldSlackAssociationMessage(user.nonce, botAccessToken);
-
       // User record already exits.
       // update nonce, reauthenticating existing user.
       user.update({ nonce: nonce }, { fields: ["nonce"] });
@@ -212,7 +206,8 @@ const beginUnfurlSlackAssociation = async (
     await slack.startUnfurlAssociation(
       nonce,
       botAccessToken,
-      channel
+      channel,
+      userId
     );
   } catch (error) {
     console.error("Begin unfurl slack association error : ", error);
@@ -232,14 +227,8 @@ const completeSlackAssociation = async (req, res) => {
       // Add returned token
       // redirect to success / homepage
       const user = await User.findOne({ where: { nonce: nonce } });
-      const authMessage = await AuthMessage.findOne({ where: { nonce: nonce }});
       if (user) {
-        const { channel, ts } = authMessage;
         const dwUserResponse = await dataworld.getActiveDWUser(token);
-
-        if (authMessage) {
-          await authMessage.destroy();
-        }
         await user.update(
           {
             dwAccessToken: token,
@@ -258,7 +247,6 @@ const completeSlackAssociation = async (req, res) => {
         //inform user via slack that authentication was successful
         const team = await Team.findOne({ where: { teamId: user.teamId } });
         const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-        await slack.deleteSlackMessage(botAccessToken, channel, ts);
         await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId);
       } else {
         console.warn("Received an invalid nonce, we should ensure stale auth links are cleaned up properly.");
@@ -270,15 +258,6 @@ const completeSlackAssociation = async (req, res) => {
     return res.status(500).send("Slack association failed.");
   }
 };
-
-const deleteOldSlackAssociationMessage = async (oldNonce, botAccessToken) => {
-  const authMessage = await AuthMessage.findOne({ where: { nonce: oldNonce } });
-  if (authMessage) { // remove auth message from slack, since adding new nonce to user will invalidate the oldNonce
-    const { channel, ts } = authMessage;
-    await slack.deleteSlackMessage(botAccessToken, channel, ts);
-    await authMessage.destroy();
-  }
-}
 
 module.exports = {
   slackOauth,

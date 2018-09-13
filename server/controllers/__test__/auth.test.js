@@ -20,7 +20,7 @@
 const auth = require("../auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
-const AuthMessage = require("../../models").AuthMessage;
+// $$ const AuthMessage = require("../../models").AuthMessage;
 const User = require("../../models").User;
 const Team = require("../../models").Team;
 
@@ -62,13 +62,13 @@ describe("Test Auth controller methods", () => {
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
       slack.deleteSlackMessage = jest.fn(() => Promise.resolve());
       slack.sendAuthRequiredMessage = jest.fn(() => Promise.resolve());
-      AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
+      // $$ AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
       await auth.beginSlackAssociation(slackUserId, teamId);
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
-      expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+      // $$ expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
       expect(destroy).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledTimes(1);
       expect(slack.deleteSlackMessage).toBeCalledWith(botAccessToken, channel, ts);
@@ -96,7 +96,7 @@ describe("Test Auth controller methods", () => {
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
       slack.startUnfurlAssociation = jest.fn(() => Promise.resolve());
       slack.deleteSlackMessage = jest.fn(() => Promise.resolve());
-      AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
+      // $$ AuthMessage.findOne = jest.fn(() => Promise.resolve({ channel, ts, destroy }));
 
       await auth.beginUnfurlSlackAssociation(
         userId,
@@ -106,7 +106,7 @@ describe("Test Auth controller methods", () => {
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
-      expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
+      // $$ expect(AuthMessage.findOne).toHaveBeenCalledTimes(1);
       expect(destroy).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledTimes(1);
       expect(slack.deleteSlackMessage).toBeCalledWith(botAccessToken, channel, ts);
