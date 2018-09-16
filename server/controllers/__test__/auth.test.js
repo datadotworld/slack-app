@@ -101,7 +101,6 @@ describe("Test Auth controller methods", () => {
       await auth.beginUnfurlSlackAssociation(
         userId,
         channel,
-        ts,
         teamId
       );
 

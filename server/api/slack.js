@@ -164,55 +164,33 @@ const dismissAuthRequiredMessage = async (botAccessToken, ts, channel) => {
   await slackBot.chat.delete(ts, channel, { as_user: true });
 };
 
-const startUnfurlAssociation = async (
-  nonce,
-  botAccessToken,
-  teamAccessToken,
-  messageTs,
-  channel
-) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel) => {
+  const associationUrl = `${DW_AUTH_URL}${nonce}`;
+  const slackBot = new SlackWebClient(botAccessToken);
+  const commandText = process.env.SLASH_COMMAND;
+  const attachments = [
+    {
+      color: "#355D8A",
+      text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
+      callback_id: "auth_required_message",
+      actions: [
+        {
+          type: "button",
+          text: "Connect data.world account",
+          style: "primary",
+          url: `${associationUrl}`
+        },
+        {
+          name: "dismiss",
+          text: "Dismiss",
+          type: "button",
+          value: `${nonce}`
+        }
+      ]
+    }
+  ];
   try {
-    const associationUrl = `${DW_AUTH_URL}${nonce}`;
-    const slackBot = new SlackWebClient(botAccessToken);
-    const slackWebApi = new SlackWebClient(teamAccessToken);
-
-    const opts = {};
-    opts.user_auth_required = true;
-    opts.user_auth_url = associationUrl;
-
-    const commandText = process.env.SLASH_COMMAND;
-    const attachments = [
-      {
-        color: "#355D8A",
-        text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
-        callback_id: "auth_required_message",
-        actions: [
-          {
-            type: "button",
-            text: "Connect data.world account",
-            style: "primary",
-            url: `${associationUrl}`
-          },
-          {
-            name: "dismiss",
-            text: "Dismiss",
-            type: "button",
-            value: `${nonce}`
-          }
-        ]
-      }
-    ];
-    // check channel type and bot presence. cos, we can't send auth required message to a group channel unless bot is present
-    const isPresent = await botBelongsToChannel(
-      channel,
-      process.env.SLACK_BOT_TOKEN || botAccessToken
-    );
-    const isGroupChannel = getChannelType(channel) === GROUP_CHANNEL;
-
-    const res = isGroupChannel && !isPresent
-      ? await slackWebApi.chat.unfurl(messageTs, channel, {}, opts)
-      : await slackBot.chat.postMessage(channel, "", { attachments });
-
+    const res = await slackBot.chat.postMessage(channel, "", { attachments });
     if (res.ok) {
       await AuthMessage.findOrCreate({
         where: { nonce: nonce },

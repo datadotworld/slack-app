@@ -467,7 +467,6 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         auth.beginUnfurlSlackAssociation(
           event.user,
           event.channel,
-          event.message_ts,
           teamId
         );
       }
