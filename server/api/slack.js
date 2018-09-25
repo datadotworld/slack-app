@@ -202,10 +202,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel) => {
   }
 };
 
-const sendCompletedAssociationMessage = async (
-  botAccessToken,
-  slackUserId
-) => {
+const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
   const slackBot = new SlackWebClient(botAccessToken);
   const botResponse = await slackBot.im.open(slackUserId);
   const dmChannelId = botResponse.channel.id;
@@ -231,12 +228,9 @@ const sendCompletedAssociationMessage = async (
 const deleteSlackMessage = async (botAccessToken, channel, ts) => {
   const slackBot = new SlackWebClient(botAccessToken);
   await slackBot.chat.delete(ts, channel, { as_user: true });
-}
+};
 
-const sendHowToUseMessage = async (
-  botAccessToken,
-  slackUserId
-) => {
+const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
   const slackBot = new SlackWebClient(botAccessToken);
   const botResponse = await slackBot.im.open(slackUserId);
   const dmChannelId = botResponse.channel.id;
