@@ -163,15 +163,10 @@ const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
       defaults: { teamId: teamId, nonce: nonce }
     });
 
-    if (!created) {      
-      // User record already exits. use existing nonce if present
-      nonce = user.nonce ? user.nonce : nonce;
-    }
-
-    // Inform user that authentication is
+    // Inform user that authentication is required
     await slack.sendAuthRequiredMessage(
       botToken,
-      nonce,
+      user.nonce,
       channelId,
       slackUserId
     );
@@ -197,14 +192,8 @@ const beginUnfurlSlackAssociation = async (
       defaults: { teamId: teamId, nonce: nonce }
     });
 
-    if (!created) {
-      // User record already exits.
-      // update nonce, reauthenticating existing user.
-      user.update({ nonce: nonce }, { fields: ["nonce"] });
-    }
-
     await slack.startUnfurlAssociation(
-      nonce,
+      user.nonce,
       botAccessToken,
       channel,
       userId
