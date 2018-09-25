@@ -72,11 +72,11 @@ describe("Test Auth controller methods", () => {
       const userId = "userId";
       const channel = "channel";
       const teamId = "teamId";
+      const nonce = "nonce";
       const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
       const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
 
-      const update = jest.fn(() => Promise.resolve());
-      const user = { update };
+      const user = { nonce };
 
       Team.findOne = jest.fn(() => Promise.resolve({ accessToken, botAccessToken }));
       User.findOrCreate = jest.fn(() => Promise.resolve([user, false]));
@@ -90,7 +90,6 @@ describe("Test Auth controller methods", () => {
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(User.findOrCreate).toHaveBeenCalledTimes(1);
-      expect(update).toHaveBeenCalledTimes(1);
       expect(slack.startUnfurlAssociation).toHaveBeenCalledTimes(1);
 
       done();
