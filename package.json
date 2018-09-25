@@ -10,7 +10,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^5.0.1",
-    "express": "~4.15.5",
+    "express": "^4.16.3",
     "jade": "~1.11.0",
     "lodash": "^4.17.5",
     "moment": "^2.22.1",
@@ -23,7 +23,7 @@
     "react-dom": "16.2.0",
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
-    "react-scripts": "1.1.1",
+    "react-scripts": "^1.1.5",
     "sequelize": "^4.37.6",
     "sequelize-cli": "^4.0.0",
     "serve-favicon": "~2.4.5",
@@ -31,6 +31,7 @@
     "uuid": "^3.2.1"
   },
   "scripts": {
+    "precommit": "./pre-commit.sh",
     "start": "node --trace-warnings ./server/bin/www",
     "dev": "yarn run heroku-prebuild && yarn run start",
     "heroku-prebuild": "yarn && yarn run build",
@@ -40,6 +41,7 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "husky": "^0.14.3",
     "jest": "^23.3.0",
     "jest-junit": "^5.1.0",
     "supertest": "^3.1.0"
