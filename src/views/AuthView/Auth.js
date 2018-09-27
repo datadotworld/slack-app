@@ -34,8 +34,8 @@ class Auth extends Component {
     axios
       .get("/api/v1/auth/exchange?code=" + code + "&state=" + state)
       .then(response => {
-        const { statusText, data } = response;
-        return statusText === "OK"
+        const { status, data } = response;
+        return status === 200
           ? this.redirectSuccess(data.url)
           : this.redirectFailed();
       })

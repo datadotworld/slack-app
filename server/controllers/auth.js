@@ -210,7 +210,7 @@ const completeSlackAssociation = async (req, res) => {
       return res.status(400).send("failed");
     } else {
       const token = response.data.access_token;
-      const refreshToken = response.data.refesh_token;
+      const refreshToken = response.data.refresh_token;
       const nonce = req.query.state;
       // use nonce to retrieve user
       // Add returned token
