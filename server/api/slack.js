@@ -45,6 +45,10 @@ const isDMChannel = channelId => {
   return channelId.startsWith("D");
 };
 
+const isPrivateChannel = channelId => {
+  return channelId.startsWith("G");
+};
+
 // TODO: Handle channel list response pagination when checking bot presence in channels
 // https://api.slack.com/methods/channels.list
 // https://api.slack.com/docs/pagination#classic
@@ -161,33 +165,41 @@ const dismissAuthRequiredMessage = async (responseUrl) => {
   }
 };
 
-const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken, teamId) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
     const slackBot = new SlackWebClient(botAccessToken);
     const commandText = process.env.SLASH_COMMAND;
-    const attachments = [
-      {
-        color: "#355D8A",
-        text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
-        callback_id: "auth_required_message",
-        actions: [
-          {
-            type: "button",
-            text: "Connect data.world account",
-            style: "primary",
-            url: `${associationUrl}`
-          },
-          {
-            name: "dismiss",
-            text: "Dismiss",
-            type: "button",
-            value: `${nonce}`
-          }
-        ]
-      }
-    ];
-    await slackBot.chat.postEphemeral(channel, "", slackUserId, { attachments });
+    const belongsToChannel = await botBelongsToChannel(channel, botAccessToken);
+    if ((isDMChannel(channel) || isPrivateChannel(channel)) && !belongsToChannel) {
+      // Fallback to slack default style of requesting auth for unfurl action.
+      const slackWebApi = new SlackWebClient(teamAccessToken);
+      const opts = { user_auth_required: true, user_auth_url: associationUrl }
+      await slackWebApi.chat.unfurl(messageTs, channel, {}, opts) // With opts, this will prompt user to authenticate using the association Url above.
+    } else {
+      const attachments = [
+        {
+          color: "#355D8A",
+          text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
+          callback_id: "auth_required_message",
+          actions: [
+            {
+              type: "button",
+              text: "Connect data.world account",
+              style: "primary",
+              url: `${associationUrl}`
+            },
+            {
+              name: "dismiss",
+              text: "Dismiss",
+              type: "button",
+              value: `${nonce}`
+            }
+          ]
+        }
+      ];
+      await slackBot.chat.postEphemeral(channel, "", slackUserId, { attachments });
+    }
   } catch (error) {
     console.error("Failed to send begin unfurl message to slack : ", error);
   }

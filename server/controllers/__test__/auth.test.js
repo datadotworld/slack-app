@@ -73,6 +73,7 @@ describe("Test Auth controller methods", () => {
       const channel = "channel";
       const teamId = "teamId";
       const nonce = "nonce";
+      const messageTs = "messageTs"
       const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
       const botAccessToken = process.env.SLACK_BOT_TOKEN || "botAccessToken";
 
@@ -85,7 +86,8 @@ describe("Test Auth controller methods", () => {
       await auth.beginUnfurlSlackAssociation(
         userId,
         channel,
-        teamId
+        teamId,
+        messageTs
       );
 
       expect(Team.findOne).toHaveBeenCalledTimes(1);
