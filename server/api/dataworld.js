@@ -87,8 +87,9 @@ const refreshToken = async refreshToken => {
     }
     return await post(process.env.DW_GET_TOKEN_BASE_URL, data);
   } catch(error) {
+    console.error(error)
     console.error("Failed to refesh DW token : ", error.message);
-    return null;
+    return;
   }
 };
 

@@ -127,11 +127,8 @@ const checkSlackAssociationStatus = async slackId => {
         // Attempt to refresh token
         const response = await dataworld.refreshToken(user.dwRefreshToken);
         if (response) {
-          const token = response.data.access_token;
-          const refreshToken = response.data.refesh_token;
-
           user = await user.update(
-            { dwAccessToken: token, dwRefreshToken: refreshToken },
+            { dwAccessToken: response.data.access_token, dwRefreshToken: response.data.refresh_token },
             { fields: ["dwAccessToken", "dwRefreshToken"] }
           );
           isAssociated = true;
