@@ -74,7 +74,7 @@ const del = (url, token) => {
 
 const exchangeAuthCode = code => {
   const requestUrl = `${accessTokenUrl}${code}`;
-  return post(requestUrl, {}, null);
+  return post(requestUrl, {});
 };
 
 const refreshToken = async refreshToken => {
@@ -85,7 +85,7 @@ const refreshToken = async refreshToken => {
       refresh_token: refreshToken,
       grant_type: "refresh_token"
     }
-    return await post(process.env.DW_GET_TOKEN_BASE_URL, data, null);
+    return await post(process.env.DW_GET_TOKEN_BASE_URL, data);
   } catch(error) {
     console.error("Failed to refesh DW token : ", error.message);
     return null;
