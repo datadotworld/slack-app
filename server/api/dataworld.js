@@ -77,9 +77,19 @@ const exchangeAuthCode = code => {
   return post(requestUrl, {}, null);
 };
 
-const refreshToken = refreshToken => {
-  const requestUrl = `${refreshTokenUrl}${refreshToken}`;
-  return post(requestUrl, {}, null);
+const refreshToken = async refreshToken => {
+  try {
+    const data = {
+      client_id: process.env.DW_CLIENT_ID,
+      client_secret: process.env.DW_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token"
+    }
+    return await post(process.env.DW_GET_TOKEN_BASE_URL, data, null);
+  } catch(error) {
+    console.error("Failed to refesh DW token : ", error.message);
+    return null;
+  }
 };
 
 const getActiveDWUser = token => {
