@@ -1,13 +1,76 @@
-# Data.world Slack Application
+# Contributing Guidelines
+
+## General
+
+* Contributions of all kinds (issues, ideas, proposals), not just code, are highly appreciated.
+* Pull requests are welcome with the understanding that major changes will be carefully evaluated 
+and discussed, and may not always be accepted. Starting with a discussion is always best!
+* All contributions including documentation, filenames and discussions should be written in English language.
+
+## Issues
+
+Our [issue tracker](https://github.com/datadotworld/slack-app/issues) can be used to report 
+issues and propose changes to the current or next version of the data.world for Slack.
+
+## Contribute Code
+
+### Review Relevant Docs
+
+* [data.world API](https://apidocs.data.world)
+* <https://api.slack.com/>
+
+### Set up machine
+
+Install:
+
+* NodeJS
+* npm
+* yarn
+
+### Fork the Project
+
+Fork the [project on Github](https://github.com/datadotworld/slack-app) and check out your copy.
+
+```
+git clone https://github.com/[YOUR_GITHUB_NAME]/slack-app.git
+cd slack-app
+git remote add upstream https://github.com/datadotworld/slack-app.git
+```
+
+### Install and Test
+
+Ensure that you can build the project and run tests.
+
+Install dependencies:
+```bash
+yarn
+```
+
+Run tests:
+```bash
+yarn test
+```
+
+### Create a Feature Branch
+
+Make sure your fork is up-to-date and create a feature branch for your feature or bug fix.
+
+```bash
+git checkout master
+git pull upstream master
+git checkout -b my-feature-branch
+```
+
+### Write Tests
+
+Try to write a test that reproduces the problem you're trying to fix or describes a feature that 
+you want to build.
+
+We definitely appreciate pull requests that highlight or reproduce a problem, even without a fix.
 
 ## Setup and configuration
 
-#### 1. Repo setup
-
-    1. git clone https://github.com/datadotworld/slack-app
-    2. From the project root dir : run yarn (This will install all necessary project depenedencies)
-
-#### 2. Postgres config (https://launchschool.com/blog/how-to-install-postgresql-on-a-mac)
+#### 1. Postgres config (https://launchschool.com/blog/how-to-install-postgresql-on-a-mac)
 
     1. Install Postgres : brew install postgres
     2. Start Postgres using : brew services start postgresql
@@ -15,13 +78,13 @@
     4. Create database slackapp in postgres : CREATE DATABASE slackapp
     5. Quit postgres shell : \q
 
-#### 3. Download and configure Ngrok
+#### 2. Download and configure Ngrok
 
     1. Follow instructions [here](https://ngrok.com/download) to setup ngrok.
     2. Bind ngrok to port 5000 : ./ngrok http 5000
     3. keep you ngrok url handy
 
-#### 4. DW Oauth Client configuration
+#### 3. DW Oauth Client configuration
 
     1. Create an oauth client on DW
     2. set "allowedRoles" field to : [ "user_api_read", "user_api_write", "user_api_hooks", "user_api_offline" ]
@@ -29,7 +92,7 @@
     4. Set the value of "redirect_url" to :  <ngrok url>/oauth/code_callback
     5. Set the value of "webhookUrl" to: <ngrok url>/api/v1/webhook/dw/events
 
-#### 5. Create slack app
+#### 4. Create slack app
 
     A. Goto https://api.slack.com/apps
     B. Click create slack app button (positioned top right corner)
@@ -71,7 +134,7 @@
             e. Add app unfurl domain : data.world
             f. Click save changes
 
-#### 6. Add env variables 
+#### 5. Add env variables 
 
     1. Create a .env file in the project directory.
 
@@ -106,11 +169,11 @@
         PG_PASSWORD= Postgres password
         PG_DATABASE=slackapp  (Postgres database name, ensure it correlates with database created earlier in step 2 above.)
 
-#### 7. Start the server
+#### 6. Start the server
 
     1. From the project root dir run : yarn dev (server should build and start on port 5000 or any other port you decide to go with)
 
-#### 8. Event subscription & Interactive Components request url
+#### 7. Event subscription & Interactive Components request url
 
     1. Go to slack app settings page 
     2. Go to event subscription section
@@ -125,7 +188,7 @@
     3. Add request url <ngrok url>/api/v1/command/action (Challenge should be successful).
     4. Click save changes.
 
-#### 9. Install and Run app in workspace
+#### 8. Install and Run app in workspace
 
     We can install this app either as a custom integration in our current workspace or using the Add to Slack button to directly install it into current workspace (This is how it will be installed by end users).
 
@@ -144,7 +207,8 @@
         2. Go to manage distribution 
         3. Click Add to slack button and follow the prompt.
 
-#### 10. Deploy to heroku
+# Deploy to heroku (for testing)
+
     You can deploy to Heroku using the heroku deploy button but before that ensure you do the following:
 
     A. Goto https://api.slack.com/apps
@@ -169,9 +233,5 @@
     J. Select Restart all dynos. 
 
     You can now install the app by following the steps in 9b
-
-### 11. Running Test
-
-    From the root directory run : yarn test
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master)
