@@ -75,7 +75,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
     1. Install Postgres : brew install postgres
     2. Start Postgres using : brew services start postgresql
     3. Open postgres shell : psql postgres
-    4. Create database slackapp in postgres : CREATE DATABASE slackapp
+    4. Create database slackapp in postgres : CREATE DATABASE slackapp;
     5. Quit postgres shell : \q
 
 #### 2. Download and configure Ngrok
