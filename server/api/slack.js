@@ -60,6 +60,7 @@ const botBelongsToChannel = async (channelId, botAccessToken) => {
       const imsRes = await slackBot.conversations.list({ types: 'im' });
       return imsRes.channels.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
+      // conversations.list() returns only public channels by default
       const channelsRes = await slackBot.conversations.list();
       return channelsRes.channels.some(
         channel => channel.id === channelId && channel.is_member
