@@ -117,7 +117,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
             a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
             b. Click save urls
-            c. Add the following scopes : bot, commands, link:read, link:write, chat:write, im:read, im:write, channels:read, groups:read, groups:write, npim:write
+            c. Add the following scopes : bot, commands, link:read, link:write, chat:write:bot
             d. Click save changes
 
         3. Add Bot user 
