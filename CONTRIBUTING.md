@@ -94,8 +94,8 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
 #### 4. Create slack app
 
-    A. Goto https://api.slack.com/apps
-    B. Click create slack app button (positioned top right corner)
+    A. Goto https://api.slack.com/authentication/basics and scroll to the bottom
+    B. Click on the `Create a classic Slack app` button
 
     C. Under features section in the left panel, configure each of the following :
 
