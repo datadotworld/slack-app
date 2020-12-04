@@ -75,7 +75,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
     1. Install Postgres : brew install postgres
     2. Start Postgres using : brew services start postgresql
     3. Open postgres shell : psql postgres
-    4. Create database slackapp in postgres : CREATE DATABASE slackapp
+    4. Create database slackapp in postgres : CREATE DATABASE slackapp;
     5. Quit postgres shell : \q
 
 #### 2. Download and configure Ngrok
@@ -159,7 +159,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)
         DW_CLIENT_SECRET= (client secret from the DW Oauth Client created earlier in step 4.)
         DW_AUTH_BASE_URL=https://data.world/oauth/authorize
-        DW_GET_TOKEN_BASE_URL=https://data.world/oauth
+        DW_GET_TOKEN_BASE_URL=https://data.world/oauth/access_token
         DW_REDIRECT_URI= <ngrok url>/oauth/code_callback
 
     4. Set Other env variables :
