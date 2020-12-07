@@ -57,16 +57,17 @@ const botBelongsToChannel = async (channelId, botAccessToken) => {
   const type = getChannelType(channelId);
   switch (type) {
     case DM_CHANNEL:
-      const imsRes = await slackBot.im.list();
-      return imsRes.ims.some(channel => channel.id === channelId);
+      const imsRes = await slackBot.conversations.list({ types: 'im' });
+      return imsRes.channels.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
-      const channelsRes = await slackBot.channels.list();
+      // conversations.list() returns only public channels by default
+      const channelsRes = await slackBot.conversations.list();
       return channelsRes.channels.some(
         channel => channel.id === channelId && channel.is_member
       );
     case GROUP_CHANNEL:
-      const groupsRes = await slackBot.groups.list();
-      return groupsRes.groups.some(channel => channel.id === channelId);
+      const groupsRes = await slackBot.conversations.list({ types: 'private_channel' });
+      return groupsRes.channels.some(channel => channel.id === channelId);
     default:
       console.error("Unknown channel type.");
       return;
@@ -93,7 +94,7 @@ const sendResponse = (responseUrl, data) => {
 const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
   try {
     const slackBot = new SlackWebClient(botAccessToken);
-    const botResponse = await slackBot.im.open(slackUserId);
+    const botResponse = await slackBot.conversations.open({ users: slackUserId });
     if (botResponse && botResponse.channel) {
       const dmChannelId = botResponse.channel.id;
       const commandText = process.env.SLASH_COMMAND;
@@ -207,7 +208,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
 
 const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  const botResponse = await slackBot.im.open(slackUserId);
+  const botResponse = await slackBot.conversations.open({ users: slackUserId });
   const dmChannelId = botResponse.channel.id;
   const commandText = process.env.SLASH_COMMAND;
   const attachments = [
@@ -235,7 +236,7 @@ const deleteSlackMessage = async (botAccessToken, channel, ts) => {
 
 const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  const botResponse = await slackBot.im.open(slackUserId);
+  const botResponse = await slackBot.conversations.open({ users: slackUserId });
   const dmChannelId = botResponse.channel.id;
   const commandText = process.env.SLASH_COMMAND;
   const attachments = [
