@@ -24,7 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       channelId: DataTypes.STRING,
       slackUserId: DataTypes.STRING,
-      teamId: DataTypes.STRING
+      teamId: DataTypes.STRING,
+      webhookId: DataTypes.STRING
     },
     {}
   );

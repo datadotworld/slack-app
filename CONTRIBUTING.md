@@ -164,6 +164,8 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
     4. Set Other env variables :
 
+        SERVER_PUBLIC_HOSTNAME= <ngrok url>
+
         PORT= node server port (defaults to 5000, if you decide to use a different port number, please revisit your ngrok config and ensure it's listening on the same port you've choosen.)
         PG_USERNAME= Postgres username
         PG_PASSWORD= Postgres password
