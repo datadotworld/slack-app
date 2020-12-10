@@ -30,6 +30,7 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
+const webhookCommands = require("../commands/webhook");
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND;
@@ -39,6 +40,10 @@ const dwCommandRegex = new RegExp(
 );
 const dwSupportCommandRegex = new RegExp(
   `^((\\\/${commandText})(list|help))$`,
+  "i"
+);
+const dwWebhookCommandRegex = new RegExp(
+  `^((\\\/${commandText})(webhook))$`,
   "i"
 );
 
@@ -381,7 +386,7 @@ const listSubscription = async (
     let baseUrl = "https://data.world";
 
     if (!lang.isEmpty(subscriptions)) {
-      message = `*Active Subscriptions*`;
+      message = "*Active Subscriptions*";
       let attachmentText = "";
       await Promise.all(
         subscriptions.map(async subscription => {
@@ -451,7 +456,7 @@ const listSubscription = async (
               options: options,
               confirm: {
                 title: "Confirm",
-                text: `Are you sure you want to unsubscribe from selected resource ?`,
+                text: "Are you sure you want to unsubscribe from selected resource ?",
                 ok_text: "Yes",
                 dismiss_text: "No"
               }
@@ -618,7 +623,8 @@ const showHelp = async responseUrl => {
     `_Unsubscribe from a data.world dataset:_ \n \`/${commandText} unsubscribe dataset_url\``,
     `_Unsubscribe from a data.world project:_ \n \`/${commandText} unsubscribe project_url\``,
     `_Unsubscribe from a data.world account:_ \n \`/${commandText} unsubscribe account\``,
-    `_List active subscriptions._ : \n \`/${commandText} list\``
+    `_List active subscriptions._ : \n \`/${commandText} list\``,
+    `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
   ];
 
   collection.forEach(commandsInfo, value => {
@@ -840,6 +846,11 @@ const validateAndProcessCommand = async (req, res, next) => {
               req.body.channel_id,
               req.body.user_id,
               false
+            );
+          } else if (dwWebhookCommandRegex.test(req.body.command + option)) {
+            webhookCommands.getOrCreateWebhookForChannel(
+              req.body.channel_id,
+              req.body.response_url
             );
           } else {
             // Show help if there's no match found.

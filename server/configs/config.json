@@ -3,6 +3,7 @@
     "username": "PG_USERNAME",
     "password": "PG_PASSWORD",
     "database": "PG_DATABASE",
+    "dialect": "postgres",
     "options": {
       "host": "127.0.0.1",
       "dialect": "postgres",

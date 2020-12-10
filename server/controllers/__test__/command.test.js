@@ -534,7 +534,8 @@ describe("Test Auth controller methods", () => {
         `_Unsubscribe from a data.world dataset:_ \n \`/${commandText} unsubscribe dataset_url\``,
         `_Unsubscribe from a data.world project:_ \n \`/${commandText} unsubscribe project_url\``,
         `_Unsubscribe from a data.world account:_ \n \`/${commandText} unsubscribe account\``,
-        `_List active subscriptions._ : \n \`/${commandText} list\``
+        `_List active subscriptions._ : \n \`/${commandText} list\``,
+        `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
     ];
 
     collection.forEach(commandsInfo, value => {
