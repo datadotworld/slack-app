@@ -18,7 +18,9 @@
  * data.world, Inc. (http://data.world/).
  */
 const axios = require("axios");
-const SlackWebClient = require("@slack/client").WebClient;
+// TODO: move methods off of the legacy Slack SDK
+const LegacySlackWebClient = require("@slack/client").WebClient;
+const SlackWebClient = require("@slack/web-api").WebClient;
 const headers = {
   Accept: "application/json",
   "Content-Type": "application/json"
@@ -53,7 +55,7 @@ const isPrivateChannel = channelId => {
 // https://api.slack.com/methods/channels.list
 // https://api.slack.com/docs/pagination#classic
 const botBelongsToChannel = async (channelId, botAccessToken) => {
-  const slackBot = new SlackWebClient(botAccessToken);
+  const slackBot = new LegacySlackWebClient(botAccessToken);
   const type = getChannelType(channelId);
   switch (type) {
     case DM_CHANNEL:
@@ -93,7 +95,7 @@ const sendResponse = (responseUrl, data) => {
 
 const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
   try {
-    const slackBot = new SlackWebClient(botAccessToken);
+    const slackBot = new LegacySlackWebClient(botAccessToken);
     const botResponse = await slackBot.conversations.open({ users: slackUserId });
     if (botResponse && botResponse.channel) {
       const dmChannelId = botResponse.channel.id;
@@ -148,7 +150,7 @@ const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUs
         ]
       }
     ];
-    const slackBot = new SlackWebClient(botAccessToken);
+    const slackBot = new LegacySlackWebClient(botAccessToken);
     await slackBot.chat.postEphemeral(channelId, "", slackUserId, {
       attachments
     });
@@ -169,12 +171,12 @@ const dismissAuthRequiredMessage = async (responseUrl) => {
 const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken, teamId) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
-    const slackBot = new SlackWebClient(botAccessToken);
+    const slackBot = new LegacySlackWebClient(botAccessToken);
     const commandText = process.env.SLASH_COMMAND;
     const belongsToChannel = await botBelongsToChannel(channel, botAccessToken);
     if ((isDMChannel(channel) || isPrivateChannel(channel)) && !belongsToChannel) {
       // Fallback to slack default style of requesting auth for unfurl action.
-      const slackWebApi = new SlackWebClient(teamAccessToken);
+      const slackWebApi = new LegacySlackWebClient(teamAccessToken);
       const opts = { user_auth_required: true, user_auth_url: associationUrl }
       await slackWebApi.chat.unfurl(messageTs, channel, {}, opts) // With opts, this will prompt user to authenticate using the association Url above.
     } else {
@@ -207,7 +209,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
 };
 
 const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
-  const slackBot = new SlackWebClient(botAccessToken);
+  const slackBot = new LegacySlackWebClient(botAccessToken);
   const botResponse = await slackBot.conversations.open({ users: slackUserId });
   const dmChannelId = botResponse.channel.id;
   const commandText = process.env.SLASH_COMMAND;
@@ -230,12 +232,12 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
 };
 
 const deleteSlackMessage = async (botAccessToken, channel, ts) => {
-  const slackBot = new SlackWebClient(botAccessToken);
+  const slackBot = new LegacySlackWebClient(botAccessToken);
   await slackBot.chat.delete(ts, channel, { as_user: true });
 };
 
 const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
-  const slackBot = new SlackWebClient(botAccessToken);
+  const slackBot = new LegacySlackWebClient(botAccessToken);
   const botResponse = await slackBot.conversations.open({ users: slackUserId });
   const dmChannelId = botResponse.channel.id;
   const commandText = process.env.SLASH_COMMAND;
@@ -256,18 +258,22 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
 };
 
 const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
-  const slackTeam = new SlackWebClient(teamAccessToken);
+  const slackTeam = new LegacySlackWebClient(teamAccessToken);
   slackTeam.chat.unfurl(ts, channel, unfurls);
 };
 
 const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
-  const slackBot = new SlackWebClient(botAccessToken);
+  const slackBot = new LegacySlackWebClient(botAccessToken);
   slackBot.chat.postMessage(channelId, "", { attachments });
 };
 
 const sendMessageWithBlocks = (botAccessToken, channelId, blocks) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  // slackBot.makeApiCall('chat.postMessage', { channelId, blocks });
+  slackBot.chat.postMessage({
+    channel: channelId,
+    text: "",
+    blocks
+  });
 }
 
 module.exports = {
