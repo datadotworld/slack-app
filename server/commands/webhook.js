@@ -8,6 +8,7 @@ const getOrCreateWebhookForChannel = async (channelId, responseUrl) => {
     where: { channelId }
   })
 
+  let webhookId
   if (channel.webhookId) {
     webhookId = channel.webhookId
   } else {
