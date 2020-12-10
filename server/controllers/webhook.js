@@ -19,7 +19,6 @@
  */
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
-const Team = require("../models").Team;
 const User = require("../models").User;
 
 const array = require("lodash/array");
@@ -32,13 +31,14 @@ const {
   handleAuthorizationRequest,
   handleContributionRequest
 } = require("./events/requests")
-const {
-  DATASET_AUTHORIZATION_TYPES,
-  CONTRIBUTION_REQUEST_TYPES
-} = require("../helpers/requests")
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
 const helper = require("../helpers/helper");
+const {
+  DATASET_AUTHORIZATION_TYPES,
+  CONTRIBUTION_REQUEST_TYPES
+} = require("../helpers/requests");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
 // Possible event actions
 const CREATE = "create";
@@ -696,8 +696,7 @@ const sendEventToSlack = async (channelIds, attachment) => {
 };
 
 const sendSlackMessage = async (channelId, attachment, teamId) => {
-  const team = await Team.findOne({ where: { teamId: teamId } });
-  const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+  const token = await getBotAccessTokenForTeam(teamId)
   slack.sendMessageWithAttachments(token, channelId, [attachment]);
 };
 

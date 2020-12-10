@@ -3,30 +3,23 @@ const {
   getAuthorizationRequestSlackBlocks,
   getContributionRequestSlackBlocks
 } = require('../../helpers/requests')
+const { getBotAccessTokenForChannel } = require('../../helpers/tokens')
 
-const Team = require('../../models').Team
-const Channel = require('../../models').Channel
-
-const sendEventToSlack = async (channelIds, blocks) => {
-  // TODO: make helper for getting token
+const sendRequestEventToSlack = async (channelIds, blocks) => {
   for (const channelId of channelIds) {
-    console.log({ channelId })
-    const channel = await Channel.findOne({ where: { channelId: channelId } });
-    const teamId = channel.teamId
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+    const token = await getBotAccessTokenForChannel(channelId)
     slack.sendMessageWithBlocks(token, channelId, blocks)
   }
 }
 
 const handleAuthorizationRequest = async (body, channelIds) => {
   const blocks = getAuthorizationRequestSlackBlocks(body)
-  await sendEventToSlack(channelIds, blocks)
+  await sendRequestEventToSlack(channelIds, blocks)
 }
 
 const handleContributionRequest = async (body, channelIds) => {
   const blocks = getContributionRequestSlackBlocks(body)
-  await sendEventToSlack(channelIds, blocks)
+  await sendRequestEventToSlack(channelIds, blocks)
 }
 
 module.exports = {
