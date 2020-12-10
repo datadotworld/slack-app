@@ -24,6 +24,8 @@ const { webhook } = require("../controllers/webhook");
 const router = express.Router();
 
 /* Listen for DW incomming webhook. */
-router.post("/dw/events", webhook.process);
+router.post("/dw/events", webhook.processSubscriptionEvent);
+
+router.post("/:webhookId", webhook.processWebhookEvent);
 
 module.exports = router;

@@ -265,6 +265,11 @@ const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
   slackBot.chat.postMessage(channelId, "", { attachments });
 };
 
+const sendMessageWithBlocks = (botAccessToken, channelId, blocks) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  // slackBot.makeApiCall('chat.postMessage', { channelId, blocks });
+}
+
 module.exports = {
   botBelongsToChannel,
   isDMChannel,
@@ -276,6 +281,7 @@ module.exports = {
   sendCompletedAssociationMessage,
   sendUnfurlAttachments,
   sendMessageWithAttachments,
+  sendMessageWithBlocks,
   dismissAuthRequiredMessage,
   sendHowToUseMessage,
   deleteSlackMessage
