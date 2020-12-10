@@ -30,7 +30,7 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
-const webhookCommands = require("../commands/webhook");
+const webhookCommands = require("./commands/webhook");
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND;

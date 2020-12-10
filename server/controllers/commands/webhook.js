@@ -1,7 +1,7 @@
-const Channel = require('../models').Channel;
+const Channel = require('../../models').Channel;
 
-const slack = require('../api/slack')
-const webhookHelper = require('../helpers/webhook')
+const slack = require('../../api/slack')
+const webhookHelper = require('../../helpers/webhook')
 
 const getOrCreateWebhookForChannel = async (channelId, responseUrl) => {
   const channel = await Channel.findOne({
