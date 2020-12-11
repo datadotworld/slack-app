@@ -1,9 +1,9 @@
-class UnreachableCaseError extends Error {
+class InvalidCaseError extends Error {
   constructor(val) {
-    super(`Unreachable case: ${val}`)
+    super(`Invalid case: ${val}`)
   }
 }
 
 module.exports = {
-  UnreachableCaseError
+  InvalidCaseError
 }

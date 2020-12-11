@@ -1,4 +1,10 @@
-const { UnreachableCaseError } = require('./errors')
+/**
+This module is largely copied from the notifications repo. Until we figure out
+a way to share code between the two repos, we should make sure that changes in
+this module are applied to both files.
+*/
+
+const { InvalidCaseError } = require('./errors')
 const {
   getOriginFromUrl,
   getWebAgentLink,
@@ -59,7 +65,7 @@ function getAuthLevelCopyText(authorizationLevel) {
     case 'ADMIN':
       return 'manage'
     default:
-      throw new UnreachableCaseError(authorizationLevel)
+      throw new InvalidCaseError(authorizationLevel)
   }
 }
 
@@ -75,6 +81,10 @@ function hasNonEmptyProperties(object) {
 }
 
 function getAuthorizationSummaryText(eventBody) {
+  // The origin is retrieved from the event body to build out URLs throughout
+  // this module. We are making an assumption that the origins should match
+  // between the event body URLs and the URLs we construct in the Slack
+  // message.
   const origin = getOriginFromUrl(eventBody.resourceUrl)
 
   const grantee =
@@ -139,7 +149,7 @@ function getAuthorizationSummaryText(eventBody) {
         dataset
       )}`
     default:
-      throw new UnreachableCaseError(eventBody)
+      throw new InvalidCaseError(eventBody)
   }
 }
 
@@ -172,7 +182,7 @@ function getContributionSummaryText(eventBody) {
     case CONTRIBUTION_REQUEST_TYPES.CATALOG_TRANSFER_APPROVED:
       return `_${requester}_'s request to publish _${resource}_ has been approved by _${actor}_`
     default:
-      throw new UnreachableCaseError(eventBody)
+      throw new InvalidCaseError(eventBody)
   }
 }
 
