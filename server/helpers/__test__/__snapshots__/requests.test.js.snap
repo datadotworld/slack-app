@@ -1,0 +1,221 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorizations cancelled/rejected 1`] = `
+Array [
+  Object {
+    "elements": Array [
+      Object {
+        "text": "📍 Use Case Org",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "text": Object {
+      "text": "_<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>_ has cancelled their request for _view_ access to _<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>_",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+  Object {
+    "fields": Array [
+      Object {
+        "text": "*<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>*
+*User ID*: _patrick_
+*E-mail*: _patrick@star.com_
+",
+        "type": "mrkdwn",
+      },
+      Object {
+        "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>*
+*Resource ID*: _use-case-discvoerable_
+*Owner ID*: _use-case-org_
+",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+]
+`;
+
+exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorizations created 1`] = `
+Array [
+  Object {
+    "elements": Array [
+      Object {
+        "text": "📍 Use Case Org",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "text": Object {
+      "text": "_<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>_ has requested _view_ access to _<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>_",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*Request Details*
+>*How long do you need access to this dataset?*:
+>_6 months_
+>*Any additional notes or comments?*:
+>_I need access._
+>*I am an existing VDAS user*:
+>_Yes_
+",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable/access|Manage this request →>*",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+  Object {
+    "fields": Array [
+      Object {
+        "text": "*<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>*
+*User ID*: _patrick_
+*E-mail*: _patrick@star.com_
+",
+        "type": "mrkdwn",
+      },
+      Object {
+        "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>*
+*Resource ID*: _use-case-discvoerable_
+*Owner ID*: _use-case-org_
+",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+]
+`;
+
+exports[`requests helper methods getContributionRequestSlackBlocks should return correctly formatted blocks for contributions cancelled/rejected 1`] = `
+Array [
+  Object {
+    "elements": Array [
+      Object {
+        "text": "📍 Goo Lagoon",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "text": Object {
+      "text": "_<http://localhost:3000/patrick|Patrick Star>_ has removed their suggestions to _<http://localhost:3000/goo-lagoon/catalog/item?uri=https%3A%2F%2Fgoo-lagoon.linked.data.world%2Fd%2Fddw-catalogs%2FbusinessTerm-52ab4c7d-8f88-33e3-b021-0277a37982ef|12th test>_",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+  Object {
+    "fields": Array [
+      Object {
+        "text": "*<http://localhost:3000/patrick|Patrick Star>*
+*User ID*: _patrick_
+*E-mail*: _patrick@star.com_
+",
+        "type": "mrkdwn",
+      },
+      Object {
+        "text": "*<http://localhost:3000/goo-lagoon/catalog/item?uri=https%3A%2F%2Fgoo-lagoon.linked.data.world%2Fd%2Fddw-catalogs%2FbusinessTerm-52ab4c7d-8f88-33e3-b021-0277a37982ef|12th test>*
+*Resource Type*: _Business term_
+",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+]
+`;
+
+exports[`requests helper methods getContributionRequestSlackBlocks should return correctly formatted blocks for contributions created 1`] = `
+Array [
+  Object {
+    "elements": Array [
+      Object {
+        "text": "📍 Goo Lagoon",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "text": Object {
+      "text": "_<http://localhost:3000/patrick|Patrick Star>_ has suggested changes to _<http://localhost:3000/goo-lagoon/catalog/item?uri=https%3A%2F%2Fgoo-lagoon.linked.data.world%2Fd%2Fddw-catalogs%2FbusinessTerm-52ab4c7d-8f88-33e3-b021-0277a37982ef|12th test>_",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*Request Details*
+>*Message*:
+>_These are very good changes._
+",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*<http://localhost:3000/goo-lagoon/catalog/item/approvals?uri=https%3A%2F%2Fgoo-lagoon.linked.data.world%2Fd%2Fddw-catalogs%2FbusinessTerm-52ab4c7d-8f88-33e3-b021-0277a37982ef|Manage this request →>*",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+  Object {
+    "fields": Array [
+      Object {
+        "text": "*<http://localhost:3000/patrick|Patrick Star>*
+*User ID*: _patrick_
+*E-mail*: _patrick@star.com_
+",
+        "type": "mrkdwn",
+      },
+      Object {
+        "text": "*<http://localhost:3000/goo-lagoon/catalog/item?uri=https%3A%2F%2Fgoo-lagoon.linked.data.world%2Fd%2Fddw-catalogs%2FbusinessTerm-52ab4c7d-8f88-33e3-b021-0277a37982ef|12th test>*
+*Resource Type*: _Business term_
+",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+]
+`;
