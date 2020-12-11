@@ -1,3 +1,5 @@
+const collection = require("lodash/collection");
+
 const slack = require('../../api/slack')
 const {
   getAuthorizationRequestSlackBlocks,
