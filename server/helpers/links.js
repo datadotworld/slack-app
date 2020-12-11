@@ -1,3 +1,5 @@
+const URL = require('url').URL
+
 const getOriginFromUrl = (urlString) => {
   const url = new URL(urlString)
   return `${url.origin}`
