@@ -1,5 +1,6 @@
 const { UnreachableCaseError } = require('./errors')
 const {
+  getOriginFromUrl,
   getWebAgentLink,
   getWebDatasetLink
 } = require('./links')
@@ -74,17 +75,19 @@ function hasNonEmptyProperties(object) {
 }
 
 function getAuthorizationSummaryText(eventBody) {
+  const origin = getOriginFromUrl(eventBody.resourceUrl)
+
   const grantee =
     eventBody.granteeType === 'EMAIL'
       ? formatLink(eventBody.granteeEmail, `mailto:${eventBody.granteeEmail}`)
-      : formatLink(eventBody.granteeName, getWebAgentLink(eventBody.granteeId))
+      : formatLink(eventBody.granteeName, getWebAgentLink(origin, eventBody.granteeId))
   const dataset = formatLink(
     eventBody.resourceName,
-    getWebDatasetLink(eventBody.resourceOwner, eventBody.resourceId)
+    getWebDatasetLink(origin, eventBody.resourceOwner, eventBody.resourceId)
   )
   const actor = formatLink(
     eventBody.actorName,
-    getWebAgentLink(eventBody.actorId)
+    getWebAgentLink(origin, eventBody.actorId)
   )
 
   switch (eventBody.eventType) {
@@ -141,6 +144,8 @@ function getAuthorizationSummaryText(eventBody) {
 }
 
 function getContributionSummaryText(eventBody) {
+  const origin = getOriginFromUrl(eventBody.requester.url)
+
   const requester = formatLink(
     eventBody.requester.displayName,
     eventBody.requester.url
@@ -148,7 +153,7 @@ function getContributionSummaryText(eventBody) {
   const resource = formatLink(eventBody.resource.name, eventBody.resource.url)
   const actor = formatLink(
     eventBody.actor.displayName,
-    getWebAgentLink(eventBody.actor.agentid)
+    getWebAgentLink(origin, eventBody.actor.agentid)
   )
   switch (eventBody.eventType) {
     case CONTRIBUTION_REQUEST_TYPES.CATALOG_CONTRIBUTE_CREATED:
@@ -185,8 +190,11 @@ function getAuthorizationRequestSlackBlocks(eventBody) {
     resourceId,
     resourceName,
     resourceOwner,
-    resourceOwnerName
+    resourceOwnerName,
+    resourceUrl
   } = eventBody
+
+  const origin = getOriginFromUrl(resourceUrl)
 
   const detailsBlocks = [
     {
@@ -252,7 +260,7 @@ function getAuthorizationRequestSlackBlocks(eventBody) {
                       : 'Organization ID']: eventBody.granteeId,
                     'E-mail': eventBody.granteeEmail
                   },
-                  headerLink: getWebAgentLink(eventBody.granteeId)
+                  headerLink: getWebAgentLink(origin, eventBody.granteeId)
                 })
         },
         {
@@ -263,7 +271,7 @@ function getAuthorizationRequestSlackBlocks(eventBody) {
               'Resource ID': resourceId,
               'Owner ID': resourceOwner
             },
-            headerLink: getWebDatasetLink(resourceOwner, resourceId)
+            headerLink: getWebDatasetLink(origin, resourceOwner, resourceId)
           })
         }
       ]

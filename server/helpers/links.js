@@ -1,12 +1,18 @@
-function getWebAgentLink(agentid) {
-  return `https://data.world/${agentid}`
+const getOriginFromUrl = (urlString) => {
+  const url = new URL(urlString)
+  return `${url.origin}`
 }
 
-function getWebDatasetLink(agentid, datasetid) {
-  return `https://data.world/${agentid}/${datasetid}`
+const getWebAgentLink = (origin, agentid) => {
+  return `${origin}/${agentid}`
+}
+
+const getWebDatasetLink = (origin, agentid, datasetid) => {
+  return `${origin}/${agentid}/${datasetid}`
 }
 
 module.exports = {
+  getOriginFromUrl,
   getWebAgentLink,
   getWebDatasetLink
 }

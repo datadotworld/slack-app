@@ -85,7 +85,7 @@ Array [
       },
       Object {
         "text": Object {
-          "text": "_<https://data.world/patrick|Patrick Star>_ has requested _view_ access to _<https://data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>_",
+          "text": "_<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>_ has requested _view_ access to _<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>_",
           "type": "mrkdwn",
         },
         "type": "section",
@@ -117,14 +117,14 @@ Array [
       Object {
         "fields": Array [
           Object {
-            "text": "*<https://data.world/patrick|Patrick Star>*
+            "text": "*<https://ddw-corewebapp.dev.data.world/patrick|Patrick Star>*
 *User ID*: _patrick_
 *E-mail*: _patrick@star.com_
 ",
             "type": "mrkdwn",
           },
           Object {
-            "text": "*<https://data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>*
+            "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable|use-case-discvoerable>*
 *Resource ID*: _use-case-discvoerable_
 *Owner ID*: _use-case-org_
 ",
