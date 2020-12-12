@@ -30,7 +30,8 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
-const webhookCommands = require("../commands/webhook");
+const webhookCommands = require("./commands/webhook");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND;
@@ -765,12 +766,10 @@ const performAction = async (req, res) => {
 const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
   // Check if bot was invited to slack channel
   // channel found, continue and process command
-  const team = await Team.findOne({
-    where: { teamId: teamId }
-  });
+  const token = await getBotAccessTokenForTeam(teamId);
   const isPresent = await slack.botBelongsToChannel(
     channelid,
-    process.env.SLACK_BOT_TOKEN || team.botAccessToken
+    token
   );
 
   if (isPresent) {

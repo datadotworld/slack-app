@@ -19,7 +19,6 @@
  */
 const Channel = require("../models").Channel;
 const Subscription = require("../models").Subscription;
-const Team = require("../models").Team;
 const User = require("../models").User;
 
 const array = require("lodash/array");
@@ -28,9 +27,18 @@ const lang = require("lodash/lang");
 const pretty = require("prettysize");
 const moment = require("moment");
 
+const {
+  handleAuthorizationRequest,
+  handleContributionRequest
+} = require("./events/requests")
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
 const helper = require("../helpers/helper");
+const {
+  DATASET_AUTHORIZATION_TYPES,
+  CONTRIBUTION_REQUEST_TYPES
+} = require("../helpers/requests");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
 // Possible event actions
 const CREATE = "create";
@@ -688,13 +696,12 @@ const sendEventToSlack = async (channelIds, attachment) => {
 };
 
 const sendSlackMessage = async (channelId, attachment, teamId) => {
-  const team = await Team.findOne({ where: { teamId: teamId } });
-  const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
+  const token = await getBotAccessTokenForTeam(teamId)
   slack.sendMessageWithAttachments(token, channelId, [attachment]);
 };
 
 const webhook = {
-  async process(req, res) {
+  async processSubscriptionEvent(req, res) {
     try {
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
       // process event based on type
@@ -771,7 +778,38 @@ const webhook = {
         console.warn("No subscriptions found for event.");
       }
     } catch (error) {
-      console.error("Failed to process webhook event! : ", error.message);
+      console.error("Failed to process subscription event! : ", error.message);
+    }
+  },
+
+  async processWebhookEvent(req, res) {
+    try {
+      const body = req.body;
+      const webhookId = req.params.webhookId;
+      const eventType = body.eventType;
+
+      const channels = await Channel.findAll({ where: { webhookId } });
+      if (lang.isEmpty(channels)) {
+        const errorMessage = `Could not find webhookId: ${webhookId}`;
+        console.error(errorMessage);
+        res.status(404).send(errorMessage);
+      }
+      const channelIds = collection.map(channels, "channelId");
+
+      if (Object.values(DATASET_AUTHORIZATION_TYPES).includes(eventType)) {
+        handleAuthorizationRequest(body, channelIds);
+      } else if (Object.values(CONTRIBUTION_REQUEST_TYPES).includes(eventType)) {
+        handleContributionRequest(body, channelIds);
+      } else {
+        const errorMessage = `Invalid eventType: ${eventType}`;
+        console.error(errorMessage);
+        res.status(400).send(errorMessage);
+      }
+
+      res.status(200).send();
+    } catch (error) {
+      console.error("Failed to process webhook event : ", error.message);
+      res.status(500).send();
     }
   }
 };

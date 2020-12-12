@@ -25,6 +25,20 @@ const User = require("../../models").User;
 const Subscription = require("../../models").Subscription;
 const Team = require("../../models").Team;
 const Channel = require("../../models").Channel;
+const tokenHelpers = require("../../helpers/tokens");
+const fixtures = require("../../jest/fixtures");
+
+jest.mock("../../api/slack");
+jest.mock("../../helpers/tokens");
+
+beforeAll(() => {
+  tokenHelpers.getBotAccessTokenForTeam.mockImplementation(() =>
+    "botAccessToken"
+  );
+  tokenHelpers.getBotAccessTokenForChannel.mockImplementation(() =>
+    "botAccessToken"
+  );
+})
 
 describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
   const newDataset = {
@@ -298,7 +312,6 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
         dwAccessToken
       );
       expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
       expect(Channel.findOne).toHaveBeenCalledTimes(1);
       expect(slack.sendMessageWithAttachments).toBeCalledWith(
         botAccessToken,
@@ -375,4 +388,122 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
         // );
       });
   });
+});
+
+describe("POST /api/v1/webhook/:webhookId", () => {
+  const mockChannelId = "mockChannelId";
+
+  it("Should send a slack message for an authorization request event", (done) => {
+    const webhookBody = fixtures.authorizationRequestCreatedEventBody;
+    Channel.findAll = jest.fn(() => [{ channelId: "mockChannelId" }]);
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+        expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
+          "botAccessToken",
+          mockChannelId,
+          expect.anything()
+        );
+        expect(slack.sendMessageWithBlocks.mock.calls).toMatchSnapshot();
+      });
+  });
+
+  it("Should send a slack message for a contribution request event", (done) => {
+    const webhookBody = fixtures.contributionRequestCreatedEventBody;
+    Channel.findAll = jest.fn(() => [{ channelId: "mockChannelId" }]);
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+        expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
+          "botAccessToken",
+          mockChannelId,
+          expect.anything()
+        );
+        expect(slack.sendMessageWithBlocks.mock.calls).toMatchSnapshot();
+      });
+  });
+
+  it("Should look for channels with the given webhook id route param", (done) => {
+    const webhookBody = fixtures.contributionRequestCreatedEventBody;
+    Channel.findAll = jest.fn(() => [{ channelId: "mockChannelId" }]);
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+        expect(Channel.findAll).toBeCalledWith({ 
+          where: { webhookId: "mockWebhookId" }
+        });
+      });
+  });
+
+  it("Should send multiple slack messages if there are multiple channels", (done) => {
+    const webhookBody = fixtures.authorizationRequestCreatedEventBody;
+    const mockChannels = [
+      { channelId: "mockChannel1" },
+      { channelId: "mockChannel2" },
+      { channelId: "mockChannel3" }
+    ]
+    Channel.findAll = jest.fn(() => mockChannels);
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+        for (let i = 1; i <= 3; i++) {
+          expect(slack.sendMessageWithBlocks).toHaveBeenNthCalledWith(
+            i,
+            "botAccessToken",
+            `mockChannel${i}`,
+            expect.anything()
+          );
+        }
+      });
+  })
+
+  it("Should return a 404 if the webhookId yields no corresponding channels", (done) => {
+    const webhookBody = fixtures.contributionRequestCreatedEventBody;
+    Channel.findAll = jest.fn(() => []);
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(404)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+      });
+  })
+
+  it("Should return a 400 if the eventType is not valid", (done) => {
+    const webhookBody = fixtures.contributionRequestCreatedEventBody;
+    Channel.findAll = jest.fn(() => [{ channelId: "mockChannelId" }]);
+
+    webhookBody.eventType = "invalidEventType";
+
+    request(server)
+      .post("/api/v1/webhook/mockWebhookId")
+      .send(webhookBody)
+      .expect(400)
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+      });
+  })
 });

@@ -1,10 +1,10 @@
-const Channel = require('../../models').Channel
+const Channel = require('../../../models').Channel
 
-const slack = require('../../api/slack')
-const webhookCommands = require('../../commands/webhook')
-const webhookHelpers = require('../../helpers/webhook')
+const slack = require('../../../api/slack')
+const webhookCommands = require('../webhook')
+const webhookHelpers = require('../../../helpers/webhook')
 
-jest.mock('../../api/slack')
+jest.mock('../../../api/slack')
 
 const buildWebhookUrlSpy = jest.spyOn(webhookHelpers, 'buildWebhookUrl')
 const generateWebhookIdSpy = jest.spyOn(webhookHelpers, 'generateWebhookId')
