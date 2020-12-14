@@ -1,5 +1,66 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorization invites cancelled 1`] = `
+Array [
+  Object {
+    "elements": Array [
+      Object {
+        "text": "📍 Use Case Org",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "text": Object {
+      "text": "_<http://localhost:3000/patrick|Patrick Star>_ has been invited to have _edit_ access to _<http://localhost:3000/use-case-org/use-case-discvoerable|use-case-discvoerable>_ by _<http://localhost:3000/user8888|testing!>_",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "elements": Array [
+      Object {
+        "action_id": "authorization_request.cancel",
+        "style": "danger",
+        "text": Object {
+          "text": "Cancel",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "value": "5dee1394-5473-4329-aae2-f7bd46f5bfad",
+      },
+    ],
+    "type": "actions",
+  },
+  Object {
+    "type": "divider",
+  },
+  Object {
+    "fields": Array [
+      Object {
+        "text": "*<http://localhost:3000/patrick|Patrick Star>*
+*User ID*: _patrick_
+*E-mail*: _patrick@star.com_
+",
+        "type": "mrkdwn",
+      },
+      Object {
+        "text": "*<http://localhost:3000/use-case-org/use-case-discvoerable|use-case-discvoerable>*
+*Resource ID*: _use-case-discvoerable_
+*Owner ID*: _use-case-org_
+",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "section",
+  },
+  Object {
+    "type": "divider",
+  },
+]
+`;
+
 exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorizations cancelled/rejected 1`] = `
 Array [
   Object {
@@ -79,11 +140,29 @@ Array [
     "type": "section",
   },
   Object {
-    "text": Object {
-      "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable/access|Manage this request →>*",
-      "type": "mrkdwn",
-    },
-    "type": "section",
+    "elements": Array [
+      Object {
+        "action_id": "authorization_request.accept",
+        "style": "primary",
+        "text": Object {
+          "text": "Approve",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "value": "a997b017-75a5-4cbb-93b8-02f6242e9483",
+      },
+      Object {
+        "action_id": "authorization_request.reject",
+        "style": "danger",
+        "text": Object {
+          "text": "Reject",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "value": "a997b017-75a5-4cbb-93b8-02f6242e9483",
+      },
+    ],
+    "type": "actions",
   },
   Object {
     "type": "divider",

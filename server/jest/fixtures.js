@@ -45,6 +45,31 @@ const authorizationRequestCancelledEventBody = {
   authorizationLevel: 'READ'
 }
 
+const authorizationInviteCancelledEventBody = {
+  actorId: "user8888",
+  actorName: "testing!",
+  granteeType: "USER",
+  granteeEmail: "patrick@star.com",
+  granteeId: "patrick",
+  granteeName: "Patrick Star",
+  resourceId: "use-case-discvoerable",
+  resourceName: "use-case-discvoerable",
+  resourceOwner: "use-case-org",
+  resourceOwnerName: "Use Case Org",
+  resourceUrl: "http://localhost:3000/use-case-org/use-case-discvoerable",
+  event: {
+    triggeredBy: "user8888",
+    created: "Sat, 12 Dec 2020 21:36:48 GMT"
+  },
+  eventType: "dataset.authorization_invite.created",
+  authorizationLevel: "WRITE",
+  resourceAccessUrl: "http://localhost:3000/use-case-org/use-case-discvoerable/access",
+  requestFormFields: {
+    message: ""
+  },
+  requestId: "5dee1394-5473-4329-aae2-f7bd46f5bfad"
+}
+
 const contributionRequestCreatedEventBody = {
   actor: { agentid: 'patrick', displayName: 'Patrick Star' },
   event:
@@ -90,6 +115,7 @@ const contributionRequestCancelledEventBody = {
 module.exports = {
   authorizationRequestCreatedEventBody,
   authorizationRequestCancelledEventBody,
+  authorizationInviteCancelledEventBody,
   contributionRequestCreatedEventBody,
   contributionRequestCancelledEventBody
 }

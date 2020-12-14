@@ -36,6 +36,12 @@ const CONTRIBUTION_REQUEST_TYPES = {
   DATASET_CONTRIBUTE_APPROVED: 'dataset.contribute_request.approved'
 }
 
+const AUTHORIZATION_ACTIONS = {
+  ACCEPT: 'authorization_request.accept',
+  CANCEL: 'authorization_request.cancel',
+  REJECT: 'authorization_request.reject'
+}
+
 function formatLink(text, url) {
   return `<${url}|${text}>`
 }
@@ -195,6 +201,52 @@ function getRequestFormFieldsText(requestFormFields) {
   }, '*Request Details*\n')
 }
 
+function getAcceptAndRejectButtons(requestId, acceptActionId, rejectActionId) {
+  return {
+    type: 'actions',
+    elements: [
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Approve'
+        },
+        style: 'primary',
+        action_id: acceptActionId,
+        value: requestId
+      },
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Reject'
+        },
+        style: 'danger',
+        action_id: rejectActionId,
+        value: requestId
+      },
+    ]
+  }
+}
+
+function getCancelButton(requestId, cancelActionId) {
+  return {
+    type: 'actions',
+    elements: [
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Cancel'
+        },
+        style: 'danger',
+        action_id: cancelActionId,
+        value: requestId
+      }
+    ]
+  }
+}
+
 function getAuthorizationRequestSlackBlocks(eventBody) {
   const {
     resourceId,
@@ -238,16 +290,22 @@ function getAuthorizationRequestSlackBlocks(eventBody) {
         }
       })
     }
-    detailsBlocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*${formatLink(
-          'Manage this request →',
-          eventBody.resourceAccessUrl
-        )}*`
-      }
-    })
+    if (eventBody.eventType === DATASET_AUTHORIZATION_TYPES.REQUEST_CREATED) {
+      detailsBlocks.push(
+        getAcceptAndRejectButtons(
+          eventBody.requestId,
+          AUTHORIZATION_ACTIONS.ACCEPT,
+          AUTHORIZATION_ACTIONS.REJECT
+        )
+      )
+    } else {
+      detailsBlocks.push(
+        getCancelButton(
+          eventBody.requestId,
+          AUTHORIZATION_ACTIONS.CANCEL,
+        )
+      )
+    }
   }
 
   const extrasBlocks = [
@@ -382,6 +440,7 @@ function getContributionRequestSlackBlocks(eventBody) {
 }
 
 module.exports = {
+  AUTHORIZATION_ACTIONS,
   DATASET_AUTHORIZATION_TYPES,
   CONTRIBUTION_REQUEST_TYPES,
   getAuthorizationRequestSlackBlocks,
