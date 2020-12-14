@@ -766,6 +766,7 @@ const performAction = async (req, res) => {
 const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
   // Check if bot was invited to slack channel
   // channel found, continue and process command
+  const team = await Team.findOne({ where: { teamId: teamId } })
   const token = await getBotAccessTokenForTeam(teamId);
   const isPresent = await slack.botBelongsToChannel(
     channelid,

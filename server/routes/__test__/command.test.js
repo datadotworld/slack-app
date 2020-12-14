@@ -211,7 +211,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           payloadObject.channel.id,
           botAccessToken
         );
-        expect(Team.findOne).toHaveBeenCalledTimes(1);
+        expect(Team.findOne).toHaveBeenCalledTimes(2);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
         expect(Subscription.destroy).toHaveBeenCalledTimes(1);
         expect(auth.checkSlackAssociationStatus).toBeCalledWith(
@@ -283,7 +283,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(Team.findOne).toHaveBeenCalledTimes(1);
+        expect(Team.findOne).toHaveBeenCalledTimes(2);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
         expect(slack.botBelongsToChannel).toBeCalledWith(
           payloadObject.channel.id,
