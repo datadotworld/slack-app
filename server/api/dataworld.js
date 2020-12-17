@@ -65,11 +65,14 @@ const get = (url, token) => {
   return axios.get(url, { headers: headers });
 };
 
-const del = (url, token) => {
+const del = (url, token, params) => {
   if (token) {
     headers.authorization = `Bearer ${token}`;
   }
-  return axios.delete(url, { headers: headers });
+  return axios.delete(url, {
+    headers: headers,
+    params: params
+  });
 };
 
 const exchangeAuthCode = code => {
@@ -222,6 +225,24 @@ const verifySubscriptionExists = async (resourseId, token, isProject) => {
  }
 };
 
+const acceptDatasetRequest = async (token, requestid, agentid, datasetid) => {
+  const requestUrl = `${baseUrl}/requests/accept`;
+  const data = { requestid, owner: agentid, resourceid: datasetid };
+  return post(requestUrl, data, token);
+}
+
+const rejectDatasetRequest = async (token, requestid, agentid, datasetid) => {
+  const requestUrl = `${baseUrl}/requests/reject`;
+  const data = { requestid, owner: agentid, resourceid: datasetid };
+  return post(requestUrl, data, token);
+}
+
+const cancelDatasetRequest = async (token, requestid, agentid, datasetid) => {
+  const requestUrl = `${baseUrl}/requests/${requestid}`;
+  const params = { owner: agentid, resourceid: datasetid }
+  return del(requestUrl, token, params)
+}
+
 module.exports = {
   exchangeAuthCode,
   getActiveDWUser,
@@ -242,6 +263,9 @@ module.exports = {
   unsubscribeFromDataset,
   unsubscribeFromProject,
   unsubscribeFromAccount,
+  acceptDatasetRequest,
+  rejectDatasetRequest,
+  cancelDatasetRequest,
   verifyDwToken,
   refreshToken,
   verifySubscriptionExists

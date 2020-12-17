@@ -201,7 +201,11 @@ function getRequestFormFieldsText(requestFormFields) {
   }, '*Request Details*\n')
 }
 
-function getAcceptAndRejectButtons(requestId, acceptActionId, rejectActionId) {
+function getAcceptAndRejectButtons(
+  acceptActionId,
+  rejectActionId,
+  data
+) {
   return {
     type: 'actions',
     elements: [
@@ -213,7 +217,7 @@ function getAcceptAndRejectButtons(requestId, acceptActionId, rejectActionId) {
         },
         style: 'primary',
         action_id: acceptActionId,
-        value: requestId
+        value: JSON.stringify(data)
       },
       {
         type: 'button',
@@ -223,13 +227,13 @@ function getAcceptAndRejectButtons(requestId, acceptActionId, rejectActionId) {
         },
         style: 'danger',
         action_id: rejectActionId,
-        value: requestId
+        value: JSON.stringify(data)
       },
     ]
   }
 }
 
-function getCancelButton(requestId, cancelActionId) {
+function getCancelButton(cancelActionId, data) {
   return {
     type: 'actions',
     elements: [
@@ -241,7 +245,7 @@ function getCancelButton(requestId, cancelActionId) {
         },
         style: 'danger',
         action_id: cancelActionId,
-        value: requestId
+        value: JSON.stringify(data)
       }
     ]
   }
@@ -293,16 +297,24 @@ function getAuthorizationRequestSlackBlocks(eventBody) {
     if (eventBody.eventType === DATASET_AUTHORIZATION_TYPES.REQUEST_CREATED) {
       detailsBlocks.push(
         getAcceptAndRejectButtons(
-          eventBody.requestId,
           AUTHORIZATION_ACTIONS.ACCEPT,
-          AUTHORIZATION_ACTIONS.REJECT
+          AUTHORIZATION_ACTIONS.REJECT,
+          {
+            requestid: eventBody.requestId,
+            agentid: resourceOwner,
+            datasetid: resourceId
+          }
         )
       )
     } else {
       detailsBlocks.push(
         getCancelButton(
-          eventBody.requestId,
           AUTHORIZATION_ACTIONS.CANCEL,
+          {
+            requestid: eventBody.requestId,
+            agentid: resourceOwner,
+            datasetid: resourceId
+          }
         )
       )
     }
