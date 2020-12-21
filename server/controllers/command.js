@@ -772,8 +772,12 @@ const performAction = async (req, res) => {
         if (Object.values(AUTHORIZATION_ACTIONS).includes(actionid)) {
           const { requestid, agentid, datasetid } = JSON.parse(action.value);
           handleDatasetRequestAction({
+            channelId: payload.channel.id,
             teamId: payload.team.id,
+            userId: payload.user.id,
             triggerId: payload.trigger_id,
+            responseUrl: payload.response_url,
+            messageTs: payload.container.message_ts,
             actionid,
             requestid,
             agentid,
