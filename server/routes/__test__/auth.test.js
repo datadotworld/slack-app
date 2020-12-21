@@ -46,17 +46,20 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
     const update =  jest.fn(() => Promise.resolve());
     const team = { update , teamId, botAccessToken: botToken }
     const resp = {
-      url: "https://slack.com/api/oauth.access",
+      url: "https://slack.com/api/oauth.v2.access",
       statusCode: 200,
       data: {
-        access_token: "xoxp-XXXXXXXX-XXXXXXXX-XXXXX",
+        ok: true,
+        access_token: botToken,
+        token_type: "bot",
         scope: "incoming-webhook,commands,bot",
-        team_name: "mockTeam",
-        user_id: userId,
-        team_id: teamId,
-        bot: {
-          bot_user_id: "Bmock",
-          bot_access_token: botToken
+        bot_user_id: "Bmock",
+        team: {
+          id: teamId
+        },
+        authed_user: {
+          id: userId,
+          access_token: "xoxp-XXXXXXXX-XXXXXXXX-XXXXX"
         }
       }
     };

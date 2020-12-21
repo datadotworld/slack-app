@@ -43,12 +43,12 @@ const slackOauth = (req, res) => {
     .then(async response => {
       // create team with returned data
       const [team, created] = await Team.findOrCreate({
-        where: { teamId: response.data.team_id },
+        where: { teamId: response.data.team.id },
         defaults: {
-          teamDomain: response.data.team_name,
-          accessToken: response.data.access_token,
-          botUserId: response.data.bot.bot_user_id,
-          botAccessToken: response.data.bot.bot_access_token
+          teamDomain: response.data.team.name,
+          accessToken: response.data.authed_user.access_token,
+          botUserId: response.data.bot_user_id,
+          botAccessToken: response.data.access_token
         }
       });
       try {
@@ -57,10 +57,10 @@ const slackOauth = (req, res) => {
           // Update existing record with new data
           await team.update(
             {
-              teamDomain: response.data.team_name,
-              accessToken: response.data.access_token,
-              botUserId: response.data.bot.bot_user_id,
-              botAccessToken: response.data.bot.bot_access_token
+              teamDomain: response.data.team.name,
+              accessToken: response.data.authed_user.access_token,
+              botUserId: response.data.bot_user_id,
+              botAccessToken: response.data.access_token
             },
             {
               fields: [
@@ -74,7 +74,7 @@ const slackOauth = (req, res) => {
         }
         //inform user via slack that installation was successful
         const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-        await slack.sendWelcomeMessage(botToken, response.data.user_id);
+        await slack.sendWelcomeMessage(botToken, response.data.authed_user.id);
 
         // deep link to slack app or redirect to slack team in web.
         res.redirect(

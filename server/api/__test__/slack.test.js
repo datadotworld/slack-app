@@ -20,7 +20,7 @@ describe("Test slack api wrapper.", () => {
     slack.oauthAccess(code);
 
     expect(axios.get).toHaveBeenCalledWith(
-      "https://slack.com/api/oauth.access",
+      "https://slack.com/api/oauth.v2.access",
       { headers, params }
     );
 

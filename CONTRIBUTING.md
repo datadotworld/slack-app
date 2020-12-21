@@ -94,8 +94,8 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
 #### 4. Create slack app
 
-    A. Goto https://api.slack.com/authentication/basics and scroll to the bottom
-    B. Click on the `Create a classic Slack app` button
+    A. Go to https://api.slack.com/start/overview#creating
+    B. Click on the `Create a Slack app` button
 
     C. Under features section in the left panel, configure each of the following :
 
@@ -117,7 +117,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
             a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
             b. Click save urls
-            c. Add the following scopes : bot, commands, link:read, link:write, chat:write:bot
+            c. Add the following scopes : channels:read, chat:write, commands, groups:read, im:history, im:read, im:write, links:read, links:write
             d. Click save changes
 
         3. Add Bot user 
