@@ -21,9 +21,9 @@ describe('requests helper methods', () => {
       expect(result).toMatchSnapshot() 
     })
 
-    it('should return correctly formatted blocks for authorization invites cancelled', () => {
+    it('should return correctly formatted blocks for authorization invites created', () => {
       const result = requestsHelpers.getAuthorizationRequestSlackBlocks(
-        fixtures.authorizationInviteCancelledEventBody 
+        fixtures.authorizationInviteCreatedEventBody
       )
       expect(result).toMatchSnapshot()
     })

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorization invites cancelled 1`] = `
+exports[`requests helper methods getAuthorizationRequestSlackBlocks should return correctly formatted blocks for authorization invites created 1`] = `
 Array [
   Object {
     "elements": Array [

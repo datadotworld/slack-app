@@ -45,7 +45,7 @@ const authorizationRequestCancelledEventBody = {
   authorizationLevel: 'READ'
 }
 
-const authorizationInviteCancelledEventBody = {
+const authorizationInviteCreatedEventBody = {
   actorId: "user8888",
   actorName: "testing!",
   granteeType: "USER",
@@ -188,7 +188,7 @@ const datasetRequestRejectedActionPayload = {
 module.exports = {
   authorizationRequestCreatedEventBody,
   authorizationRequestCancelledEventBody,
-  authorizationInviteCancelledEventBody,
+  authorizationInviteCreatedEventBody,
   contributionRequestCreatedEventBody,
   contributionRequestCancelledEventBody,
   datasetRequestRejectedActionPayload,
