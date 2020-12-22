@@ -38,12 +38,12 @@ const updateMessageBlocksWithAction = (messageBlocks, blockId, userId, action) =
 }
 
 const handleDatasetRequestAction = async ({
-  channelId,
-  userId,
-  triggerId,
+  channelid,
+  userid,
+  triggerid,
   responseUrl,
   message,
-  blockId,
+  blockid,
   actionid,
   requestid,
   agentid,
@@ -70,15 +70,15 @@ const handleDatasetRequestAction = async ({
     }
   } catch (error) {
     if (error.response && error.response.status === 403) {
-      openNotificationModal(
-        channelId,
-        triggerId,
+      await openNotificationModal(
+        channelid,
+        triggerid,
         'You are not authorized to manage this request.'
       )
     } else {
-      openNotificationModal(
-        channelId,
-        triggerId,
+      await openNotificationModal(
+        channelid,
+        triggerid,
         'Could not successfully manage this request. Try viewing the request on <https://data.world|data.world>.'
       )
     }
@@ -88,8 +88,8 @@ const handleDatasetRequestAction = async ({
   // Update original message to indicate action completed
   const updatedBlocks = updateMessageBlocksWithAction(
     message.blocks,
-    blockId,
-    userId,
+    blockid,
+    userid,
     action
   )
   slack.sendResponse(responseUrl, {

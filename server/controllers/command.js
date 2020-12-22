@@ -771,13 +771,13 @@ const performAction = async (req, res) => {
         const actionid = action.action_id
         if (Object.values(AUTHORIZATION_ACTIONS).includes(actionid)) {
           const { requestid, agentid, datasetid } = JSON.parse(action.value);
-          handleDatasetRequestAction({
-            channelId: payload.channel.id,
-            userId: payload.user.id,
-            triggerId: payload.trigger_id,
+          await handleDatasetRequestAction({
+            channelid: payload.channel.id,
+            userid: payload.user.id,
+            triggerid: payload.trigger_id,
             responseUrl: payload.response_url,
             message: payload.message,
-            blockId: action.block_id,
+            blockid: action.block_id,
             actionid,
             requestid,
             agentid,
