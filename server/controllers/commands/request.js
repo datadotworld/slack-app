@@ -2,9 +2,10 @@ const dataworld = require('../../api/dataworld')
 const slack = require('../../api/slack')
 const { InvalidCaseError } = require('../../helpers/errors')
 const { AUTHORIZATION_ACTIONS } = require('../../helpers/requests')
-const { getBotAccessTokenForTeam } = require('../../helpers/tokens')
+const { getBotAccessTokenForChannel } = require('../../helpers/tokens')
 
-const openNotificationModal = async (token, triggerId, message) => {
+const openNotificationModal = async (channelId, triggerId, message) => {
+  const token = await getBotAccessTokenForChannel(channelId)
   const modalView = {
     type: 'modal',
     title: {
@@ -24,9 +25,9 @@ const openNotificationModal = async (token, triggerId, message) => {
   slack.openView(token, triggerId, modalView)
 }
 
-const updateRequestBlocksWithAction = (messageBlocks, userId, action) => {
+const updateMessageBlocksWithAction = (messageBlocks, userId, action) => {
+  // Currently there is only section with type 'actions' in the message format
   const buttonsIndex = messageBlocks.findIndex(block => block.type === 'actions')
-  console.log({ buttonsIndex })
   messageBlocks[buttonsIndex] = {
     type: 'section',
     text: {
@@ -37,9 +38,13 @@ const updateRequestBlocksWithAction = (messageBlocks, userId, action) => {
   return messageBlocks
 }
 
+const getOriginalMessage = async (channelId, messageTs) => {
+  const token = await getBotAccessTokenForChannel(channelId)
+  return slack.getMessage(token, channelId, messageTs)
+}
+
 const handleDatasetRequestAction = async ({
   channelId,
-  teamId,
   userId,
   triggerId,
   responseUrl,
@@ -50,17 +55,12 @@ const handleDatasetRequestAction = async ({
   datasetid,
   dwAccessToken
 }) => {
-  // const token = await getBotAccessTokenForTeam(teamId)
-  const Team = require('../../models').Team
-  const team = await Team.findOne({ where: { teamId }})
-  const token = team.accessToken
-  console.log({ token })
   let action
   try {
     switch (actionid) {
       case AUTHORIZATION_ACTIONS.ACCEPT:
         await dataworld.acceptDatasetRequest(dwAccessToken, requestid, agentid, datasetid)
-        action = 'accepted'
+        action = 'approved'
         break
       case AUTHORIZATION_ACTIONS.REJECT:
         await dataworld.rejectDatasetRequest(dwAccessToken, requestid, agentid, datasetid)
@@ -76,29 +76,27 @@ const handleDatasetRequestAction = async ({
   } catch (error) {
     if (error.response && error.response.status === 403) {
       openNotificationModal(
-        token,
+        channelId,
         triggerId,
         'You are not authorized to manage this request.'
       )
     } else {
       openNotificationModal(
-        token,
+        channelId,
         triggerId,
         'Could not successfully manage this request. Try viewing the request on <https://data.world|data.world>.'
       )
     }
     return
   }
-  // TODO: update message, add conversation history scope
-  const message = await slack.getMessage(token, channelId, messageTs)
-  console.log(message.blocks)
-  const updatedBlocks = updateRequestBlocksWithAction(message.blocks, userId, action)
-  console.log(updatedBlocks)
+
+  // Update original message to indicate action completed
+  const message = await getOriginalMessage(channelId, messageTs)
+  const updatedBlocks = updateMessageBlocksWithAction(message.blocks, userId, action)
   slack.sendResponse(responseUrl, {
     replace_original: true,
     blocks: updatedBlocks
   })
-  // slack.updateMessageWithBlocks(token, channelId, messageTs, updatedBlocks)
 }
 
 module.exports = {
