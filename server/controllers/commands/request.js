@@ -25,9 +25,8 @@ const openNotificationModal = async (channelId, triggerId, message) => {
   slack.openView(token, triggerId, modalView)
 }
 
-const updateMessageBlocksWithAction = (messageBlocks, userId, action) => {
-  // Currently there is only section with type 'actions' in the message format
-  const buttonsIndex = messageBlocks.findIndex(block => block.type === 'actions')
+const updateMessageBlocksWithAction = (messageBlocks, blockId, userId, action) => {
+  const buttonsIndex = messageBlocks.findIndex(block => block.block_id === blockId)
   messageBlocks[buttonsIndex] = {
     type: 'section',
     text: {
@@ -38,17 +37,13 @@ const updateMessageBlocksWithAction = (messageBlocks, userId, action) => {
   return messageBlocks
 }
 
-const getOriginalMessage = async (channelId, messageTs) => {
-  const token = await getBotAccessTokenForChannel(channelId)
-  return slack.getMessage(token, channelId, messageTs)
-}
-
 const handleDatasetRequestAction = async ({
   channelId,
   userId,
   triggerId,
   responseUrl,
-  messageTs,
+  message,
+  blockId,
   actionid,
   requestid,
   agentid,
@@ -91,8 +86,12 @@ const handleDatasetRequestAction = async ({
   }
 
   // Update original message to indicate action completed
-  const message = await getOriginalMessage(channelId, messageTs)
-  const updatedBlocks = updateMessageBlocksWithAction(message.blocks, userId, action)
+  const updatedBlocks = updateMessageBlocksWithAction(
+    message.blocks,
+    blockId,
+    userId,
+    action
+  )
   slack.sendResponse(responseUrl, {
     replace_original: true,
     blocks: updatedBlocks

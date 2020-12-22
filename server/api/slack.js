@@ -281,26 +281,6 @@ const openView = async (botAccessToken, triggerId, view) => {
   await slackBot.views.open({ trigger_id: triggerId, view });
 }
 
-const getMessage = async (botAccessToken, channelId, ts) => {
-  const slackBot = new SlackWebClient(botAccessToken);
-  const res = await slackBot.conversations.history({
-    channel: channelId,
-    latest: ts,
-    limit: 1,
-    inclusive: true
-  });
-  return res.messages[0];
-}
-
-const updateMessageWithBlocks = async (botAccessToken, channelId, ts, blocks) => {
-  const slackBot = new SlackWebClient(botAccessToken);
-  await slackBot.chat.update({
-    channel: channelId,
-    ts,
-    blocks
-  });
-}
-
 module.exports = {
   botBelongsToChannel,
   isDMChannel,
@@ -316,7 +296,5 @@ module.exports = {
   dismissAuthRequiredMessage,
   sendHowToUseMessage,
   deleteSlackMessage,
-  openView,
-  getMessage,
-  updateMessageWithBlocks
+  openView
 };
