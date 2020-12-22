@@ -114,7 +114,7 @@ Array [
               "type": "plain_text",
             },
             "type": "button",
-            "value": "a997b017-75a5-4cbb-93b8-02f6242e9483",
+            "value": "{\\"requestid\\":\\"a997b017-75a5-4cbb-93b8-02f6242e9483\\",\\"agentid\\":\\"use-case-org\\",\\"datasetid\\":\\"use-case-discvoerable\\"}",
           },
           Object {
             "action_id": "authorization_request.reject",
@@ -124,7 +124,7 @@ Array [
               "type": "plain_text",
             },
             "type": "button",
-            "value": "a997b017-75a5-4cbb-93b8-02f6242e9483",
+            "value": "{\\"requestid\\":\\"a997b017-75a5-4cbb-93b8-02f6242e9483\\",\\"agentid\\":\\"use-case-org\\",\\"datasetid\\":\\"use-case-discvoerable\\"}",
           },
         ],
         "type": "actions",
