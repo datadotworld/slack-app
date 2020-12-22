@@ -23,6 +23,7 @@ const auth = require("../../controllers/auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
 const helper = require("../../helpers/helper");
+const fixtures = require("../../jest/fixtures");
 
 const Team = require("../../models").Team;
 const Channel = require("../../models").Channel;
@@ -311,5 +312,114 @@ describe("POST /api/v1/command/action - Process an action", () => {
         );
         done();
       });
+  });
+
+  describe('dataset request action button', () => {
+    let datasetRequestActionPayload, requestid, agentid, datasetid, dwAccessToken, botAccessToken
+
+    beforeEach(() => {
+      datasetRequestActionPayload = fixtures.datasetRequestRejectedActionPayload;
+      const values = JSON.parse(datasetRequestActionPayload.actions[0].value);
+
+      requestid = values.requestid
+      agentid = values.agentid
+      datasetid = values.datasetid
+      dwAccessToken = "dwAccessToken";
+      botAccessToken = "botAccessToken";
+
+      Team.findOne = jest.fn(() => Promise.resolve({
+        teamId: "teamId",
+        botAccessToken
+      }));
+      Channel.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
+      Channel.findOne = jest.fn(() => Promise.resolve('channelId'));
+      auth.checkSlackAssociationStatus = jest.fn(() =>
+        Promise.resolve([true, { dwAccessToken }])
+      );
+      slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
+      slack.openView = jest.fn(() => Promise.resolve({}));
+      slack.sendResponse = jest.fn(() => Promise.resolve({}));
+    })
+
+    it('should handle a successful action', async done => {
+      // Perform a deep copy
+      const updatedBlocks = JSON.parse(JSON.stringify(datasetRequestActionPayload.message.blocks));
+      updatedBlocks[2] = {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Request rejected by <@${datasetRequestActionPayload.user.id}>*`
+        }
+      };
+
+      dataworld.rejectDatasetRequest = jest.fn(() => Promise.resolve({}));
+
+      request(server)
+        .post("/api/v1/command/action")
+        .send({ payload: JSON.stringify(datasetRequestActionPayload) })
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          expect(dataworld.rejectDatasetRequest).toHaveBeenCalledWith(
+            dwAccessToken,
+            requestid,
+            agentid,
+            datasetid
+          );
+          expect(slack.sendResponse).toBeCalledWith(
+            datasetRequestActionPayload.response_url,
+            {
+              replace_original: true,
+              blocks: updatedBlocks
+            }
+          );
+          expect(slack.openView).not.toHaveBeenCalled();
+          done();
+        });
+    });
+
+    it('should show a modal view when an action is unsuccessful', async done => {
+      const modalView = {
+        type: 'modal',
+        title: {
+          type: 'plain_text',
+          text: 'Something went wrong 😞'
+        },
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'You are not authorized to manage this request.'
+            }
+          }
+        ]
+      }
+
+      dataworld.rejectDatasetRequest = jest.fn(() =>
+        Promise.reject({ response: { status: 403 } })
+      );
+
+      request(server)
+        .post("/api/v1/command/action")
+        .send({ payload: JSON.stringify(datasetRequestActionPayload) })
+        .expect(200)
+        .end((err, res) => {
+          if (err) return done(err);
+          expect(dataworld.rejectDatasetRequest).toHaveBeenCalledWith(
+            dwAccessToken,
+            requestid,
+            agentid,
+            datasetid
+          );
+          expect(slack.sendResponse).not.toHaveBeenCalled();
+          expect(slack.openView).toHaveBeenCalledWith(
+            botAccessToken,
+            datasetRequestActionPayload.trigger_id,
+            modalView
+          );
+          done();
+        });
+    });
   });
 });
