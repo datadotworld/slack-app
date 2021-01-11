@@ -267,13 +267,18 @@ const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
   slackBot.chat.postMessage(channelId, "", { attachments });
 };
 
-const sendMessageWithBlocks = (botAccessToken, channelId, blocks) => {
+const sendMessageWithBlocks = async (botAccessToken, channelId, blocks) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  slackBot.chat.postMessage({
+  await slackBot.chat.postMessage({
     channel: channelId,
     text: "",
     blocks
   });
+}
+
+const openView = async (botAccessToken, triggerId, view) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  await slackBot.views.open({ trigger_id: triggerId, view });
 }
 
 module.exports = {
@@ -290,5 +295,6 @@ module.exports = {
   sendMessageWithBlocks,
   dismissAuthRequiredMessage,
   sendHowToUseMessage,
-  deleteSlackMessage
+  deleteSlackMessage,
+  openView
 };

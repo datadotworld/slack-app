@@ -30,7 +30,9 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
+const { handleDatasetRequestAction } = require("./commands/request");
 const webhookCommands = require("./commands/webhook");
+const { AUTHORIZATION_ACTIONS } = require("../helpers/requests")
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
 // data.world command format
@@ -722,39 +724,70 @@ const performAction = async (req, res) => {
     }
 
     if (
-      await isBotPresent(
+      !(await isBotPresent(
         payload.team.id,
         payload.channel.id,
         payload.user.id,
         payload.response_url
-      )
+      ))
     ) {
-      const [isAssociated, user] = await auth.checkSlackAssociationStatus(
-        payload.user.id
+      return;
+    }
+    // Assuming that all actions require user to be data.world authenticated
+    const [isAssociated, user] = await auth.checkSlackAssociationStatus(
+      payload.user.id
+    );
+    if (!isAssociated) {
+      // User is not associated begin association process.
+      await beginSlackAssociation(
+        payload.user.id,
+        payload.channel.id,
+        payload.team.id
       );
-      if (isAssociated) {
-        // subscribe or unsubscribe to/from resource.
-        collection.forEach(payload.actions, async action => {
-          switch (action.type) {
-            case "button":
-              await handleButtonAction(payload, action, user);
-              break;
-            case "select":
-              await handleMenuAction(payload, action, user);
-              break;
-            default:
-              console.warn("Unknown action type : ", action.type);
-              break;
-          }
-        });
-      } else {
-        // User is not associated begin association process.
-        await beginSlackAssociation(
-          payload.user.id,
-          payload.channel.id,
-          payload.team.id
-        );
-      }
+      return;
+    }
+
+    if ("callback_id" in payload) {
+      // Handle legacy Slack actions
+      // https://api.slack.com/messaging/attachments-to-blocks#callback_id_replacement
+
+      // subscribe or unsubscribe to/from resource.
+      collection.forEach(payload.actions, async action => {
+        switch (action.type) {
+          case "button":
+            await handleButtonAction(payload, action, user);
+            break;
+          case "select":
+            await handleMenuAction(payload, action, user);
+            break;
+          default:
+            console.warn("Unknown action type : ", action.type);
+            break;
+        }
+      });
+    } else {
+      // Handle new Slack block kit actions
+      collection.forEach(payload.actions, async action => {
+        const actionid = action.action_id
+        if (Object.values(AUTHORIZATION_ACTIONS).includes(actionid)) {
+          const { requestid, agentid, datasetid } = JSON.parse(action.value);
+          await handleDatasetRequestAction({
+            channelid: payload.channel.id,
+            userid: payload.user.id,
+            triggerid: payload.trigger_id,
+            responseUrl: payload.response_url,
+            message: payload.message,
+            blockid: action.block_id,
+            actionid,
+            requestid,
+            agentid,
+            datasetid,
+            dwAccessToken: user.dwAccessToken
+          });
+        } else {
+          console.warn("Unknown action type : ", actionid)
+        }
+      })
     }
   } catch (error) {
     // An internal error has occured send a descriptive message

@@ -45,6 +45,31 @@ const authorizationRequestCancelledEventBody = {
   authorizationLevel: 'READ'
 }
 
+const authorizationInviteCreatedEventBody = {
+  actorId: "user8888",
+  actorName: "testing!",
+  granteeType: "USER",
+  granteeEmail: "patrick@star.com",
+  granteeId: "patrick",
+  granteeName: "Patrick Star",
+  resourceId: "use-case-discvoerable",
+  resourceName: "use-case-discvoerable",
+  resourceOwner: "use-case-org",
+  resourceOwnerName: "Use Case Org",
+  resourceUrl: "http://localhost:3000/use-case-org/use-case-discvoerable",
+  event: {
+    triggeredBy: "user8888",
+    created: "Sat, 12 Dec 2020 21:36:48 GMT"
+  },
+  eventType: "dataset.authorization_invite.created",
+  authorizationLevel: "WRITE",
+  resourceAccessUrl: "http://localhost:3000/use-case-org/use-case-discvoerable/access",
+  requestFormFields: {
+    message: ""
+  },
+  requestId: "5dee1394-5473-4329-aae2-f7bd46f5bfad"
+}
+
 const contributionRequestCreatedEventBody = {
   actor: { agentid: 'patrick', displayName: 'Patrick Star' },
   event:
@@ -87,9 +112,85 @@ const contributionRequestCancelledEventBody = {
   eventType: 'catalog.contribute_request.cancelled'
 }
 
+const datasetRequestWebhookMessage = (action) => ({
+  bot_id: 'B01G1BDDF61',
+  type: 'message',
+  text: 'This content can\'t be displayed.',
+  user: 'U01FXMWB84W',
+  ts: '1608604853.004200',
+  team: 'T01EYB10HFZ',
+  blocks: [
+    {
+      type: 'context',
+      block_id: '0e6Ul',
+      elements: [ { type: 'mrkdwn', text: 'abcdedf' } ]
+    },
+    {
+      type: 'section',
+      block_id: 'HzJC',
+      text: { type: 'mrkdwn', text: 'more text' }
+    },
+    {
+      type: 'actions',
+      block_id: 'blockid',
+      elements: [{
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Reject'
+        },
+        style: 'primary',
+        action_id: `authorization_request.${action}`,
+        value: '{"requestid":"fe642b58-a4a0-4a68-83ba-91572bbae349","agentid":"use-case-org","datasetid":"use-case-discvoerable"}'
+      }]
+    },
+    {
+      type: 'divider',
+      block_id: 'D8CN'
+    }
+  ]
+})
+
+const datasetRequestRejectedActionPayload = {
+  type: 'block_actions',
+  user:
+   { id: 'U01G2U5SBGQ',
+     username: 'daniel.peng',
+     name: 'daniel.peng',
+     team_id: 'T01EYB10HFZ' },
+  api_app_id: 'A01G17SK2VB',
+  token: 'p6kINd3ICTBD7nR4eIQLCHDu',
+  container:
+   { type: 'message',
+     message_ts: '1608604853.004200',
+     channel_id: 'C01F6BCHE5U',
+     is_ephemeral: false },
+  trigger_id:
+   '1589244125189.1508375017543.cb6fc0be648a0c6fe91c6ee6f845dfdb',
+  team: { id: 'T01EYB10HFZ', domain: 'second-slackbot-test' },
+  enterprise: null,
+  is_enterprise_install: false,
+  channel: { id: 'C01F6BCHE5U', name: 'also-slackbot' },
+  message: datasetRequestWebhookMessage('reject'),
+  response_url:
+   'https://hooks.slack.com/actions/T01EYB10HFZ/1577558403447/I5fDkDrCGA0zKp3dxa6XUbeJ',
+  actions:
+   [ { action_id: 'authorization_request.reject',
+       block_id: 'blockid',
+       text: 'sample text',
+       value:
+        '{"requestid":"fe642b58-a4a0-4a68-83ba-91572bbae349","agentid":"use-case-org","datasetid":"use-case-discvoerable"}',
+       style: 'danger',
+       type: 'button',
+       action_ts: '1608604863.748298' } ]
+}
+
 module.exports = {
   authorizationRequestCreatedEventBody,
   authorizationRequestCancelledEventBody,
+  authorizationInviteCreatedEventBody,
   contributionRequestCreatedEventBody,
-  contributionRequestCancelledEventBody
+  contributionRequestCancelledEventBody,
+  datasetRequestRejectedActionPayload,
+  datasetRequestWebhookMessage
 }

@@ -20,6 +20,13 @@ describe('requests helper methods', () => {
       )
       expect(result).toMatchSnapshot() 
     })
+
+    it('should return correctly formatted blocks for authorization invites created', () => {
+      const result = requestsHelpers.getAuthorizationRequestSlackBlocks(
+        fixtures.authorizationInviteCreatedEventBody
+      )
+      expect(result).toMatchSnapshot()
+    })
   })
 
   describe('getContributionRequestSlackBlocks', () => {

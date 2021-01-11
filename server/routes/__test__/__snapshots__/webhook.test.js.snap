@@ -105,11 +105,29 @@ Array [
         "type": "section",
       },
       Object {
-        "text": Object {
-          "text": "*<https://ddw-corewebapp.dev.data.world/use-case-org/use-case-discvoerable/access|Manage this request →>*",
-          "type": "mrkdwn",
-        },
-        "type": "section",
+        "elements": Array [
+          Object {
+            "action_id": "authorization_request.accept",
+            "style": "primary",
+            "text": Object {
+              "text": "Approve",
+              "type": "plain_text",
+            },
+            "type": "button",
+            "value": "{\\"requestid\\":\\"a997b017-75a5-4cbb-93b8-02f6242e9483\\",\\"agentid\\":\\"use-case-org\\",\\"datasetid\\":\\"use-case-discvoerable\\"}",
+          },
+          Object {
+            "action_id": "authorization_request.reject",
+            "style": "danger",
+            "text": Object {
+              "text": "Reject",
+              "type": "plain_text",
+            },
+            "type": "button",
+            "value": "{\\"requestid\\":\\"a997b017-75a5-4cbb-93b8-02f6242e9483\\",\\"agentid\\":\\"use-case-org\\",\\"datasetid\\":\\"use-case-discvoerable\\"}",
+          },
+        ],
+        "type": "actions",
       },
       Object {
         "type": "divider",

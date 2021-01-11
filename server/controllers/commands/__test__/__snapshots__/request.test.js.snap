@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test request command methods handleDatasetRequestAction should accept a dataset request and update the message 1`] = `
+Array [
+  Object {
+    "block_id": "0e6Ul",
+    "elements": Array [
+      Object {
+        "text": "abcdedf",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "block_id": "HzJC",
+    "text": Object {
+      "text": "more text",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*Request approved by <@userid>*",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "block_id": "D8CN",
+    "type": "divider",
+  },
+]
+`;
+
+exports[`Test request command methods handleDatasetRequestAction should cancel a dataset request and update the message 1`] = `
+Array [
+  Object {
+    "block_id": "0e6Ul",
+    "elements": Array [
+      Object {
+        "text": "abcdedf",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "block_id": "HzJC",
+    "text": Object {
+      "text": "more text",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*Request cancelled by <@userid>*",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "block_id": "D8CN",
+    "type": "divider",
+  },
+]
+`;
+
+exports[`Test request command methods handleDatasetRequestAction should handle generic errors in acting on a dw request 1`] = `
+Object {
+  "blocks": Array [
+    Object {
+      "text": Object {
+        "text": "Could not successfully manage this request. Try viewing the request on <https://data.world|data.world>.",
+        "type": "mrkdwn",
+      },
+      "type": "section",
+    },
+  ],
+  "title": Object {
+    "text": "Something went wrong 😞",
+    "type": "plain_text",
+  },
+  "type": "modal",
+}
+`;
+
+exports[`Test request command methods handleDatasetRequestAction should handle unauthorized users 1`] = `
+Object {
+  "blocks": Array [
+    Object {
+      "text": Object {
+        "text": "You are not authorized to manage this request.",
+        "type": "mrkdwn",
+      },
+      "type": "section",
+    },
+  ],
+  "title": Object {
+    "text": "Something went wrong 😞",
+    "type": "plain_text",
+  },
+  "type": "modal",
+}
+`;
+
+exports[`Test request command methods handleDatasetRequestAction should reject a dataset request and update the message 1`] = `
+Array [
+  Object {
+    "block_id": "0e6Ul",
+    "elements": Array [
+      Object {
+        "text": "abcdedf",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  Object {
+    "block_id": "HzJC",
+    "text": Object {
+      "text": "more text",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "text": Object {
+      "text": "*Request rejected by <@userid>*",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  Object {
+    "block_id": "D8CN",
+    "type": "divider",
+  },
+]
+`;

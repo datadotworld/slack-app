@@ -797,9 +797,9 @@ const webhook = {
       const channelIds = collection.map(channels, "channelId");
 
       if (Object.values(DATASET_AUTHORIZATION_TYPES).includes(eventType)) {
-        handleAuthorizationRequest(body, channelIds);
+        await handleAuthorizationRequest(body, channelIds);
       } else if (Object.values(CONTRIBUTION_REQUEST_TYPES).includes(eventType)) {
-        handleContributionRequest(body, channelIds);
+        await handleContributionRequest(body, channelIds);
       } else {
         const errorMessage = `Invalid eventType: ${eventType}`;
         console.error(errorMessage);
