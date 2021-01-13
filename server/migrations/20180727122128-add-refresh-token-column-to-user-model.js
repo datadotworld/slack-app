@@ -3,7 +3,7 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     queryInterface.addColumn(
-      'User',
+      'Users',
       'dwRefreshToken',
      Sequelize.STRING
     );
@@ -11,7 +11,7 @@ module.exports = {
 
   down: (queryInterface, Sequelize) => {
     queryInterface.removeColumn(
-      'User',
+      'Users',
       'dwRefreshToken',
      Sequelize.STRING
     );

@@ -6,10 +6,7 @@
     "dialect": "postgres",
     "options": {
       "host": "127.0.0.1",
-      "dialect": "postgres",
-      "operatorsAliases": {
-        "$ne": "Op.ne"
-      }
+      "dialect": "postgres"
     }
   },
   "production": {
