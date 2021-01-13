@@ -6,13 +6,11 @@
     "dialect": "postgres",
     "options": {
       "host": "127.0.0.1",
-      "dialect": "postgres",
-      "operatorsAliases": {
-        "$ne": "Op.ne"
-      }
+      "dialect": "postgres"
     }
   },
   "production": {
-    "prod_db_url_key": "DATABASE_URL"
+    "dialect": "postgres",
+    "use_env_variable": "DATABASE_URL"
   }
 }

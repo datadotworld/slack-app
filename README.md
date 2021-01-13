@@ -12,7 +12,7 @@ Once you've the app up and running and installed in your workspace (See CONTRIBU
 ##### OAuth handshake / User account binding 
 
 This means binding a user's slack account to his/her data.world account and there by giving data.world slack app the permission to perform 
-read, write and webhook operations on behalf of the user.User can revoke permission at will from data.world [settings](https://data.world/settings/advanced) page.
+read, write and webhook operations on behalf of the user. User can revoke permission at will from data.world [settings](https://data.world/settings/advanced) page.
 
 Account binding is required to be able to run data.world slash commands. Hence, the data.world slack app will prompt the user
 to complete Account binding any time he/she tries to use any of the available commands in slack.

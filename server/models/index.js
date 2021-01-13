@@ -30,10 +30,7 @@ if (process.env.DATABASE_URL) {
 } else {
   const options = {
     host: "127.0.0.1",
-    dialect: "postgres",
-    operatorsAliases: {
-      $ne: "Op.ne"
-    }
+    dialect: "postgres"
   };
   sequelize = new Sequelize(
     process.env.PG_DATABASE,
