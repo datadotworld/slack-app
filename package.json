@@ -33,7 +33,7 @@
   },
   "scripts": {
     "precommit": "./pre-commit.sh",
-    "start": "node --trace-warnings ./server/bin/www",
+    "start": "yarn run migration --env production && node --trace-warnings ./server/bin/www",
     "dev": "yarn run heroku-prebuild && yarn run migration && yarn run start",
     "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
