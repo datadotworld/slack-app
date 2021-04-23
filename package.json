@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@slack/client": "^3.16.0",
+    "@slack/client": "^5.0.2",
     "@slack/web-api": "^5.14.0",
     "axios": "^0.18.0",
     "axios-retry": "^3.1.1",
