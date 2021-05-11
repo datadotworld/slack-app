@@ -33,9 +33,9 @@
   },
   "scripts": {
     "precommit": "./pre-commit.sh",
-    "start": "yarn run migration --env production && node --trace-warnings ./server/bin/www",
+    "start": "node --trace-warnings ./server/bin/www",
     "dev": "yarn run heroku-prebuild && yarn run migration && yarn run start",
-    "heroku-prebuild": "yarn && yarn run build",
+    "heroku-prebuild": "yarn && yarn run build && yarn run migration --env production",
     "build": "react-scripts build",
     "migration": "sequelize db:migrate",
     "test": "jest --notify --forceExit  --clearMocks",
