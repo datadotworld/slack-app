@@ -4,9 +4,9 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 
 directories="$(git diff --staged --name-status --diff-filter=DR)"
 
-# Prevent direct commit to master branch
-if [ "$branch" = "master" ]; then
-  echo "You can't commit directly to master branch"
+# Prevent direct commit to main branch
+if [ "$branch" = "main" ]; then
+  echo "You can't commit directly to main branch"
   exit 1
 fi
 

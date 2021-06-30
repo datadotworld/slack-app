@@ -56,8 +56,8 @@ yarn test
 Make sure your fork is up-to-date and create a feature branch for your feature or bug fix.
 
 ```bash
-git checkout master
-git pull upstream master
+git checkout main
+git pull upstream main
 git checkout -b my-feature-branch
 ```
 
@@ -236,4 +236,4 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
     You can now install the app by following the steps in 9b
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/datadotworld/slack-app/tree/main)
