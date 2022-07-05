@@ -32,10 +32,11 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
-const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).*/i;
-const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
-const queryLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+const dwLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
+const insightLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+const queryLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
 const messageAttachmentFromLink = async (
   token,
@@ -128,7 +129,7 @@ const unfurlDataset = (
       {
         type: "button",
         text: "Explore :microscope:",
-        url: `https://data.world/${resourceId}/workspace`
+        url: `https://ddw-corewebapp.dev.data.world/${resourceId}/workspace`
       }
     ],
     url: params.link
@@ -162,11 +163,11 @@ const unfurlDataset = (
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
       if (index < helper.FILES_LIMIT) {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+        fieldValue += `• <https://ddw-corewebapp.dev.data.world/${resourceId}/workspace/file?filename=${
           file.name
         }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
       } else {
-        fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+        fieldValue += `<https://ddw-corewebapp.dev.data.world/${resourceId}|See more>\n`;
         return false;
       }
     });
@@ -179,7 +180,7 @@ const unfurlDataset = (
   } else {
     fields.push({
       title: "File(s)",
-      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+      value: `_none found_\n_need some ?_\n_be the first to <https://ddw-corewebapp.dev.data.world/${resourceId}|add one>_`
     });
   }
 
@@ -222,7 +223,7 @@ const unfurlProject = async (
         {
           type: "button",
           text: "Explore :microscope:",
-          url: `https://data.world/${resourceId}/workspace`
+          url: `https://ddw-corewebapp.dev.data.world/${resourceId}/workspace`
         }
       ],
       url: params.link
@@ -258,11 +259,11 @@ const unfurlProject = async (
         let fieldValue = "";
         collection.forEach(files, (file, index) => {
           if (index < helper.FILES_LIMIT) {
-            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
+            fieldValue += `• <https://ddw-corewebapp.dev.data.world/${resourceId}/workspace/file?filename=${
               file.name
             }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
           } else {
-            fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+            fieldValue += `<https://ddw-corewebapp.dev.data.world/${resourceId}|See more>\n`;
             return false;
           }
         });
@@ -275,7 +276,7 @@ const unfurlProject = async (
       } else {
         fields.push({
           title: "File(s)",
-          value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+          value: `_none found_\n_need some ?_\n_be the first to <https://ddw-corewebapp.dev.data.world/${resourceId}|add one>_`
         });
       }
     } else {
@@ -284,11 +285,11 @@ const unfurlProject = async (
       let fieldValue = "";
       collection.forEach(linkedDatasets, (linkedDataset, index) => {
         if (index < helper.LINKED_DATASET_LIMIT) {
-          fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
+          fieldValue += `• <https://ddw-corewebapp.dev.data.world/${resourceId}/workspace/dataset?datasetid=${
             linkedDataset.id
           }|${linkedDataset.description || linkedDataset.title}>\n`;
         } else {
-          fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+          fieldValue += `<https://ddw-corewebapp.dev.data.world/${resourceId}|See more>\n`;
           return false;
         }
       });
@@ -364,7 +365,7 @@ const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
     fallback: insight.title,
     color: "#9581CA",
     author_name: author.displayName,
-    author_link: `http://data.world/${author.id}`,
+    author_link: `http://ddw-corewebapp.dev.data.world/${author.id}`,
     author_icon: author.avatarUrl,
     title: insight.title,
     title_link: params.link,
@@ -396,7 +397,7 @@ const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
     fallback: query.name,
     color: isSql ? "#0e33cb" : "#ac40be",
     author_name: owner.displayName,
-    author_link: `http://data.world/${owner.id}`,
+    author_link: `http://ddw-corewebapp.dev.data.world/${owner.id}`,
     author_icon: owner.avatarUrl,
     thumb_url: isSql
       ? `${serverBaseUrl}/assets/icon-sql.png`
@@ -435,6 +436,8 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         let token = user.dwAccessToken;
         const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
 
+        const botToken = await getBotAccessTokenForTeam(teamId);
+
         Promise.all(
           event.links.map(
             messageAttachmentFromLink.bind(
@@ -458,7 +461,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               event.message_ts,
               event.channel,
               unfurls,
-              teamToken
+              botToken
             )
           )
           .catch(console.error);
@@ -514,7 +517,7 @@ const handleMessage = async data => {
   try {
     const { event, team_id } = data;
     const message = event.text ? event.text : "";
-    const dwLinkFormat = /((<https:\/\/data.world\/[\w-]+\/[\w-]+).*>)/i;
+    const dwLinkFormat = /((<https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*>)/i;
     const command = `/${process.env.SLASH_COMMAND}`;
     const ignoredSubTypes = ["bot_message", "message_deleted"];
     const isBotMessage =

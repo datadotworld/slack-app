@@ -30,6 +30,8 @@ const webhook = require("./routes/webhook");
 
 const app = express();
 
+const dotenv = require("dotenv").config();
+
 app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -61,5 +63,9 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500).send();
 });
+
+app.get('/ping', (req, res) => res.send(`pong ${new Date()}`));
+console.log('starting on port1', process.env.SLACK_CLIENT_ID);
+//app.listen(5000);
 
 module.exports = app;

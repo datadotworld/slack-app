@@ -24,7 +24,9 @@ const FILES_LIMIT = 5;
 const LINKED_DATASET_LIMIT = 5;
 const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
   process.env.DW_CLIENT_ID
-}&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
+}&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
+
+console.log("helper DW_AUTH_URL", DW_AUTH_URL);
 
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
@@ -38,14 +40,24 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
   return params;
 };
 
+const domain = "ddw-corewebapp.dev.data.world";
 const extractDatasetOrProjectParamsFromLink = link => {
   let params = {};
-  const cleanLink = link.replace(/(https\:\/\/data.world\/|)/g, "");
+  //link = "https://data.world/dwslacktest/test-project"
+  //link = "https://data.world/dwslacktest/basketball-stats"
+  //link = "https://ddw-corewebapp.dev.data.world/dwslacktest/basketball-stats"
+  console.log("extractDatasetOrProjectParamsFromLink link", link);
+  //const cleanLink = link.replace(/(https\:\/\/ddw-corewebapp.dev.data.world\/|)/g, "");
+  const cleanLink = link.replace(/^.*\/\/[^\/]+/, '');
   const pathNames = cleanLink.split("/");
+  console.log("extractDatasetOrProjectParamsFromLink link", link, link);
+  console.log("extractDatasetOrProjectParamsFromLink cleanLink", cleanLink);
+  
 
-  params.owner = pathNames[0];
-  params.datasetId = pathNames[1];
+  params.owner = pathNames[1];
+  params.datasetId = pathNames[2];
   params.link = link;
+  console.log("extractDatasetOrProjectParamsFromLink params",params.owner,  params.datasetId, params.link);
 
   return params;
 };
@@ -97,7 +109,7 @@ const extractIdFromLink = link => {
 };
 
 const cleanSlackLinkInput = link => {
-  return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
+  return link.replace(/(<https\:\/\/ddw-corewebapp.dev.data.world\/|>)/g, "");
 };
 
 const getDelay = (retryCount) => {

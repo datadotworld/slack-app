@@ -77,6 +77,7 @@ const del = (url, token, params) => {
 
 const exchangeAuthCode = code => {
   const requestUrl = `${accessTokenUrl}${code}`;
+  console.log("exchangeauthcode", requestUrl)
   return post(requestUrl, {});
 };
 
@@ -98,6 +99,7 @@ const refreshToken = async refreshToken => {
 
 const getActiveDWUser = token => {
   const requestUrl = `${baseUrl}/user`;
+  console.log("getActiveDWUser", token, requestUrl);
   return get(requestUrl, token);
 };
 
@@ -113,6 +115,8 @@ const getDataset = (id, owner, token) => {
 
 const getProject = (id, owner, token) => {
   const requestUrl = `${baseUrl}/projects/${owner}/${id}`;
+  console.log("getProject url", requestUrl)
+  console.log("getProject id : " ,id, " owner : " ,owner, " token : ", token);
   return get(requestUrl, token);
 };
 
