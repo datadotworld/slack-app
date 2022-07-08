@@ -37,6 +37,7 @@ const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND;
+const dwDomain = helper.DW_DOMAIN;
 const dwCommandRegex = new RegExp(
   `^((\\\/${commandText})(subscribe|unsubscribe) [\\w-\\\/\\:\\.]+)$`,
   "i"
@@ -52,11 +53,11 @@ const dwWebhookCommandRegex = new RegExp(
 
 // Sub command format
 const subscribeFormat = new RegExp(
-  `^((\\\/${commandText})(subscribe) (https\\:\\\/\\\/ddw-corewebapp.dev.data.world\\\/|)[\\w-\\\/]+)$`,
+  `^((\\\/${commandText})(subscribe) (https\\:\\\/\\\/${dwDomain}\\\/|)[\\w-\\\/]+)$`,
   "i"
 );
 const unsubscribeFormat = new RegExp(
-  `^((\\\/${commandText})(unsubscribe) (https\\:\\\/\\\/ddw-corewebapp.dev.data.world\\\/|)[\\w-\\\/]+)$`,
+  `^((\\\/${commandText})(unsubscribe) (https\\:\\\/\\\/${dwDomain}\\\/|)[\\w-\\\/]+)$`,
   "i"
 );
 
@@ -386,7 +387,7 @@ const listSubscription = async (
     let message;
     let attachments;
     let options = [];
-    let baseUrl = "https://ddw-corewebapp.dev.data.world";
+    let baseUrl = `https://${dwDomain}`;
 
     if (!lang.isEmpty(subscriptions)) {
       message = "*Active Subscriptions*";

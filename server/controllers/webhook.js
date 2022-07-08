@@ -40,6 +40,8 @@ const {
 } = require("../helpers/requests");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
+const dwDomain = helper.DW_DOMAIN;
+
 // Possible event actions
 const CREATE = "create";
 const UPDATE = "update";
@@ -111,13 +113,13 @@ const getNewDatasetAttachment = (
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
       if (index < helper.FILES_LIMIT) {
-        fieldValue += `• <https://ddw-corewebapp.dev.data.world/${params.owner}/${
+        fieldValue += `• <https://${dwDomain}/${params.owner}/${
           params.datasetId
         }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
           file.sizeInBytes
         )})_\n`;
       } else {
-        fieldValue += `<https://ddw-corewebapp.dev.data.world/${params.owner}/${
+        fieldValue += `<https://${dwDomain}/${params.owner}/${
           params.datasetId
         }|See more>\n`;
         return false;
@@ -132,7 +134,7 @@ const getNewDatasetAttachment = (
   } else {
     fields.push({
       title: "File(s)",
-      value: `_none found_\n_need some ?_\n_be the first to <https://ddw-corewebapp.dev.data.world/${resourceId}|add one>_`
+      value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
     });
   }
 
@@ -274,11 +276,11 @@ const getNewProjectAttachment = (
       let fieldValue = "";
       collection.forEach(files, (file, index) => {
         if (index < helper.FILES_LIMIT) {
-          fieldValue += `• <https://ddw-corewebapp.dev.data.world/${resourceId}/workspace/file?filename=${
+          fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/file?filename=${
             file.name
           }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
         } else {
-          fieldValue += `<https://ddw-corewebapp.dev.data.world/${resourceId}|See more>\n`;
+          fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
           return false;
         }
       });
@@ -291,7 +293,7 @@ const getNewProjectAttachment = (
     } else {
       fields.push({
         title: "File(s)",
-        value: `_none found_\n_need some ?_\n_be the first to <https://ddw-corewebapp.dev.data.world/${resourceId}|add one>_`
+        value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
       });
     }
   } else {
@@ -300,11 +302,11 @@ const getNewProjectAttachment = (
     let fieldValue = "";
     collection.forEach(linkedDatasets, (linkedDataset, index) => {
       if (index < helper.LINKED_DATASET_LIMIT) {
-        fieldValue += `• <https://ddw-corewebapp.dev.data.world/${resourceId}/workspace/dataset?datasetid=${
+        fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/dataset?datasetid=${
           linkedDataset.id
         }|${linkedDataset.description || linkedDataset.title}>\n`;
       } else {
-        fieldValue += `<https://ddw-corewebapp.dev.data.world/${resourceId}|See more>\n`;
+        fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
         return false;
       }
     });
@@ -375,7 +377,7 @@ const getNewInsightAttachment = (
       {
         type: "button",
         text: "Discuss :left_speech_bubble:",
-        url: `https://ddw-corewebapp.dev.data.world/${params.owner}/${params.datasetId}/insights/${
+        url: `https://${dwDomain}/${params.owner}/${params.datasetId}/insights/${
           insight.id
         }`
       }
@@ -433,7 +435,7 @@ const getFileUploadAttachment = (
   let fieldValue = "";
 
   collection.forEach(files, file => {
-    fieldValue += `• <https://ddw-corewebapp.dev.data.world/${params.owner}/${
+    fieldValue += `• <https://${dwDomain}/${params.owner}/${
       params.datasetId
     }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
       file.sizeInBytes
@@ -607,6 +609,7 @@ const handleInsightEvent = async (
   actorSlackId,
   serverBaseUrl
 ) => {
+  console.log("insight event")
   const params = helper.extractDatasetOrProjectParamsFromLink(
     event.links.web.project
   );
