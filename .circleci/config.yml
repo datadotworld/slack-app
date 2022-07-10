@@ -25,6 +25,9 @@ jobs:
       - run:
           name: Build react app
           command: yarn build
+      - run: 
+          name: Set Node Env
+          command: export NODE_ENV=development
       - run:
           name: Run tests with JUnit as reporter
           command: yarn test-with-reporter
