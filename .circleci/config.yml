@@ -3,8 +3,8 @@ version: 2.1
 resources:
   defaults: &defaults
     docker:
-      - image: cimg/node:18.4.0
-      - image: cimg/postgres:14.2.0
+      - image: cimg/node:14.19.2
+      - image: cimg/postgres:13.6
 
     working_directory: ~/slack-app
 
