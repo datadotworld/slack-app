@@ -35,9 +35,24 @@ const slack = require("../api/slack");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 const dwDomain = helper.DW_DOMAIN;
 
-const dwLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
-const insightLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
-const queryLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+//const dwLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
+//const insightLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+//const queryLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+
+const dwLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*`,
+  "i"
+);
+
+const insightLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  "i"
+);
+
+const queryLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/workspace\/query\\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  "i"
+);
 
 const messageAttachmentFromLink = async (
   token,
