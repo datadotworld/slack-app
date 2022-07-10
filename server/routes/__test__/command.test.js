@@ -29,6 +29,8 @@ const Team = require("../../models").Team;
 const Channel = require("../../models").Channel;
 const Subscription = require("../../models").Subscription;
 
+const dwDomain = helper.DW_DOMAIN;
+
 describe("POST /api/v1/command/ - Process slash command", () => {
   it("should respond to slack challenge request", done => {
     const challenge = "challenge";
@@ -122,7 +124,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         \"title\":\"actors-proj\",
         \"footer\":\"kehesjay\\\/actors-proj\",
         \"id\":\"1\",
-        \"title_link\":\"https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\",
+        \"title_link\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\",
         \"thumb_height\":512,
         \"thumb_width\":512,
         \"thumb_url\":\"https:\\\/\\\/cdn.filepicker.io\\\/api\\\/file\\\/XYpHGiLQfKj2tQqH9HwC\",
@@ -137,7 +139,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         },
         {
           \"title\":\"Linked datasets\",
-          \"value\":\"\\u2022 <https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=proj4test|proj_4_test>\\n\\u2022 <https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=cool-data|cool-data>\\n\\u2022 <https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=nolly-dataset|nolly dataset>\\n\\u2022 <https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-new-data|test-new-data>\\n\\u2022 <https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-cdi|test cdi>\\n<https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj|See more>\\n\",
+          \"value\":\"\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=proj4test|proj_4_test>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=cool-data|cool-data>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=nolly-dataset|nolly dataset>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-new-data|test-new-data>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-cdi|test cdi>\\n<https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj|See more>\\n\",
           \"short\":false
         }],
         \"actions\":[{
@@ -145,7 +147,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           \"text\":\"Explore :microscope:\",
           \"type\":\"button\",
           \"style\":\"\",
-          \"url\":\"https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\\\/workspace\"
+          \"url\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\"
         },
         {
           \"id\":\"2\",
@@ -157,7 +159,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
         }],
         \"mrkdwn_in\":[\"fields\"],
         \"bot_id\":\"BBS0N97PC\",
-        \"app_unfurl_url\":\"https:\\\/\\\/data.world\\\/kehesjay\\\/actors-proj\",
+        \"app_unfurl_url\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\",
         \"is_app_unfurl\":true
       }
     ]},

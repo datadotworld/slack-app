@@ -25,6 +25,7 @@ const slack = require("../../api/slack");
 const Channel = require("../../models").Channel;
 const Team = require("../../models").Team;
 const Subscription = require("../../models").Subscription;
+const dwDomain = require("../../helpers/helper").DW_DOMAIN;
 
 describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
   const linkSharedEvent = {
@@ -37,7 +38,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       channel: "GBRPJRPDH",
       message_ts: "1532076310.000245",
       links: [
-        { url: "https://data.world/kehesjay/actors-proj", domain: "data.world" }
+        { url: `https://${dwDomain}/kehesjay/actors-proj`, domain: "data.world" }
       ]
     },
     type: "event_callback",
@@ -177,8 +178,8 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
-    const team = { accessToken };
+    const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
+    const team = {  teamId: "teamId", botAccessToken : "accessToken" };
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = {
@@ -205,11 +206,12 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
 
+
     const expectedAttachment = {
       fallback: "An Example Project that Shows What To Put in data.world",
       color: "#F6BD68",
       title: "An Example Project that Shows What To Put in data.world",
-      title_link: "https://data.world/kehesjay/actors-proj",
+      title_link: `https://${dwDomain}/kehesjay/actors-proj`,
       text:
         "Link to a dataset, extract some data from a PDF, make some insights!",
       footer: "kehesjay/actors-proj",
@@ -222,7 +224,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         {
           type: "button",
           text: "Explore :microscope:",
-          url: "https://data.world/kehesjay/actors-proj/workspace"
+          url: `https://${dwDomain}/kehesjay/actors-proj/workspace`
         },
         {
           name: "subscribe",
@@ -237,20 +239,20 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         {
           title: "Linked dataset",
           value:
-            "• <https://data.world/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n",
+            `• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n`,
           short: false
         }
       ]
     };
 
     const expectedUnfurlObject = {
-      "https://data.world/kehesjay/actors-proj": expectedAttachment
+      "https://ddw-corewebapp.dev.data.world/kehesjay/actors-proj": expectedAttachment
     };
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toBeCalledWith(
         dwResourceId,
         dwAgentId,
@@ -263,6 +265,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         dwAgentId,
         dwAccessToken
       );
+      
       expect(slack.sendUnfurlAttachments).toBeCalledWith(
         event.message_ts,
         event.channel,
@@ -278,8 +281,8 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
-    const team = { accessToken };
+    const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
+    const team = {  teamId: "teamId", botAccessToken : "accessToken" };
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = dwDataset;
@@ -307,7 +310,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       fallback: "TrumpWorld",
       color: "#5CC0DE",
       title: "TrumpWorld",
-      title_link: "https://data.world/kehesjay/actors-proj",
+      title_link: `https://${dwDomain}/kehesjay/actors-proj`,
       text: "TrumpWorld Data",
       thumb_url: `${serverBaseUrl}/assets/avatar.png`,
       footer: "kehesjay/actors-proj",
@@ -319,7 +322,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         {
           type: "button",
           text: "Explore :microscope:",
-          url: "https://data.world/kehesjay/actors-proj/workspace"
+          url: `https://${dwDomain}/kehesjay/actors-proj/workspace`
         },
         {
           name: "subscribe",
@@ -338,20 +341,22 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         {
           title: "Files",
           value:
-            "• <https://data.world/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://data.world/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://data.world/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n",
+            `• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n`,
           short: false
         }
       ]
     };
 
+    const expectedUrl = `https://${dwDomain}/kehesjay/actors-proj`
+    
     const expectedUnfurlObject = {
-      "https://data.world/kehesjay/actors-proj": expectedAttachment
+      "https://ddw-corewebapp.dev.data.world/kehesjay/actors-proj": expectedAttachment
     };
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toBeCalledWith(
         dwResourceId,
         dwAgentId,

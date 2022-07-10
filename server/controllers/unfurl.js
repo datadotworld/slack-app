@@ -438,7 +438,8 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         let token = user.dwAccessToken;
         const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
 
-        const botToken = await getBotAccessTokenForTeam(teamId);
+        const botToken = await getBotAccessTokenForTeam(team.teamId);
+        console.log("botToken", botToken, team);
 
         Promise.all(
           event.links.map(

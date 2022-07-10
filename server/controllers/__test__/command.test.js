@@ -24,6 +24,7 @@ const slack = require("../../api/slack");
 const command = require("../command");
 const Subscription = require("../../models").Subscription;
 const User = require("../../models").User;
+const dwDomain = helper.DW_DOMAIN;
 
 describe("Test Auth controller methods", () => {
   it(
@@ -407,7 +408,7 @@ describe("Test Auth controller methods", () => {
     const attachments = [
       {
         color: "#79B8FB",
-        text: `• https://data.world/resourceId \n *created by :* <@user_id> \n`,
+        text: `• https://${dwDomain}/resourceId \n *created by :* <@user_id> \n`,
         callback_id: "unsubscribe_menu",
         actions: [
           {

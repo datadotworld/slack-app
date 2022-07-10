@@ -1,3 +1,4 @@
+
 /*
  * data.world Slack Application
  * Copyright 2018 data.world, Inc.
@@ -30,7 +31,6 @@ const webhook = require("./routes/webhook");
 
 const app = express();
 
-const dotenv = require("dotenv").config();
 
 app.use(logger("dev"));
 app.use(bodyParser.json());

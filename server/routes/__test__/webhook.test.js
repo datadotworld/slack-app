@@ -27,6 +27,7 @@ const Team = require("../../models").Team;
 const Channel = require("../../models").Channel;
 const tokenHelpers = require("../../helpers/tokens");
 const fixtures = require("../../jest/fixtures");
+const dwDomain = require("../../helpers/helper").DW_DOMAIN;
 
 jest.mock("../../api/slack");
 jest.mock("../../helpers/tokens");
@@ -49,14 +50,14 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     dataset: "Cool pictures of dogs",
     links: {
       api: {
-        actor: "https://api.data.world/v0/users/user8",
-        owner: "https://api.data.world/v0/users/user8",
-        dataset: "https://api.data.world/v0/datasets/user8/cool-dog-pics"
+        actor: `https://${process.env.DW_BASE_URL}/users/user8`,
+        owner: `https://${process.env.DW_BASE_URL}/v0/users/user8`,
+        dataset: `https://${process.env.DW_BASE_URL}/v0/datasets/user8/cool-dog-pics`
       },
       web: {
-        actor: "https://data.world/user8",
-        owner: "https://data.world/user8",
-        dataset: "https://data.world/user8/cool-dog-pics"
+        actor: `https://${dwDomain}/user8`,
+        owner: `https://${dwDomain}/user8`,
+        dataset: `https://${dwDomain}/user8/cool-dog-pics`
       }
     },
     timestamp: "2017-10-24T17:36:23.533Z",
@@ -72,14 +73,14 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     project: "Cool pictures of dogs",
     links: {
       api: {
-        actor: "https://api.data.world/v0/users/user8",
-        owner: "https://api.data.world/v0/users/user8",
-        project: "https://api.data.world/v0/projects/user8/cool-dog-pics"
+        actor: `https://${process.env.DW_BASE_URL}/users/user8`,
+        owner: `https://${process.env.DW_BASE_URL}/users/user8`,
+        project: `https://${process.env.DW_BASE_URL}/projects/user8/cool-dog-pics`
       },
       web: {
-        actor: "https://data.world/user8",
-        owner: "https://data.world/user8",
-        project: "https://data.world/user8/cool-dog-pics"
+        actor: `https://${dwDomain}/user8`,
+        owner: `https://${dwDomain}/user8`,
+        project: `https://${dwDomain}/user8/cool-dog-pics`
       }
     },
     timestamp: "2017-10-24T17:36:23.533Z",
@@ -252,7 +253,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       fallback: "user8 created a new dataset",
       pretext: "<@slackId> created a *new dataset*",
       title: "TrumpWorld",
-      title_link: "https://data.world/user8/cool-dog-pics",
+      title_link: `https://${dwDomain}/user8/cool-dog-pics`,
       thumb_url: `${serverBaseUrl}/assets/avatar.png`,
       color: "#5CC0DE",
       text: "TrumpWorld Data",
@@ -265,7 +266,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
         {
           type: "button",
           text: "Explore :microscope:",
-          url: "https://data.world/user8/cool-dog-pics/workspace"
+          url: `https://${dwDomain}/user8/cool-dog-pics/workspace`
         },
         {
           name: "subscribe",
@@ -279,7 +280,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
         {
           title: "Files",
           value:
-            "• <https://data.world/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://data.world/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://data.world/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n",
+            `• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n`,
           short: false
         },
         {
