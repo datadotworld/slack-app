@@ -39,7 +39,7 @@
     "build": "react-scripts build",
     "migration": "sequelize-cli db:migrate",
     "test": "jest --notify --forceExit  --clearMocks --detectOpenHandles",
-    "test-with-reporter": "jest --forceExit --ci --reporters=default --reporters=jest-junit",
+    "test-with-reporter": "jest --forceExit --detectOpenHandles --ci --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
