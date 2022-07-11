@@ -535,7 +535,6 @@ const handleMessage = async data => {
   try {
     const { event, team_id } = data;
     const message = event.text ? event.text : "";
-    const dwLinkFormat = /((<https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*>)/i;
     const command = `/${process.env.SLASH_COMMAND}`;
     const ignoredSubTypes = ["bot_message", "message_deleted"];
     const isBotMessage =
