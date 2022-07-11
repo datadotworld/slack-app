@@ -60,8 +60,7 @@ const botBelongsToChannel = async (channelId, botAccessToken) => {
       const imsRes = await slackBot.conversations.list({ types: 'im' });
       return imsRes.channels.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
-      // conversations.list() returns only public channels by default
-      const channelsRes = await slackBot.conversations.list();
+      const channelsRes = await slackBot.conversations.list({ types: 'public_channel,private_channel' });
       return channelsRes.channels.some(
         channel => channel.id === channelId && channel.is_member
       );
@@ -118,7 +117,7 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
           }
         ]
       });*/
-      slackBot.chat.postMessage({ channel: dmChannelId, text : "welcome", attachments: [
+      slackBot.chat.postMessage({ channel: dmChannelId, text : "", attachments: [
         {
           color: "#355D8A",
           text:
@@ -200,7 +199,7 @@ const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUs
       ]
 		}]
     
-    await slackBot.chat.postEphemeral({channel : channelId, user : slackUserId, blocks : blocks, text : "authmessage5", 
+    await slackBot.chat.postEphemeral({channel : channelId, user : slackUserId, blocks : blocks, text : "", 
     });
   } catch (error) {
     console.error("SendAuthRequiredMessage failed : ", error);
@@ -301,7 +300,7 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
     
   ];
 
-  await slackBot.chat.postMessage({channel : dmChannelId, text : "association", blocks : blocks /*attachments : { attachments }*/});
+  await slackBot.chat.postMessage({channel : dmChannelId, text : "", blocks : blocks /*attachments : { attachments }*/});
 };
 
 const deleteSlackMessage = async (botAccessToken, channel, ts) => {
