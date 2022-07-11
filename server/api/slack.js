@@ -225,7 +225,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
       // Fallback to slack default style of requesting auth for unfurl action.
       const slackWebApi = new SlackWebClient(teamAccessToken);
       const opts = { user_auth_required: true, user_auth_url: associationUrl }
-      await slackWebApi.chat.unfurl(messageTs, channel, {}, opts) // With opts, this will prompt user to authenticate using the association Url above.
+      await slackWebApi.chat.unfurl({ts : messageTs, channel : channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
     } else {
       const attachments = [
         {
