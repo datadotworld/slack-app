@@ -35,7 +35,7 @@ const slack = require("../api/slack");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 const dwDomain = helper.DW_DOMAIN;
 
-//const dwLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
+//const dwLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
 //const insightLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 //const queryLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
 
@@ -535,11 +535,16 @@ const handleMessage = async data => {
   try {
     const { event, team_id } = data;
     const message = event.text ? event.text : "";
+    const dwLinkFormat = new RegExp(
+      `(<https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*>`,
+      "i"
+    );
     const command = `/${process.env.SLASH_COMMAND}`;
     const ignoredSubTypes = ["bot_message", "message_deleted"];
     const isBotMessage =
       event.bot_id ||
       (event.subtype && ignoredSubTypes.includes(event.subtype));
+      console.log("event message", event.bot_id, event.subtype,  dwLinkFormat.test(message), message.startsWith(command))
     if (
       isBotMessage ||
       dwLinkFormat.test(message) ||
@@ -601,6 +606,7 @@ const unfurl = {
     res.json({ response_type: "in_channel" });
     const event = req.body.event;
     const serverBaseUrl = helper.getServerBaseUrl(req);
+    console.log("unfurl event", event);
     switch (event.type) {
       case "link_shared":
         await handleLinkSharedEvent(event, req.body.team_id, serverBaseUrl);

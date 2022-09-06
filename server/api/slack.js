@@ -227,7 +227,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
       const opts = { user_auth_required: true, user_auth_url: associationUrl }
       await slackWebApi.chat.unfurl({ts : messageTs, channel : channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
     } else {
-      const attachments = [
+      /*const attachments = [
         {
           color: "#355D8A",
           text: `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`,
@@ -247,8 +247,37 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
             }
           ]
         }
-      ];
-      await slackBot.chat.postEphemeral({channel : channel, user : slackUserId, text : "unfurl", attachments : { attachments }});
+      ];*/
+      const blocks = [{
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `Hi there! Linking your data.world account to Slack will make it possible to use \`/${commandText}\` commands and to show a rich preview for data.world links. You only have to do this once.\n*Would you like to set it up?*`
+        }
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Connect data.world account",
+            },
+            "url": `${associationUrl}`
+          },
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Dismiss"
+            },
+            "value": `${nonce}`
+          }
+        ]
+      }]
+      await slackBot.chat.postEphemeral({channel : channel, user : slackUserId, text : "", blocks : blocks});
     }
   } catch (error) {
     console.error("Failed to send begin unfurl message to slack : ", error);
