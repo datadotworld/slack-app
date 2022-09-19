@@ -65,6 +65,7 @@ const getNewDatasetAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
+  console.log("getNewDatasetAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -154,7 +155,60 @@ const getNewDatasetAttachment = (
     attachment.fields = fields;
   }
 
-  return attachment;
+  //return attachment;
+  let datasetDescription = dataset.description || "_No Description_"
+
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+          "type": "mrkdwn",
+          "text": `${slackUserMentionText} created a *new dataset*\n\n*<${event.links.web.dataset}|${dataset.title}>*\n${datasetDescription}\n${fields[0].title}\n${fields[0].value}\n`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/dataset.png`,
+          "alt_text": "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore :microscope:",
+          },
+          "url": `${event.links.web.dataset}/workspace`
+        },
+        {
+          "type": "button",
+          "style": "primary",
+          "text": {
+            "type": "plain_text",
+            "text": "Subscribe"
+          },
+          "value": `${resourceId}`
+        }
+      ]
+    }]
+  
+    return blocks;
 };
 
 const getLinkedDatasetAttachment = (
@@ -165,6 +219,7 @@ const getLinkedDatasetAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
+  console.log("getLinkedDatasetAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -194,25 +249,57 @@ const getLinkedDatasetAttachment = (
     mrkdwn_in: ["text", "pretext", "fields"]
   };
 
-  const fields = [];
+  //const fields = [];
+  let fieldValue = "";
 
   const tags = dataset.tags;
   if (!lang.isEmpty(tags)) {
-    let fieldValue = "";
+    
     collection.forEach(tags, tag => {
       fieldValue += `\`${tag}\` `;
     });
-    fields.push({
+    /*fields.push({
       value: fieldValue,
       short: false
-    });
+    });*/
   }
 
-  if (!lang.isEmpty(fields)) {
+  /*if (!lang.isEmpty(fields)) {
     attachment.fields = fields;
-  }
+  }*/
 
-  return attachment;
+  //return attachment;
+  let datasetDescription = dataset.description || "_No Description_"
+
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+          "type": "mrkdwn",
+          "text": `${slackUserMentionText} linked a *dataset* to a *project*\n\n*<${event.links.web.actor}|${event.actor}>*\n<${event.links.web.project}/workspace|${dataset.title}>\n${datasetDescription}\n${fieldValue}\n`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": `${serverBaseUrl}/assets/link_dataset.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+        }
+      ]
+    }]
+  
+    return blocks;
 };
 
 const getNewProjectAttachment = (
@@ -224,6 +311,7 @@ const getNewProjectAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
+  console.log("getNewProjectAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -334,7 +422,61 @@ const getNewProjectAttachment = (
     attachment.fields = fields;
   }
 
-  return attachment;
+  //return attachment;
+  let projectDescription = project.objective || "_No Description_"
+
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+          "type": "mrkdwn",
+          "text": `${slackUserMentionText} created a *new project*\n\n*<${event.links.web.project}|${project.title}>*\n${projectDescription}\n${fields[0].title}\n${fields[0].value}\n`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "project"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore :microscope:",
+          },
+          "url": `${event.links.web.dataset}/workspace`
+        },
+        {
+          "type": "button",
+          "style": "primary",
+          "action_id": "dataset_subscribe_button",
+          "text": {
+            "type": "plain_text",
+            "text": "Subscribe"
+          },
+          "value": `${resourceId}`
+        }
+      ]
+    }]
+  
+    return blocks;
 };
 
 const getNewInsightAttachment = (
@@ -345,6 +487,7 @@ const getNewInsightAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
+  console.log('getNewInsightAttachment')
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -357,7 +500,7 @@ const getNewInsightAttachment = (
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
 
-  const attachment = {
+  /* const attachment = {
     fallback: `${dwActorId} shared a new insight`,
     pretext: `${slackUserMentionText} shared a *new insight*`,
     author_name: event.actor,
@@ -382,9 +525,54 @@ const getNewInsightAttachment = (
         }`
       }
     ]
-  };
+  }; */
 
-  return attachment;
+  //return attachment;
+
+  const blocks = [
+  {
+    "type": "section",
+    "text": {
+        "type": "mrkdwn",
+        "text": `${slackUserMentionText} shared a *new insight*\n\n*<${event.links.web.actor}|${event.actor}>*\n<${event.links.web.insight}|${insight.title}>\n${insight.title}`
+    },
+    "accessory": {
+      "type": "image",
+      "image_url": `${serverBaseUrl}/assets/insight.png`,
+      "alt_text": "insight"
+    }
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "image",
+        "image_url": `${serverBaseUrl}/assets/project.png`,
+        "alt_text": "project"
+      },
+      {
+        "type": "mrkdwn",
+        "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+      }
+    ]
+  },
+  {
+    "type": "actions",
+    "elements": [
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "Discuss :left_speech_bubble:",
+        },
+        "url": `https://${dwDomain}/${params.owner}/${params.datasetId}/insights/${
+          insight.id
+        }`
+      }
+    ]
+  }]
+
+  return blocks;
 };
 
 const getFileUploadAttachment = (
@@ -396,6 +584,7 @@ const getFileUploadAttachment = (
   isProjectFiles,
   serverBaseUrl
 ) => {
+  console.log('getFileUploadAttachment')
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -416,7 +605,7 @@ const getFileUploadAttachment = (
     fileCount > 1
       ? `${dwActorId} uploaded *${fileCount} files*`
       : `${dwActorId} uploaded *a file*`;
-  const attachment = {
+  /*const attachment = {
     fallback: fallback,
     pretext: pretext,
     color: isProjectFiles ? "#F6BD68" : "#5CC0DE", // changes if it's project file upload
@@ -429,9 +618,9 @@ const getFileUploadAttachment = (
       : `${serverBaseUrl}/assets/dataset.png`, // changes if it's project file upload
     ts: ts,
     mrkdwn_in: ["pretext", "fields"]
-  };
+  };*/
 
-  const fields = [];
+  //const fields = [];
   let fieldValue = "";
 
   collection.forEach(files, file => {
@@ -442,15 +631,47 @@ const getFileUploadAttachment = (
     )})_\n`;
   });
 
-  fields.push({
+  /*fields.push({
     title: fileCount > 1 ? "Files Uploaded" : "File Uploaded",
     value: fieldValue,
     short: false
   });
 
-  attachment.fields = fields;
+  attachment.fields = fields;*/
 
-  return attachment;
+  //return attachment;
+  const blocks = [
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text":  fileCount > 1 ? `${dwActorId} uploaded *${fileCount} files*\n\n*Files Uploaded*\n\n${fieldValue}` : `${dwActorId} uploaded *a file*\n\n*File Uploaded*\n\n${fieldValue}` 
+    },
+    "accessory": {
+      "type": "image",
+      "image_url": isProjectFiles
+      ? `${serverBaseUrl}/assets/file_upload_project.png`
+      : `${serverBaseUrl}/assets/file_upload_dataset.png`,
+      "alt_text": isProjectFiles ? "file upload project" : "file upload dataset"
+    }
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "image",
+        "image_url": isProjectFiles
+        ? `${serverBaseUrl}/assets/project.png`
+        : `${serverBaseUrl}/assets/dataset.png`,
+        "alt_text": isProjectFiles ? "project" : "dataset"
+      },
+      {
+        "type": "mrkdwn",
+        "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+      }
+    ]
+  }]
+  return blocks;
 };
 
 const extractResouceIdFromWebLink = (webLink, action) => {
@@ -679,7 +900,7 @@ const handleFileEvents = async (
     }
   });
 
-  const attachment = getFileUploadAttachment(
+  const block = getFileUploadAttachment(
     params,
     files,
     event,
@@ -688,7 +909,7 @@ const handleFileEvents = async (
     isProjectFiles,
     serverBaseUrl
   );
-  sendEventToSlack(channelIds, attachment);
+  sendEventToSlack(channelIds, block);
 };
 
 const sendEventToSlack = async (channelIds, attachment) => {
@@ -699,9 +920,17 @@ const sendEventToSlack = async (channelIds, attachment) => {
   });
 };
 
+
 const sendSlackMessage = async (channelId, attachment, teamId) => {
   const token = await getBotAccessTokenForTeam(teamId)
-  slack.sendMessageWithAttachments(token, channelId, [attachment]);
+  //slack.sendMessageWithAttachments(token, channelId, [attachment]);
+  slack.sendMessageWithBlocks(token, channelId, attachment);
+};
+
+const sendSlackMessage1 = async (channelId, text, block, teamId) => {
+  const token = await getBotAccessTokenForTeam(teamId)
+  //slack.sendMessageWithAttachments(token, channelId, [attachment]);
+  slack.sendMessageWithBlocks(token, channelId, text, attachment);
 };
 
 const webhook = {

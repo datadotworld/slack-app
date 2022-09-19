@@ -90,6 +90,7 @@ const oauthAccess = code => {
 };
 
 const sendResponse = (responseUrl, data) => {
+  console.log("slack sendResponse", responseUrl, data)
   return axios.post(responseUrl, data, { headers });
 };
 
@@ -117,21 +118,26 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
           }
         ]
       });*/
-      slackBot.chat.postMessage({ channel: dmChannelId, text : "", attachments: [
-        {
-          color: "#355D8A",
-          text:
-            "You've successfully installed data.world on this Slack workspace :tada: \n" +
-            "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
-            `• _/${commandText} subscribe account_ \n` +
-            `• _/${commandText} subscribe dataset_url_ \n` +
-            `• _/${commandText} subscribe project_url_`
-        },
-        {
-          color: "#68BF70",
-          text: `Looking for additional help? Try \`/${commandText} help\``
+      const blocks = [{
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "You've successfully installed data.world on this Slack workspace :tada: \n" +
+          "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
+          `• _/${commandText} subscribe account_ \n` +
+          `• _/${commandText} subscribe dataset_url_ \n` +
+          `• _/${commandText} subscribe project_url_`
         }
-      ] });
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `Looking for additional help? Try \`/${commandText} help\``
+      }
+    }]
+      
+      slackBot.chat.postMessage({ channel: dmChannelId, text : "You've successfully installed data.world on this Slack workspace", blocks: blocks});
     } else {
       console.warn("Unable to start Bot DM chat with user.");
     }
@@ -199,7 +205,7 @@ const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUs
       ]
 		}]
     
-    await slackBot.chat.postEphemeral({channel : channelId, user : slackUserId, blocks : blocks, text : "", 
+    await slackBot.chat.postEphemeral({channel : channelId, user : slackUserId, blocks : blocks, text : "Connect data.world account", 
     });
   } catch (error) {
     console.error("SendAuthRequiredMessage failed : ", error);
@@ -277,7 +283,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
           }
         ]
       }]
-      await slackBot.chat.postEphemeral({channel : channel, user : slackUserId, text : "", blocks : blocks});
+      await slackBot.chat.postEphemeral({channel : channel, user : slackUserId, text : "Link your data.world account to Slack", blocks : blocks});
     }
   } catch (error) {
     console.error("Failed to send begin unfurl message to slack : ", error);
@@ -289,7 +295,7 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
   const botResponse = await slackBot.conversations.open({ users: slackUserId });
   const dmChannelId = botResponse.channel.id;
   const commandText = process.env.SLASH_COMMAND;
-  const attachments = [
+  /*const attachments = [
     {
       color: "#355D8A",
       text:
@@ -303,7 +309,7 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
       color: "#68BF70",
       text: `Looking for additional help? Try \`/${commandText} help\``
     }
-  ];
+  ];*/
 
   const blocks = [
     {
@@ -329,7 +335,7 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
     
   ];
 
-  await slackBot.chat.postMessage({channel : dmChannelId, text : "", blocks : blocks /*attachments : { attachments }*/});
+  await slackBot.chat.postMessage({channel : dmChannelId, text : "Thanks for completing authentication", blocks : blocks /*attachments : { attachments }*/});
 };
 
 const deleteSlackMessage = async (botAccessToken, channel, ts) => {
@@ -396,7 +402,7 @@ const sendMessageWithBlocks = async (botAccessToken, channelId, blocks) => {
   await slackBot.chat.postMessage({
     channel: channelId,
     text: "",
-    blocks
+    blocks: blocks
   });
 }
 
