@@ -25,9 +25,9 @@ const LINKED_DATASET_LIMIT = 5;
 const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
   process.env.DW_CLIENT_ID
 }&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
-const DW_DOMAIN = "ddw-corewebapp.dev.data.world";
+const DW_DOMAIN = process.env.DW_DOMAIN || "data.world";
 
-console.log("helper DW_AUTH_URL", DW_AUTH_URL);
+console.log("helper DW_AUTH_URL", DW_AUTH_URL, DW_DOMAIN);
 
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
