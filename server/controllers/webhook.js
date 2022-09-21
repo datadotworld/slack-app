@@ -65,7 +65,6 @@ const getNewDatasetAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
-  console.log("getNewDatasetAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -190,7 +189,6 @@ const getLinkedDatasetAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
-  console.log("getLinkedDatasetAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -254,7 +252,6 @@ const getNewProjectAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
-  console.log("getNewProjectAttachment")
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -398,7 +395,6 @@ const getNewInsightAttachment = (
   actorSlackId,
   serverBaseUrl
 ) => {
-  console.log('getNewInsightAttachment')
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -465,7 +461,6 @@ const getFileUploadAttachment = (
   isProjectFiles,
   serverBaseUrl
 ) => {
-  console.log('getFileUploadAttachment')
   const offset = moment(
     event.timestamp,
     "YYYY-MM-DDTHH:mm:ss.SSSSZ"
@@ -549,7 +544,6 @@ const handleDatasetEvent = async (
   try {
     // Fetch necessary DW resources
     const isProject = event.links.web.project ? true : false; // check type.
-    console.log("handleDatasetEvent", event.links.web.project);
     const params = helper.extractDatasetOrProjectParamsFromLink(
       event.links.web.project || event.links.web.dataset
     );
@@ -685,7 +679,6 @@ const handleInsightEvent = async (
   actorSlackId,
   serverBaseUrl
 ) => {
-  console.log("insight event")
   const params = helper.extractDatasetOrProjectParamsFromLink(
     event.links.web.project
   );

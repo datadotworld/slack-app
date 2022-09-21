@@ -32,7 +32,6 @@ const Op = Sequelize.Op;
 const slackOauth = (req, res) => {
   // When a user authorizes an app, a code query parameter is passed on the oAuth endpoint.
   // If that code is not there, we respond with an error message
-  //console.log("oauth req", req.query)
   const baseUrl = `${req.protocol}://${req.get("host")}`;
   if (!req.query.code) {
     return res.redirect(`${baseUrl}/failed`);
@@ -43,7 +42,6 @@ const slackOauth = (req, res) => {
   slack
     .oauthAccess(req.query.code)
     .then(async response => {
-      //console.log("slack oauth response", response.data)
       // create team with returned data
       const [team, created] = await Team.findOrCreate({
         where: { teamId: response.data.team.id },
@@ -222,9 +220,7 @@ const completeSlackAssociation = async (req, res) => {
       // redirect to success / homepage
       const user = await User.findOne({ where: { nonce: nonce } });
       if (user) {
-        console.log("get user", user);
         const dwUserResponse = await dataworld.getActiveDWUser(token);
-        console.log("get user1", user);
         await user.update(
           {
             dwAccessToken: token,
@@ -250,7 +246,6 @@ const completeSlackAssociation = async (req, res) => {
       }
     }
   } catch (error) {
-    console.log("get user1", error);
     //console.error(error);
     return res.status(500).send("Slack association failed.");
   }

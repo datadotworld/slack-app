@@ -472,7 +472,6 @@ const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
 };
 
 const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
-  console.log("getQueryAttachment", serverBaseUrl);
   const ts = getTimestamp(query);
   const isSql = query.language === "SQL";
   const blocks = [
@@ -539,9 +538,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
 
         const botToken = await getBotAccessTokenForTeam(team.teamId);
-        console.log("botToken", botToken, team);
 
-        console.log("handleLinkSharedEvent event", event.links)
         Promise.all(
           event.links.map(
             messageAttachmentFromLink.bind(
@@ -553,13 +550,11 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
           )
         )
           // Transform the array of attachments to an unfurls object keyed by URL
-          .then(attachments => { console.log("handleLinkSharedEvent attachments", attachments); return collection.keyBy(attachments, "url") }) // group by url
-          .then(unfurls => {
-            console.log("handleLinkSharedEvent unfurls", unfurls);
-            return object.mapValues(unfurls, attachment =>
+          .then(attachments => collection.keyBy(attachments, "url")) // group by url
+          .then(unfurls => 
+            object.mapValues(unfurls, attachment =>
               object.omit(attachment, "url")
             )
-          }
           ) // remove url from attachment object
           // Invoke the Slack Web API to append the attachment
           .then(unfurls =>
@@ -632,7 +627,6 @@ const handleMessage = async data => {
     const isBotMessage =
       event.bot_id ||
       (event.subtype && ignoredSubTypes.includes(event.subtype));
-    console.log("event message", event.bot_id, event.subtype, dwLinkFormat.test(message), message.startsWith(command))
     if (
       isBotMessage ||
       dwLinkFormat.test(message) ||
@@ -695,7 +689,6 @@ const unfurl = {
     res.json({ response_type: "in_channel" });
     const event = req.body.event;
     const serverBaseUrl = helper.getServerBaseUrl(req);
-    console.log("unfurl event", event);
     switch (event.type) {
       case "link_shared":
         await handleLinkSharedEvent(event, req.body.team_id, serverBaseUrl);

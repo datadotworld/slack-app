@@ -677,7 +677,6 @@ const showHelp = async responseUrl => {
 };
 
 const handleButtonAction = async (payload, action, user) => {
-  console.log('handleButtonAction', payload, action)
   if (action.action_id === "dataset_subscribe_button") {
     await subscribeToProjectOrDataset(
       payload.user.id,
@@ -688,14 +687,9 @@ const handleButtonAction = async (payload, action, user) => {
     );
 
     if (payload.container.is_app_unfurl) {
-      console.log("payload.app_unfurl.blocks", payload.app_unfurl.blocks)
-      var result = payload.app_unfurl.blocks.find(t => t.type === 'actions').elements;
-      console.log("results", result);
       array.remove(payload.app_unfurl.blocks.find(t => t.type === 'actions').elements, element => {
         return element.action_id === "dataset_subscribe_button";
       });
-      var result1 = payload.app_unfurl.blocks.find(t => t.type === 'actions').elements;
-      console.log("results1", result1);
       // update unfurl attachment
       sendSlackAttachment(payload.response_url, payload.app_unfurl.blocks);
     } else {
@@ -728,7 +722,6 @@ const handleButtonAction = async (payload, action, user) => {
 };
 
 const handleMenuAction = async (payload, action, user) => {
-  console.log('handleMenuAction', payload, action)
   if (action.action_id === "unsubscribe_menu") {
     const value = action.selected_option.value;
     if (value.includes("/")) {
@@ -773,7 +766,6 @@ const performAction = async (req, res) => {
     return;
   }
   const payload = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
-  console.log("performAction payload", payload)
   try {
     if (payload.callback_id === "auth_required_message") {
       // Handle auth_required_message dismiss button action
@@ -806,7 +798,6 @@ const performAction = async (req, res) => {
     }
 
     collection.forEach(payload.actions, async action => {
-      console.log('action_type', action.type)
       if (action.type === "button") {
         await handleButtonAction(payload, action, user);
       } else if (action.type === "static_select") {

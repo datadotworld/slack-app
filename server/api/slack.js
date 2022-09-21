@@ -74,14 +74,11 @@ const botBelongsToChannel = async (channelId, botAccessToken) => {
 };
 
 const oauthAccess = code => {
-
   const params = {
     code: code,
     client_id: process.env.SLACK_CLIENT_ID,
     client_secret: process.env.SLACK_CLIENT_SECRET
   };
-
-  console.log("ouathacess param", params)
 
   return axios.get("https://slack.com/api/oauth.v2.access", {
     headers,
@@ -90,7 +87,6 @@ const oauthAccess = code => {
 };
 
 const sendResponse = (responseUrl, data) => {
-  console.log("slack sendResponse", responseUrl, data)
   return axios.post(responseUrl, data, { headers });
 };
 
@@ -132,10 +128,8 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
 const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUserId) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
-    console.log("association url", associationUrl);
     const commandText = process.env.SLASH_COMMAND;
     const slackBot = new SlackWebClient(botAccessToken);
-    console.log("here", botAccessToken)
     const blocks = [{
       "type": "section",
       "text": {
@@ -299,7 +293,6 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
 };
 
 const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
-  console.log("sendUnfurlAttachments", ts, channel, unfurls, teamAccessToken)
   const slackTeam = new SlackWebClient(teamAccessToken);
   slackTeam.chat.unfurl({ts : ts, channel : channel, unfurls : unfurls});
 };

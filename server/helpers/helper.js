@@ -27,8 +27,6 @@ const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
 }&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
 const DW_DOMAIN = process.env.DW_DOMAIN || "data.world";
 
-console.log("helper DW_AUTH_URL", DW_AUTH_URL, DW_DOMAIN);
-
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
   const parts = command.split(" ");
@@ -43,21 +41,12 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
 
 const extractDatasetOrProjectParamsFromLink = link => {
   let params = {};
-  //link = "https://data.world/dwslacktest/test-project"
-  //link = "https://data.world/dwslacktest/basketball-stats"
-  //link = "https://ddw-corewebapp.dev.data.world/dwslacktest/basketball-stats"
-  console.log("extractDatasetOrProjectParamsFromLink link", link);
-  //const cleanLink = link.replace(/(https\:\/\/ddw-corewebapp.dev.data.world\/|)/g, "");
   const cleanLink = link.replace(/(^.*\:\/\/[^\/]+\/)/g, '');
   const pathNames = cleanLink.split("/");
-  console.log("extractDatasetOrProjectParamsFromLink link", link, link);
-  console.log("extractDatasetOrProjectParamsFromLink cleanLink", cleanLink);
   
-
   params.owner = pathNames[0];
   params.datasetId = pathNames[1];
   params.link = link;
-  console.log("extractDatasetOrProjectParamsFromLink params",params.owner,  params.datasetId, params.link);
 
   return params;
 };
@@ -109,8 +98,6 @@ const extractIdFromLink = link => {
 };
 
 const cleanSlackLinkInput = link => {
-  console.log("cleanSlackLinkInput12", link, link.replace(/(<.*\:\/\/[^\/]+\/|>)/g, ""));
-  
   return link.replace(/(<.*\:\/\/[^\/]+\/|>)/g, "");
 };
 
