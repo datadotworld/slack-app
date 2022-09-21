@@ -60,7 +60,7 @@ describe("POST /api/v1/command/ - Process slash command", () => {
 });
 
 describe("POST /api/v1/command/action - Process an action", () => {
-  const menu_action_payload = `{
+  /*const menu_action_payload = `{
     \"type\":\"interactive_message\",
     \"actions\":[{
       \"name\":\"subscription_list\",
@@ -89,9 +89,61 @@ describe("POST /api/v1/command/action - Process an action", () => {
     \"is_app_unfurl\":false,
     \"response_url\":\"https:\/\/hooks.slack.com\/actions\/TAZ5ZUB7D\/398173347970\/hFb2X8rFRzthYQl9QGrpdc0C\",
     \"trigger_id\":\"397616350305.373203963251.0f5e6875d7a8b384db606cd9d9f6b7dc\"
-  }`;
+  }`;*/
 
-  const button_action_payload = `{
+  const menu_action_payload = `{
+    \"type\": \"block_actions\",
+    \"user\": {
+      \"id\": \"U03M7594GTT\",
+      \"username\": \"dwslacktest\",
+      \"name\": \"dwslacktest\",
+      \"team_id\": \"T03LUDRTG3V\"
+    },
+    \"api_app_id\": \"A042EJVBFB6\",
+    \"token\": \"wR3FggQmBpAcrywHrwTrx59a\",
+    \"container\": {
+      \"type\": \"message\",
+      \"message_ts\": \"1663729514.001000\",
+      \"channel_id\": \"C03LDTMQG23\",
+      \"is_ephemeral\": \"true\"
+    },
+    \"trigger_id\": \"4112714566084.3708467934131.1d103a241c81092538bed404e2c63212\",
+    \"team\": { \"id\": \"T03LUDRTG3V\", \"domain\": \"dwslacktest\" },
+    \"enterprise\": \"null\",
+    \"is_enterprise_install\": \"false\",
+    \"channel\": { \"id\": \"C03LDTMQG23\", \"name\": \"dwslackapp\" },
+    \"state\": { \"values\": { \"subscription_list\": \"[Object]\" } },
+    \"response_url\": \"https://hooks.slack.com/actions/T03LUDRTG3V/4107305713189/RAa8f6zHZ1ZGkk0862hECt6S\",
+    \"actions\": [
+      {
+        \"confirm\":  {
+          \"title\": { \"type\": \"plain_text\", \"text\": \"Confirm\", \"emoji\": \"true\" },
+          \"text\": {
+            \"type\": \"mrkdwn\",
+            \"text\": \"Are you sure you want to unsubscribe from selected resource ?\",
+            \"verbatim\": \"false\"
+          },
+          \"confirm\": { \"type\": \"plain_text\", \"text\": \"Yes\", \"emoji\": \"true\" },
+          \"deny\": { \"type\": \"plain_text\", \"text\": \"No\", \"emoji\": \"true\" }
+        },
+        \"type\": \"static_select\",
+        \"action_id\": \"unsubscribe_menu\",
+        \"block_id\": \"subscription_list\",
+        \"selected_option\": {
+          \"text\": {
+            \"type\": \"plain_text\",
+            \"text\": \"dwslacktest/basketball-stats\",
+            \"emoji\": \"true\"
+          },
+          \"value\": \"dwslacktest/basketball-stats\"
+        },
+        \"placeholder\": { \"type\": \"plain_text\", \"text\": \"Unsubscribe from...\", \"emoji\": \"true\" },
+        \"action_ts\": \"1663729544.210697\"
+      }
+    ]
+  }`
+
+  /*const button_action_payload = `{
     \"type\":\"interactive_message\",
     \"actions\":[{
       \"name\":\"subscribe\",
@@ -165,6 +217,108 @@ describe("POST /api/v1/command/action - Process an action", () => {
     ]},
     \"response_url\":\"https:\\\/\\\/hooks.slack.com\\\/actions\\\/TAZ5ZUB7D\\\/400690536912\\\/hbVIN3Xo97Hh0mDG0e2wQoZ4\",
     \"trigger_id\":\"402725352246.373203963251.50f933b0da72e4cb4becec2d8c101ea2\"
+  }`;*/
+
+  const button_action_payload = `{
+    \"type\": \"block_actions\",
+    \"user\": {
+      \"id\": \"U03M7594GTT\",
+      \"username\": \"dwslacktest\",
+      \"name\": \"dwslacktest\",
+      \"team_id\": \"T03LUDRTG3V\"
+    },
+    \"api_app_id\": \"A042EJVBFB6\",
+    \"token\": \"wR3FggQmBpAcrywHrwTrx59a\",
+    \"container\": {
+      \"type\": \"message_attachment\",
+      \"message_ts\": \"1663729379.208379\",
+      \"attachment_id\": \"1\",
+      \"channel_id\": \"C03LDTMQG23\",
+      \"is_ephemeral\": \"false\",
+      \"is_app_unfurl\": \"true\",
+      \"app_unfurl_url\": \"https:\\\/\\\/${dwDomain}\\\/dwslacktest/basketball-stats\"
+    },
+    \"trigger_id\": \"4103647075574.3708467934131.fe9571f3f336211dd116b857cc06c22b\",
+    \"team\": { \"id\": \"T03LUDRTG3V\", \"domain\": \"dwslacktest\" },
+    \"enterprise\": \"null\",
+    \"is_enterprise_install\": \"false\",
+    \"channel\": { \"id\": \"C03LDTMQG23\", \"name\": \"dwslackapp\" },
+    \"app_unfurl\": {
+      \"id\": \"1\",
+      \"blocks\": [
+        {
+          \"type\": \"section\",
+          \"block_id\": \"JIQy\",
+          \"text\": {
+            \"type\": \"mrkdwn\",
+            \"text\": \"<https:\\\/\\\/${dwDomain}\\\/dwslacktest/basketball-stats|basketball-stats>\\\\n\",
+            \"verbatim\": \"false\"
+          },
+          \"accessory\": {
+            \"type\": \"image\",
+            \"image_url\": \"https://nowhere.com/assets/avatar.png\",
+            \"alt_text\": \"avatar\"
+          }
+        },
+        {
+          \"type\": \"context\",
+          \"block_id\": \"CWca\",
+          \"elements\": [
+            {
+              \"type\": \"image\",
+              \"image_url\": \"https://nowhere.com/assets/dataset.png\",
+              \"alt_text\": \"dataset\"
+            },
+            {
+              \"type\": \"mrkdwn\",
+              \"text\": \"<!date^1531955022^dwslacktest/basketball-stats  {date_short_pretty} at {time}|dwslacktest/basketball-stats>\"
+            }
+          ]
+        },
+        {
+          \"type\": \"actions\",
+          \"block_id\": \"J0W\",
+          \"elements\": [
+            {
+              \"type\": \"button\",
+              \"text\": {
+                \"type\": \"plain_text\",
+                \"text\": \"Explore :microscope:\"
+              },
+              \"url\": \"https:\\\/\\\/${dwDomain}\\\/dwslacktest/basketball-stats/workspace\"
+            },
+            {
+              \"type\": \"button\",
+              \"action_id\": \"dataset_subscribe_button\",
+              \"style\": \"primary\",
+              \"text\": {
+                \"type\": \"plain_text\",
+                \"text\": \"Subscribe\"
+              },
+              \"value\": \"dwslacktest/basketball-stats\"
+            }
+          ]
+        }
+      ],
+      \"fallback\": \"[no preview available]\",
+      \"bot_id\": \"B042C3DU8RZ\",
+      \"app_unfurl_url\": \"https:\\\/\\\/${dwDomain}\\\/dwslacktest/basketball-stats\",
+      \"is_app_unfurl\": \"true\",
+      \"app_id\": \"A042EJVBFB6\"
+    },
+    \"state\": { \"values\": {} },
+    \"response_url\": \"https://hooks.slack.com/actions/T03LUDRTG3V/4110167256019/6kjH1Xm5leOHkTN6JdzJVsLs\",
+    \"actions\": [
+      {
+        \"action_id\": \"dataset_subscribe_button\",
+        \"block_id\": \"HFVZf\",
+        \"text\":  { \"type\": \"plain_text\", \"text\": \"Subscribe\", \"emoji\": \"true\" },
+        \"value\": \"dwslacktest/basketball-stats\",
+        \"style\": \"primary\",
+        \"type\": \"button\",
+        \"action_ts\": \"1663729406.461872\"
+      }
+    ]
   }`;
 
   it("should pass slack ssl_check", done => {
@@ -181,7 +335,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
   it("should perform dataset unsubscribe menu action for associated user in know channel", done => {
     const payloadObject = JSON.parse(menu_action_payload);
     const action = payloadObject.actions[0];
-    const resourceId = action.selected_options[0].value;
+    const resourceId = action.selected_option.value;
     const data = resourceId.split("/");
     const dwDatasetId = data.pop();
     const teamId = "teamId";
@@ -307,8 +461,8 @@ describe("POST /api/v1/command/action - Process an action", () => {
         expect(slack.sendResponse).toBeCalledWith(
           payloadObject.response_url,
           {
-            delete_original: false, 
-            replace_original: false, 
+            delete_original: false,
+            replace_original: false,
             text: message
           }
         );

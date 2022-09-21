@@ -179,7 +179,8 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
     const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
-    const team = {  teamId: "teamId", botAccessToken : "accessToken" };
+    const team = { teamId: "teamId", botAccessToken: "accessToken" };
+    const ts = 1522193271;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = {
@@ -207,7 +208,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const serverBaseUrl = `http://127.0.0.1:${port}`;
 
 
-    const expectedAttachment = {
+    /*const expectedAttachment = {
       fallback: "An Example Project that Shows What To Put in data.world",
       color: "#F6BD68",
       title: "An Example Project that Shows What To Put in data.world",
@@ -243,10 +244,62 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
           short: false
         }
       ]
-    };
+    };*/
+
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|An Example Project that Shows What To Put in data.world>\nLinked dataset\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n\nundefined\n\`new feature\` \n`
+        },
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/project.png`,
+            "alt_text": "project"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^kehesjay/actors-proj  {date_short_pretty} at {time}|kehesjay/actors-proj>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/kehesjay/actors-proj/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "kehesjay/actors-proj"
+          }
+        ]
+      }
+    ]
 
     const expectedUnfurlObject = {
-      "https://ddw-corewebapp.dev.data.world/kehesjay/actors-proj": expectedAttachment
+      [`https://${dwDomain}/kehesjay/actors-proj`]: { blocks: expectedBlocks }
     };
 
     agent.expect(200).end((err, res) => {
@@ -265,7 +318,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         dwAgentId,
         dwAccessToken
       );
-      
+
       expect(slack.sendUnfurlAttachments).toBeCalledWith(
         event.message_ts,
         event.channel,
@@ -282,7 +335,8 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
     const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
-    const team = {  teamId: "teamId", botAccessToken : "accessToken" };
+    const team = { teamId: "teamId", botAccessToken: "accessToken" };
+    const ts = 1486421719;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = dwDataset;
@@ -306,7 +360,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
 
-    const expectedAttachment = {
+    /*const expectedAttachment = {
       fallback: "TrumpWorld",
       color: "#5CC0DE",
       title: "TrumpWorld",
@@ -345,12 +399,64 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
           short: false
         }
       ]
-    };
+    };*/
 
-    const expectedUrl = `https://${dwDomain}/kehesjay/actors-proj`
-    
-    const expectedUnfurlObject = {
-      "https://ddw-corewebapp.dev.data.world/kehesjay/actors-proj": expectedAttachment
+    //const expectedUrl = `https://${dwDomain}/kehesjay/actors-proj`
+  
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|TrumpWorld>\nFiles\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n\nundefined\n\`trump\` \`trump world\` \`president\` \`connections\` \`swamp\` \`business network\` \n`
+        },
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/dataset.png`,
+            "alt_text": "dataset"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^kehesjay/actors-proj  {date_short_pretty} at {time}|kehesjay/actors-proj>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/kehesjay/actors-proj/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "kehesjay/actors-proj"
+          }
+        ]
+      }
+    ]
+
+    let expectedUnfurlObject = {
+      [`https://${dwDomain}/kehesjay/actors-proj`]: { blocks: expectedBlocks }
     };
 
     agent.expect(200).end((err, res) => {

@@ -248,6 +248,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
 
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
+    const ts = 1508866583
 
     const expectedAttachment = {
       fallback: "user8 created a new dataset",
@@ -291,6 +292,77 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       ]
     };
 
+    let blockText = `<@slackId> created a *new dataset*\n\n*<https://${dwDomain}/user8/cool-dog-pics|TrumpWorld>*\nTrumpWorld Data\n`
+    const fields = [
+      {
+        title: "Files",
+        value:
+          `• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n`,
+      },
+      {
+        value:
+          "`trump` `trump world` `president` `connections` `swamp` `business network` ",
+      }
+    ]
+
+    if (fields.length > 0) {
+      fields.forEach(field => {
+        blockText += `${field.title}\n${field.value}\n`
+      })
+    }
+
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": blockText
+        },
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/dataset.png`,
+            "alt_text": "dataset"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^user8/cool-dog-pics  {date_short_pretty} at {time}|user8/cool-dog-pics>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/user8/cool-dog-pics/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "user8/cool-dog-pics"
+          }
+        ]
+      }
+    ]
+
     User.findOne = jest
       .fn()
       .mockImplementationOnce(() => Promise.resolve(subscriber))
@@ -301,7 +373,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     dataworld.getDataset = jest.fn(() => Promise.resolve({ data }));
     dataworld.getDWUser = jest.fn(() => Promise.resolve(ownerResponse));
 
-    slack.sendMessageWithAttachments = jest.fn();
+    slack.sendMessageWithBlocks = jest.fn();
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
@@ -314,10 +386,10 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       );
       expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
       expect(Channel.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendMessageWithAttachments).toBeCalledWith(
+      expect(slack.sendMessageWithBlocks).toBeCalledWith(
         botAccessToken,
         channelId,
-        [expectedAttachment]
+        expectedBlocks
       );
       done();
     });
@@ -445,7 +517,7 @@ describe("POST /api/v1/webhook/:webhookId", () => {
       .end((err, res) => {
         if (err) return done(err);
         done();
-        expect(Channel.findAll).toBeCalledWith({ 
+        expect(Channel.findAll).toBeCalledWith({
           where: { webhookId: "mockWebhookId" }
         });
       });

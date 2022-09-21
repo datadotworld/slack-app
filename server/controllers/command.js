@@ -763,6 +763,21 @@ const handleButtonAction = async (payload, action, user) => {
         }
       //});
     //}
+    } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
+      const { requestid, agentid, datasetid } = JSON.parse(action.value);
+      await handleDatasetRequestAction({
+        channelid: payload.channel.id,
+        userid: payload.user.id,
+        triggerid: payload.trigger_id,
+        responseUrl: payload.response_url,
+        message: payload.message,
+        blockid: action.block_id,
+        actionid: action.action_id,
+        requestid,
+        agentid,
+        datasetid,
+        dwAccessToken: user.dwAccessToken
+      });
   } else {
     // unknow action
     console.warn("Unknown action_id in button action event.");
@@ -877,7 +892,7 @@ const performAction = async (req, res) => {
           await handleButtonAction(payload, action, user);
         } else if(action.type === "static_select") {
           await handleMenuAction(payload, action, user);
-        } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
+        } /*else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
           const { requestid, agentid, datasetid } = JSON.parse(action.value);
           await handleDatasetRequestAction({
             channelid: payload.channel.id,
@@ -886,13 +901,13 @@ const performAction = async (req, res) => {
             responseUrl: payload.response_url,
             message: payload.message,
             blockid: action.block_id,
-            actionid,
+            actionid: action.action_id,
             requestid,
             agentid,
             datasetid,
             dwAccessToken: user.dwAccessToken
           });
-        } else {
+        }*/ else {
           console.warn("Unknown action type : ", action.action_id)
         }
       })

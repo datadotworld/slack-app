@@ -398,14 +398,23 @@ describe("Test Auth controller methods", () => {
     const req = { body };
 
     const options = [];
-    options.push({
+    /*options.push({
       text: "resourceId",
       value: "resourceId"
+    });*/
+    options.push({
+      "text": {
+        "type": "plain_text",
+        "text": "resourceId"
+      },
+      "value": "resourceId"
     });
     const message = `*Active Subscriptions*`;
     const dwAccessToken = "dwAccessToken";
 
-    const attachments = [
+
+
+    /*const attachments = [
       {
         color: "#79B8FB",
         text: `• https://${dwDomain}/resourceId \n *created by :* <@user_id> \n`,
@@ -426,7 +435,56 @@ describe("Test Auth controller methods", () => {
           }
         ]
       }
-    ];
+    ];*/
+
+    blocks = [{
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Active Subscriptions*"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": `• https://${dwDomain}/resourceId \n *created by :* <@user_id> \n`
+      }
+    },
+    {
+      "type": "actions",
+      "block_id": "subscription_list",
+      "elements": [
+        {
+          "type": "static_select",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Unsubscribe from..."
+          },
+          "action_id": "unsubscribe_menu",
+          "options": options,
+          "confirm": {
+            "title": {
+              "type": "plain_text",
+              "text": "Confirm"
+            },
+            "text": {
+              "type": "mrkdwn",
+              "text": "Are you sure you want to unsubscribe from selected resource ?"
+            },
+            "confirm": {
+              "type": "plain_text",
+              "text": "Yes"
+            },
+            "deny": {
+              "type": "plain_text",
+              "text": "No"
+            }
+          }
+        }
+      ]
+    }
+    ]
 
     const subscription = {
       slackUserId: "user_id",
@@ -436,7 +494,7 @@ describe("Test Auth controller methods", () => {
 
     const data = {
       text: message,
-      attachments: attachments,
+      blocks: blocks,
       replace_original: false,
       delete_original: false
     };
@@ -525,30 +583,49 @@ describe("Test Auth controller methods", () => {
   it("should build and send help message to slack.", async done => {
     const commandText = process.env.SLASH_COMMAND;
     const message = `Not sure how to use \`/${commandText}\`? Here are some ideas:point_down:`;
-    const attachments = [];
+    //const attachments = [];
     const responseUrl = "response_url";
 
     const commandsInfo = [
-        `_Subscribe to a data.world dataset:_ \n \`/${commandText} subscribe dataset_url\``,
-        `_Subscribe to a data.world project:_ \n \`/${commandText} subscribe project_url\``,
-        `_Subscribe to a data.world account:_ \n \`/${commandText} subscribe account\``,
-        `_Unsubscribe from a data.world dataset:_ \n \`/${commandText} unsubscribe dataset_url\``,
-        `_Unsubscribe from a data.world project:_ \n \`/${commandText} unsubscribe project_url\``,
-        `_Unsubscribe from a data.world account:_ \n \`/${commandText} unsubscribe account\``,
-        `_List active subscriptions._ : \n \`/${commandText} list\``,
-        `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
+      `Not sure how to use \`/${commandText}? Here are some ideas:point_down:`,
+      `_Subscribe to a data.world dataset:_ \n \`/${commandText} subscribe dataset_url\``,
+      `_Subscribe to a data.world project:_ \n \`/${commandText} subscribe project_url\``,
+      `_Subscribe to a data.world account:_ \n \`/${commandText} subscribe account\``,
+      `_Unsubscribe from a data.world dataset:_ \n \`/${commandText} unsubscribe dataset_url\``,
+      `_Unsubscribe from a data.world project:_ \n \`/${commandText} unsubscribe project_url\``,
+      `_Unsubscribe from a data.world account:_ \n \`/${commandText} unsubscribe account\``,
+      `_List active subscriptions._ : \n \`/${commandText} list\``,
+      `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
     ];
 
-    collection.forEach(commandsInfo, value => {
+    /*collection.forEach(commandsInfo, value => {
       attachments.push({
         color: "#355D8A",
         text: value
+      });
+    });*/
+
+    const blocks = [];
+
+    /*collection.forEach(commandsInfo, value => {
+      attachments.push({
+        color: "#355D8A",
+        text: value
+      });
+    });*/
+    collection.forEach(commandsInfo, value => {
+      blocks.push({
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": value
+        }
       });
     });
 
     const data = {
       text: message,
-      attachments: attachments,
+      blocks: blocks,
       replace_original: false,
       delete_original: false
     };

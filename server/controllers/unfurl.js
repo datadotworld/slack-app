@@ -162,17 +162,6 @@ const unfurlDataset = (
   }
 
   const fields = [];
-  const tags = dataset.tags;
-  if (!lang.isEmpty(tags)) {
-    let fieldValue = "";
-    collection.forEach(tags, tag => {
-      fieldValue += `\`${tag}\` `;
-    });
-    fields.push({
-      value: fieldValue,
-      short: false
-    });
-  }
 
   const files = dataset.files;
   if (!lang.isEmpty(files)) {
@@ -199,11 +188,32 @@ const unfurlDataset = (
     });
   }
 
-  if (fields.length > 0) {
-    attachment.fields = fields;
+  const tags = dataset.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
+      short: false
+    });
   }
+
+  /*if (fields.length > 0) {
+    attachment.fields = fields;
+  }*/
   //return attachment;
 
+  //let blockText = `<${params.link}|${dataset.title}>\n${fields[0].title}\n${fields[0].value}\n`
+  let blockText = `<${params.link}|${dataset.title}>\n`
+
+  if (!lang.isEmpty(fields)) {
+    collection.forEach(fields, field => {
+      blockText += `${field.title}\n${field.value}\n`
+    })
+  }
+  
   const actions = {
     "type": "actions",
     "elements": [
@@ -236,7 +246,7 @@ const unfurlDataset = (
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": `<${params.link}|${dataset.title}>\n${fields[0].title}\n${fields[0].value}\n`
+        "text": blockText
       },
       "accessory": {
         "type": "image",
@@ -317,18 +327,6 @@ const unfurlProject = async (
 
     const fields = [];
 
-    const tags = project.tags;
-    if (!lang.isEmpty(tags)) {
-      let fieldValue = "";
-      collection.forEach(tags, tag => {
-        fieldValue += `\`${tag}\` `;
-      });
-      fields.push({
-        value: fieldValue,
-        short: false
-      });
-    }
-
     if (lang.isEmpty(project.linkedDatasets)) {
       const files = project.files;
       if (!lang.isEmpty(files)) {
@@ -375,10 +373,30 @@ const unfurlProject = async (
       });
     }
 
-    if (fields.length > 0) {
-      attachment.fields = fields;
+    const tags = project.tags;
+    if (!lang.isEmpty(tags)) {
+      let fieldValue = "";
+      collection.forEach(tags, tag => {
+        fieldValue += `\`${tag}\` `;
+      });
+      fields.push({
+        value: fieldValue,
+        short: false
+      });
     }
+
+    /*if (fields.length > 0) {
+      attachment.fields = fields;
+    }*/
     //return attachment;
+
+    let blockText = `<${params.link}|${project.title}>\n`
+
+    if (!lang.isEmpty(fields)) {
+      collection.forEach(fields, field => {
+        blockText += `${field.title}\n${field.value}\n`
+      })
+    }
 
     //let projectDescription = project.objective || "_No Description_"
     const actions = {
@@ -398,6 +416,7 @@ const unfurlProject = async (
     if (addSubcribeAction) {
       actions.elements.push({
         "type": "button",
+        "action_id": "dataset_subscribe_button",
         "style": "primary",
         "text": {
           "type": "plain_text",
@@ -412,7 +431,7 @@ const unfurlProject = async (
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": `*<${params.link}|${project.title}>*\n${fields[0].title}\n${fields[0].value}\n`
+          "text": blockText
         },
         "accessory": {
           "type": "image",

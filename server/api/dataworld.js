@@ -77,7 +77,7 @@ const del = (url, token, params) => {
 
 const exchangeAuthCode = code => {
   const requestUrl = `${accessTokenUrl}${code}`;
-  console.log("exchangeauthcode", requestUrl)
+  //console.log("exchangeauthcode", requestUrl)
   return post(requestUrl, {});
 };
 
@@ -99,7 +99,7 @@ const refreshToken = async refreshToken => {
 
 const getActiveDWUser = token => {
   const requestUrl = `${baseUrl}/user`;
-  console.log("getActiveDWUser", token, requestUrl);
+  //console.log("getActiveDWUser", token, requestUrl);
   return get(requestUrl, token);
 };
 
@@ -115,8 +115,8 @@ const getDataset = (id, owner, token) => {
 
 const getProject = (id, owner, token) => {
   const requestUrl = `${baseUrl}/projects/${owner}/${id}`;
-  console.log("getProject url", requestUrl)
-  console.log("getProject id : " ,id, " owner : " ,owner, " token : ", token);
+  //console.log("getProject url", requestUrl)
+  //console.log("getProject id : " ,id, " owner : " ,owner, " token : ", token);
   return get(requestUrl, token);
 };
 
@@ -196,7 +196,7 @@ const verifyDwToken = async token => {
     const res = await get(requestUrl, token);
     return res.data ? true : false;
   } catch (error) {
-    console.error("DW token verification failed : ", error.message);
+    //console.error("DW token verification failed : ", error.message);
     return false;
   }
 };
