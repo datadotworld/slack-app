@@ -60,37 +60,6 @@ describe("POST /api/v1/command/ - Process slash command", () => {
 });
 
 describe("POST /api/v1/command/action - Process an action", () => {
-  /*const menu_action_payload = `{
-    \"type\":\"interactive_message\",
-    \"actions\":[{
-      \"name\":\"subscription_list\",
-      \"type\":\"select\",
-      \"selected_options\":[{
-        \"value\":\"kennyshittu\/test-new-actors-data\"
-      }]
-    }],
-    \"callback_id\":\"unsubscribe_menu\",
-    \"team\":{
-      \"id\":\"TAZ5ZUB7D\",
-      \"domain\":\"dwbotworkspace\"
-    },
-    \"channel\":{
-      \"id\":\"GBPSMFGH2\",
-      \"name\":\"privategroup\"
-    },
-    \"user\":{
-      \"id\":\"UB05RLNS2\",
-      \"name\":\"kehinde.a.shittu\"
-    },
-    \"action_ts\":\"1531487581.307505\",
-    \"message_ts\":\"1531487576.000154\",
-    \"attachment_id\":\"1\",
-    \"token\":\"4ld7Y3ZjWp5gRhi0EcMnqYEV\",
-    \"is_app_unfurl\":false,
-    \"response_url\":\"https:\/\/hooks.slack.com\/actions\/TAZ5ZUB7D\/398173347970\/hFb2X8rFRzthYQl9QGrpdc0C\",
-    \"trigger_id\":\"397616350305.373203963251.0f5e6875d7a8b384db606cd9d9f6b7dc\"
-  }`;*/
-
   const menu_action_payload = `{
     \"type\": \"block_actions\",
     \"user\": {
@@ -142,82 +111,6 @@ describe("POST /api/v1/command/action - Process an action", () => {
       }
     ]
   }`
-
-  /*const button_action_payload = `{
-    \"type\":\"interactive_message\",
-    \"actions\":[{
-      \"name\":\"subscribe\",
-      \"type\":\"button\",
-      \"value\":\"kehesjay\\\/actors-proj\"
-    }],
-    \"callback_id\":\"dataset_subscribe_button\",
-    \"team\":{
-      \"id\":\"TAZ5ZUB7D\",
-      \"domain\":\"dwbotworkspace\"
-    },
-    \"channel\":{
-      \"id\":\"GBRPJRPDH\",
-      \"name\":\"privategroup\"
-    },
-    \"user\":{
-      \"id\":\"UB05RLNS2\",
-      \"name\":\"kehinde.a.shittu\"
-    },
-    \"action_ts\":\"1532002514.131704\",
-    \"message_ts\":\"1532002506.000200\",
-    \"attachment_id\":\"1\",
-    \"token\":\"4ld7Y3ZjWp5gRhi0EcMnqYEV\",
-    \"is_app_unfurl\":true,
-    \"original_message\":{
-      \"attachments\":[{
-        \"callback_id\":\"dataset_subscribe_button\",
-        \"fallback\":\"actors-proj\",
-        \"text\":\"Keep track of nollywood actors project in 2018.\",
-        \"title\":\"actors-proj\",
-        \"footer\":\"kehesjay\\\/actors-proj\",
-        \"id\":\"1\",
-        \"title_link\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\",
-        \"thumb_height\":512,
-        \"thumb_width\":512,
-        \"thumb_url\":\"https:\\\/\\\/cdn.filepicker.io\\\/api\\\/file\\\/XYpHGiLQfKj2tQqH9HwC\",
-        \"footer_icon\":
-        \"https:\\\/\\\/cdn.filepicker.io\\\/api\\\/file\\\/N5PbEQQ2QbiuK3s5qhZr\",
-        \"ts\":1531955022,
-        \"color\":\"F6BD68\",
-        \"fields\":[{
-          \"title\":\"\",
-          \"value\":\"\`actors\` \`data\` \`test\` \",
-          \"short\":false
-        },
-        {
-          \"title\":\"Linked datasets\",
-          \"value\":\"\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=proj4test|proj_4_test>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=cool-data|cool-data>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=nolly-dataset|nolly dataset>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-new-data|test-new-data>\\n\\u2022 <https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\\\/dataset?datasetid=test-cdi|test cdi>\\n<https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj|See more>\\n\",
-          \"short\":false
-        }],
-        \"actions\":[{
-          \"id\":\"1\",
-          \"text\":\"Explore :microscope:\",
-          \"type\":\"button\",
-          \"style\":\"\",
-          \"url\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\\\/workspace\"
-        },
-        {
-          \"id\":\"2\",
-          \"name\":\"subscribe\",
-          \"text\":\"Subscribe :nerd_face:\",
-          \"type\":\"button\",
-          \"value\":\"kehesjay\\\/actors-proj\",
-          \"style\":\"primary\"
-        }],
-        \"mrkdwn_in\":[\"fields\"],
-        \"bot_id\":\"BBS0N97PC\",
-        \"app_unfurl_url\":\"https:\\\/\\\/${dwDomain}\\\/kehesjay\\\/actors-proj\",
-        \"is_app_unfurl\":true
-      }
-    ]},
-    \"response_url\":\"https:\\\/\\\/hooks.slack.com\\\/actions\\\/TAZ5ZUB7D\\\/400690536912\\\/hbVIN3Xo97Hh0mDG0e2wQoZ4\",
-    \"trigger_id\":\"402725352246.373203963251.50f933b0da72e4cb4becec2d8c101ea2\"
-  }`;*/
 
   const button_action_payload = `{
     \"type\": \"block_actions\",

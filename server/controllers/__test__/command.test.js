@@ -396,12 +396,10 @@ describe("Test Auth controller methods", () => {
       user_id: "user_id"
     };
     const req = { body };
-
+    const message = `*Active Subscriptions*`;
+    const dwAccessToken = "dwAccessToken";
     const options = [];
-    /*options.push({
-      text: "resourceId",
-      value: "resourceId"
-    });*/
+    
     options.push({
       "text": {
         "type": "plain_text",
@@ -409,35 +407,8 @@ describe("Test Auth controller methods", () => {
       },
       "value": "resourceId"
     });
-    const message = `*Active Subscriptions*`;
-    const dwAccessToken = "dwAccessToken";
 
-
-
-    /*const attachments = [
-      {
-        color: "#79B8FB",
-        text: `• https://${dwDomain}/resourceId \n *created by :* <@user_id> \n`,
-        callback_id: "unsubscribe_menu",
-        actions: [
-          {
-            name: "subscription_list",
-            text: "Unsubscribe from...",
-            type: "select",
-            style: "danger",
-            options: options,
-            confirm: {
-              title: "Confirm",
-              text: `Are you sure you want to unsubscribe from selected resource ?`,
-              ok_text: "Yes",
-              dismiss_text: "No"
-            }
-          }
-        ]
-      }
-    ];*/
-
-    blocks = [{
+    const blocks = [{
       "type": "section",
       "text": {
         "type": "mrkdwn",
@@ -483,8 +454,7 @@ describe("Test Auth controller methods", () => {
           }
         }
       ]
-    }
-    ]
+    }]
 
     const subscription = {
       slackUserId: "user_id",
@@ -583,7 +553,7 @@ describe("Test Auth controller methods", () => {
   it("should build and send help message to slack.", async done => {
     const commandText = process.env.SLASH_COMMAND;
     const message = `Not sure how to use \`/${commandText}\`? Here are some ideas:point_down:`;
-    //const attachments = [];
+    const blocks = [];
     const responseUrl = "response_url";
 
     const commandsInfo = [
@@ -598,21 +568,6 @@ describe("Test Auth controller methods", () => {
       `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
     ];
 
-    /*collection.forEach(commandsInfo, value => {
-      attachments.push({
-        color: "#355D8A",
-        text: value
-      });
-    });*/
-
-    const blocks = [];
-
-    /*collection.forEach(commandsInfo, value => {
-      attachments.push({
-        color: "#355D8A",
-        text: value
-      });
-    });*/
     collection.forEach(commandsInfo, value => {
       blocks.push({
         "type": "section",

@@ -207,45 +207,6 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
 
-
-    /*const expectedAttachment = {
-      fallback: "An Example Project that Shows What To Put in data.world",
-      color: "#F6BD68",
-      title: "An Example Project that Shows What To Put in data.world",
-      title_link: `https://${dwDomain}/kehesjay/actors-proj`,
-      text:
-        "Link to a dataset, extract some data from a PDF, make some insights!",
-      footer: "kehesjay/actors-proj",
-      footer_icon: `${serverBaseUrl}/assets/project.png`,
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      ts: 1522193271,
-      mrkdwn_in: ["fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: `https://${dwDomain}/kehesjay/actors-proj/workspace`
-        },
-        {
-          name: "subscribe",
-          text: "Subscribe :nerd_face:",
-          style: "primary",
-          type: "button",
-          value: "kehesjay/actors-proj"
-        }
-      ],
-      fields: [
-        { value: "`new feature` ", short: false },
-        {
-          title: "Linked dataset",
-          value:
-            `• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n`,
-          short: false
-        }
-      ]
-    };*/
-
     const expectedBlocks = [
       {
         "type": "section",
@@ -359,49 +320,6 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
 
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
-
-    /*const expectedAttachment = {
-      fallback: "TrumpWorld",
-      color: "#5CC0DE",
-      title: "TrumpWorld",
-      title_link: `https://${dwDomain}/kehesjay/actors-proj`,
-      text: "TrumpWorld Data",
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      footer: "kehesjay/actors-proj",
-      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-      ts: 1486421719,
-      callback_id: "dataset_subscribe_button",
-      mrkdwn_in: ["fields"],
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: `https://${dwDomain}/kehesjay/actors-proj/workspace`
-        },
-        {
-          name: "subscribe",
-          text: "Subscribe :nerd_face:",
-          style: "primary",
-          type: "button",
-          value: "kehesjay/actors-proj"
-        }
-      ],
-      fields: [
-        {
-          value:
-            "`trump` `trump world` `president` `connections` `swamp` `business network` ",
-          short: false
-        },
-        {
-          title: "Files",
-          value:
-            `• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n`,
-          short: false
-        }
-      ]
-    };*/
-
-    //const expectedUrl = `https://${dwDomain}/kehesjay/actors-proj`
   
     const expectedBlocks = [
       {

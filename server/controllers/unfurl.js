@@ -35,10 +35,6 @@ const slack = require("../api/slack");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 const dwDomain = helper.DW_DOMAIN;
 
-//const dwLinkFormat = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+).*/i;
-//const insightLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
-//const queryLinkFormat1 = /^(https:\/\/ddw-corewebapp.dev.data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
-
 const dwLinkFormat = new RegExp(
   `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*`,
   "i"
@@ -128,39 +124,6 @@ const unfurlDataset = (
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
   const ts = getTimestamp(dataset);
-
-  const attachment = {
-    fallback: dataset.title,
-    color: "#5CC0DE",
-    title: dataset.title,
-    title_link: params.link,
-    text: dataset.description,
-    thumb_url: owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
-    footer: `${resourceId}`,
-    footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-    ts: ts,
-    callback_id: "dataset_subscribe_button",
-    mrkdwn_in: ["fields"],
-    actions: [
-      {
-        type: "button",
-        text: "Explore :microscope:",
-        url: `https://${dwDomain}/${resourceId}/workspace`
-      }
-    ],
-    url: params.link
-  };
-
-  if (addSubcribeAction) {
-    attachment.actions.push({
-      name: "subscribe",
-      text: "Subscribe :nerd_face:",
-      style: "primary",
-      type: "button",
-      value: `${resourceId}`
-    });
-  }
-
   const fields = [];
 
   const files = dataset.files;
@@ -200,12 +163,6 @@ const unfurlDataset = (
     });
   }
 
-  /*if (fields.length > 0) {
-    attachment.fields = fields;
-  }*/
-  //return attachment;
-
-  //let blockText = `<${params.link}|${dataset.title}>\n${fields[0].title}\n${fields[0].value}\n`
   let blockText = `<${params.link}|${dataset.title}>\n`
 
   if (!lang.isEmpty(fields)) {
@@ -290,41 +247,7 @@ const unfurlProject = async (
     );
     const project = response.data;
     const resourceId = `${params.owner}/${params.datasetId}`;
-
     const ts = getTimestamp(project);
-    const attachment = {
-      fallback: project.title,
-      color: "#F6BD68",
-      title: project.title,
-      title_link: params.link,
-      text: project.objective,
-      footer: `${resourceId}`,
-      footer_icon: `${serverBaseUrl}/assets/project.png`,
-      thumb_url: owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
-      ts: ts,
-      mrkdwn_in: ["fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: `https://${dwDomain}/${resourceId}/workspace`
-        }
-      ],
-      url: params.link
-    };
-
-    console.log("unfurlProject addSubcribeAction", addSubcribeAction)
-    if (addSubcribeAction) {
-      attachment.actions.push({
-        name: "subscribe",
-        text: "Subscribe :nerd_face:",
-        style: "primary",
-        type: "button",
-        value: `${resourceId}`
-      });
-    }
-
     const fields = [];
 
     if (lang.isEmpty(project.linkedDatasets)) {
@@ -385,11 +308,6 @@ const unfurlProject = async (
       });
     }
 
-    /*if (fields.length > 0) {
-      attachment.fields = fields;
-    }*/
-    //return attachment;
-
     let blockText = `<${params.link}|${project.title}>\n`
 
     if (!lang.isEmpty(fields)) {
@@ -398,7 +316,6 @@ const unfurlProject = async (
       })
     }
 
-    //let projectDescription = project.objective || "_No Description_"
     const actions = {
       "type": "actions",
       "elements": [
@@ -514,33 +431,6 @@ const unfurlQuery = async (params, token, serverBaseUrl) => {
 
 const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
   const ts = getTimestamp(insight);
-  const attachment = {
-    fallback: insight.title,
-    color: "#9581CA",
-    author_name: author.displayName,
-    author_link: `http://${dwDomain}/${author.id}`,
-    author_icon: author.avatarUrl,
-    title: insight.title,
-    title_link: params.link,
-    text: insight.description,
-    image_url: insight.thumbnail,
-    footer: `${params.owner}/${params.projectId}`,
-    footer_icon: `${serverBaseUrl}/assets/project.png`,
-    url: params.link,
-    ts: ts,
-    actions: [
-      {
-        type: "button",
-        text: "Discuss :left_speech_bubble:",
-        url: params.link
-      }
-    ]
-  };
-  if (!attachment.image_url) {
-    attachment.image_url = insight.body.imageUrl;
-  }
-
-  //return attachment;
   const blocks = [
     {
       "type": "section",
@@ -585,34 +475,6 @@ const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
   console.log("getQueryAttachment", serverBaseUrl);
   const ts = getTimestamp(query);
   const isSql = query.language === "SQL";
-  const attachment = {
-    fallback: query.name,
-    color: isSql ? "#0e33cb" : "#ac40be",
-    author_name: owner.displayName,
-    author_link: `http://${dwDomain}/${owner.id}`,
-    author_icon: owner.avatarUrl,
-    thumb_url: isSql
-      ? `${serverBaseUrl}/assets/icon-sql.png`
-      : `${serverBaseUrl}/assets/icon-sparql.png`,
-    title: query.name,
-    title_link: params.link,
-    text: `\`\`\`${query.body}\`\`\``,
-    footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: isProject
-      ? `${serverBaseUrl}/assets/project.png`
-      : `${serverBaseUrl}/assets/dataset.png`,
-    url: params.link,
-    ts: ts,
-    actions: [
-      {
-        type: "button",
-        text: "Run query :zap:",
-        url: params.link
-      }
-    ]
-  };
-
-  //return attachment;
   const blocks = [
     {
       "type": "section",
@@ -698,141 +560,6 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               object.omit(attachment, "url")
             )
           }
-          ) // remove url from attachment object
-          // Invoke the Slack Web API to append the attachment
-          .then(unfurls =>
-            slack.sendUnfurlAttachments(
-              event.message_ts,
-              event.channel,
-              unfurls,
-              botToken
-            )
-          )
-          .catch(console.error);
-      } else {
-        // User is not associated, begin association for unfurl
-        auth.beginUnfurlSlackAssociation(
-          event.user,
-          event.channel,
-          teamId,
-          event.message_ts
-        );
-      }
-    } else {
-      console.log(
-        "INFO: unsupported data.world links : ",
-        JSON.stringify(event.links)
-      );
-    }
-  } catch (error) {
-    console.error(
-      "Failed to verify slack association status during link unfurl : ",
-      error
-    );
-  }
-};
-
-const handleLinkSharedEvent1 = async (event, teamId, serverBaseUrl) => {
-  // verify slack associaton
-  try {
-    if (verifyLink(event.links)) {
-      const team = await Team.findOne({ where: { teamId: teamId } });
-      const [isAssociated, user] = await auth.checkSlackAssociationStatus(
-        event.user
-      );
-      if (isAssociated) {
-        // User is associated, carry on and unfold url
-        let token = user.dwAccessToken;
-        const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-
-        const botToken = await getBotAccessTokenForTeam(team.teamId);
-        console.log("botToken", botToken, team);
-
-        console.log("handleLinkSharedEvent event", event.links)
-        Promise.all(
-          event.links.map(
-            messageAttachmentFromLink.bind(
-              null,
-              token,
-              event.channel,
-              serverBaseUrl
-            )
-          )
-        )
-          // Transform the array of attachments to an unfurls object keyed by URL
-          .then(attachments => { console.log("handleLinkSharedEvent attachments", attachments); return collection.keyBy(attachments, "url") }) // group by url
-          .then(unfurls => {
-            console.log("handleLinkSharedEvent unfurls", unfurls);
-            return object.mapValues(unfurls, attachment =>
-              object.omit(attachment, "url")
-            )
-          }
-          ) // remove url from attachment object
-          // Invoke the Slack Web API to append the attachment
-          .then(unfurls =>
-            slack.sendUnfurlAttachments(
-              event.message_ts,
-              event.channel,
-              unfurls,
-              botToken
-            )
-          )
-          .catch(console.error);
-      } else {
-        // User is not associated, begin association for unfurl
-        auth.beginUnfurlSlackAssociation(
-          event.user,
-          event.channel,
-          teamId,
-          event.message_ts
-        );
-      }
-    } else {
-      console.log(
-        "INFO: unsupported data.world links : ",
-        JSON.stringify(event.links)
-      );
-    }
-  } catch (error) {
-    console.error(
-      "Failed to verify slack association status during link unfurl : ",
-      error
-    );
-  }
-};
-
-const handleLinkSharedEventorig = async (event, teamId, serverBaseUrl) => {
-  // verify slack associaton
-  try {
-    if (verifyLink(event.links)) {
-      const team = await Team.findOne({ where: { teamId: teamId } });
-      const [isAssociated, user] = await auth.checkSlackAssociationStatus(
-        event.user
-      );
-      if (isAssociated) {
-        // User is associated, carry on and unfold url
-        let token = user.dwAccessToken;
-        const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-
-        const botToken = await getBotAccessTokenForTeam(team.teamId);
-        console.log("botToken", botToken, team);
-
-        Promise.all(
-          event.links.map(
-            messageAttachmentFromLink.bind(
-              null,
-              token,
-              event.channel,
-              serverBaseUrl
-            )
-          )
-        )
-          // Transform the array of attachments to an unfurls object keyed by URL
-          .then(attachments => collection.keyBy(attachments, "url")) // group by url
-          .then(unfurls =>
-            object.mapValues(unfurls, attachment =>
-              object.omit(attachment, "url")
-            )
           ) // remove url from attachment object
           // Invoke the Slack Web API to append the attachment
           .then(unfurls =>

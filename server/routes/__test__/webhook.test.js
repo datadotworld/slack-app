@@ -250,48 +250,6 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     const serverBaseUrl = `http://127.0.0.1:${port}`;
     const ts = 1508866583
 
-    const expectedAttachment = {
-      fallback: "user8 created a new dataset",
-      pretext: "<@slackId> created a *new dataset*",
-      title: "TrumpWorld",
-      title_link: `https://${dwDomain}/user8/cool-dog-pics`,
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      color: "#5CC0DE",
-      text: "TrumpWorld Data",
-      footer: "user8/cool-dog-pics",
-      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-      ts: 1508866583,
-      mrkdwn_in: ["text", "pretext", "fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: `https://${dwDomain}/user8/cool-dog-pics/workspace`
-        },
-        {
-          name: "subscribe",
-          text: "Subscribe",
-          style: "primary",
-          type: "button",
-          value: "user8/cool-dog-pics"
-        }
-      ],
-      fields: [
-        {
-          title: "Files",
-          value:
-            `• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n`,
-          short: false
-        },
-        {
-          value:
-            "`trump` `trump world` `president` `connections` `swamp` `business network` ",
-          short: false
-        }
-      ]
-    };
-
     let blockText = `<@slackId> created a *new dataset*\n\n*<https://${dwDomain}/user8/cool-dog-pics|TrumpWorld>*\nTrumpWorld Data\n`
     const fields = [
       {

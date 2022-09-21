@@ -411,10 +411,6 @@ const listSubscription = async (
             );
             if (existsInDW) {
               if (subscription.slackUserId === userId) {
-                /*options.push({
-                  text: subscription.resourceId,
-                  value: subscription.resourceId
-                });*/
                 options.push({
                   "text": {
                     "type": "plain_text",
@@ -444,28 +440,6 @@ const listSubscription = async (
           : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
       }
 
-      /*attachments = [
-        {
-          color: "#79B8FB",
-          text: attachmentText,
-          callback_id: "unsubscribe_menu",
-          actions: [
-            {
-              name: "subscription_list",
-              text: "Unsubscribe from...",
-              type: "select",
-              style: "danger",
-              options: options,
-              confirm: {
-                title: "Confirm",
-                text: "Are you sure you want to unsubscribe from selected resource ?",
-                ok_text: "Yes",
-                dismiss_text: "No"
-              }
-            }
-          ]
-        }
-      ];*/
       blocks = [{
         "type": "section",
         "text": {
@@ -512,8 +486,7 @@ const listSubscription = async (
             }
           }
         ]
-      }
-      ]
+      }]
     } else {
       const commandText = process.env.SLASH_COMMAND;
       // when updating previous list of subscriptions, remove message completely if there no more subscriptions.
@@ -578,7 +551,7 @@ const sendSlackMessage = async (
 const sendSlackAttachment = (responseUrl, attachment) => {
   try {
     //data.blocks = attachment;
-    slack.sendResponse(responseUrl, {blocks : attachment}).catch(console.error);
+    slack.sendResponse(responseUrl, { blocks: attachment }).catch(console.error);
   } catch (error) {
     console.error("Failed to send attachment to slack", error.message);
   }
@@ -602,16 +575,6 @@ const sendSlackAttachments = async (
     await slack.sendResponse(responseUrl, data);
   } catch (error) {
     console.error("Failed to send message to slack", error.message);
-  }
-};
-
-const sendSlackAttachments1 = (responseUrl, attachments) => {
-  try {
-    let data = {};
-    data.attachments = attachments;
-    slack.sendResponse(responseUrl, data).catch(console.error);
-  } catch (error) {
-    console.error("Failed to send attachments to slack", error.message);
   }
 };
 
@@ -700,12 +663,6 @@ const showHelp = async responseUrl => {
     `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
   ];
 
-  /*collection.forEach(commandsInfo, value => {
-    attachments.push({
-      color: "#355D8A",
-      text: value
-    });
-  });*/
   collection.forEach(commandsInfo, value => {
     blocks.push({
       "type": "section",
@@ -729,55 +686,40 @@ const handleButtonAction = async (payload, action, user) => {
       payload.response_url,
       user.dwAccessToken
     );
-    //if (payload.original_message) {
-      //collection.forEach(payload.original_message.attachments, attachment => {
-        // remove subscribe button
-        /*array.remove(attachment.actions, action => {
-          //return action.name === "subscribe";
-          return action.action_id === "dataset_subscribe_button";
-        });*/
-        if (payload.container.is_app_unfurl) {
-          console.log("payload.app_unfurl.blocks", payload.app_unfurl.blocks)
-          var result = payload.app_unfurl.blocks.find(t=>t.type ==='actions').elements;
-          console.log("results", result);
-          array.remove(payload.app_unfurl.blocks.find(t=>t.type ==='actions').elements, element => {
-            //return action.name === "subscribe";
-            return element.action_id === "dataset_subscribe_button";
-          });
-          var result1 = payload.app_unfurl.blocks.find(t=>t.type ==='actions').elements;
-          console.log("results1", result1);
-          // update unfurl attachment
-          sendSlackAttachment(payload.response_url,  payload.app_unfurl.blocks);
-        } else {
-          /*array.remove(payload.message.blocks, action => {
-            //return action.name === "subscribe";
-            return action.action_id === "dataset_subscribe_button";
-          });*/
-          // update message attachments
-          array.remove(payload.message.blocks.find(t=>t.type ==='actions').elements, element => {
-            //return action.name === "subscribe";
-            return element.action_id === "dataset_subscribe_button";
-          });
-          //sendSlackAttachments(payload.response_url, '', payload.message.blocks, true);
-          sendSlackAttachments(payload.response_url, '', payload.message.blocks, true);
-        }
-      //});
-    //}
-    } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
-      const { requestid, agentid, datasetid } = JSON.parse(action.value);
-      await handleDatasetRequestAction({
-        channelid: payload.channel.id,
-        userid: payload.user.id,
-        triggerid: payload.trigger_id,
-        responseUrl: payload.response_url,
-        message: payload.message,
-        blockid: action.block_id,
-        actionid: action.action_id,
-        requestid,
-        agentid,
-        datasetid,
-        dwAccessToken: user.dwAccessToken
+
+    if (payload.container.is_app_unfurl) {
+      console.log("payload.app_unfurl.blocks", payload.app_unfurl.blocks)
+      var result = payload.app_unfurl.blocks.find(t => t.type === 'actions').elements;
+      console.log("results", result);
+      array.remove(payload.app_unfurl.blocks.find(t => t.type === 'actions').elements, element => {
+        return element.action_id === "dataset_subscribe_button";
       });
+      var result1 = payload.app_unfurl.blocks.find(t => t.type === 'actions').elements;
+      console.log("results1", result1);
+      // update unfurl attachment
+      sendSlackAttachment(payload.response_url, payload.app_unfurl.blocks);
+    } else {
+      // update message attachments
+      array.remove(payload.message.blocks.find(t => t.type === 'actions').elements, element => {
+        return element.action_id === "dataset_subscribe_button";
+      });
+      sendSlackAttachments(payload.response_url, '', payload.message.blocks, true);
+    }
+  } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
+    const { requestid, agentid, datasetid } = JSON.parse(action.value);
+    await handleDatasetRequestAction({
+      channelid: payload.channel.id,
+      userid: payload.user.id,
+      triggerid: payload.trigger_id,
+      responseUrl: payload.response_url,
+      message: payload.message,
+      blockid: action.block_id,
+      actionid: action.action_id,
+      requestid,
+      agentid,
+      datasetid,
+      dwAccessToken: user.dwAccessToken
+    });
   } else {
     // unknow action
     console.warn("Unknown action_id in button action event.");
@@ -863,55 +805,16 @@ const performAction = async (req, res) => {
       return;
     }
 
-    /*if ("callback_id" in payload) {
-      // Handle legacy Slack actions
-      // https://api.slack.com/messaging/attachments-to-blocks#callback_id_replacement
-
-      // subscribe or unsubscribe to/from resource.
-      collection.forEach(payload.actions, async action => {
-        console.log('action_type', action_type)
-        switch (action.type) {
-          case "button":
-            await handleButtonAction(payload, action, user);
-            break;
-          case "static_select":
-            await handleMenuAction(payload, action, user);
-            break;
-          default:
-            console.warn("Unknown action type : ", action.type);
-            break;
-        }
-      });
-    } else {*/
-      // Handle new Slack block kit actions
-      collection.forEach(payload.actions, async action => {
-        console.log('action_type', action.type)
-        //const actionid = action.action_id
-        //console.log('actionid', action)
-        if (action.type === "button") {
-          await handleButtonAction(payload, action, user);
-        } else if(action.type === "static_select") {
-          await handleMenuAction(payload, action, user);
-        } /*else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
-          const { requestid, agentid, datasetid } = JSON.parse(action.value);
-          await handleDatasetRequestAction({
-            channelid: payload.channel.id,
-            userid: payload.user.id,
-            triggerid: payload.trigger_id,
-            responseUrl: payload.response_url,
-            message: payload.message,
-            blockid: action.block_id,
-            actionid: action.action_id,
-            requestid,
-            agentid,
-            datasetid,
-            dwAccessToken: user.dwAccessToken
-          });
-        }*/ else {
-          console.warn("Unknown action type : ", action.action_id)
-        }
-      })
-    //}
+    collection.forEach(payload.actions, async action => {
+      console.log('action_type', action.type)
+      if (action.type === "button") {
+        await handleButtonAction(payload, action, user);
+      } else if (action.type === "static_select") {
+        await handleMenuAction(payload, action, user);
+      } else {
+        console.warn("Unknown action type : ", action.action_id)
+      }
+    })
   } catch (error) {
     // An internal error has occured send a descriptive message
     console.error("Failed to perform action : ", error);
