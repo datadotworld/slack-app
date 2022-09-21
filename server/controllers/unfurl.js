@@ -228,8 +228,8 @@ const unfurlDataset = (
     actions
   ]
 
-  let blocks1 = { blocks: blocks, url: params.link }
-  return blocks1;
+  const unfurlBlocks = { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
 const unfurlProject = async (
@@ -373,8 +373,8 @@ const unfurlProject = async (
       actions
     ]
 
-    let blocks1 = { blocks: blocks, url: params.link }
-    return blocks1;
+    const unfurlBlocks = { blocks: blocks, url: params.link }
+    return unfurlBlocks;
   } catch (error) {
     console.error("failed to get project attachment : ", error.message);
     return;
@@ -392,7 +392,7 @@ const unfurlInsight = (params, serverBaseUrl) => {
         insight.author
       );
       const author = authorResponse.data;
-      return getInsightAttachment(insight, author, params, serverBaseUrl);
+      return getInsightUnfurlBlocks(insight, author, params, serverBaseUrl);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -416,7 +416,7 @@ const unfurlQuery = async (params, token, serverBaseUrl) => {
 
     const owner = ownerResponse.data;
 
-    return getQueryAttachment(
+    return getQueryUnfurlBlocks(
       query,
       owner,
       params,
@@ -429,7 +429,7 @@ const unfurlQuery = async (params, token, serverBaseUrl) => {
   }
 };
 
-const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
+const getInsightUnfurlBlocks = (insight, author, params, serverBaseUrl) => {
   const ts = getTimestamp(insight);
   const blocks = [
     {
@@ -467,11 +467,11 @@ const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
       ]
     }]
 
-  let blocks1 = { blocks: blocks, url: params.link }
-  return blocks1;
+  const unfurlBlocks = { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
-const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
+const getQueryUnfurlBlocks = (query, owner, params, isProject, serverBaseUrl) => {
   const ts = getTimestamp(query);
   const isSql = query.language === "SQL";
   const blocks = [
@@ -520,8 +520,8 @@ const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
     }
   ]
 
-  let blocks1 = { blocks: blocks, url: params.link }
-  return blocks1;
+  const unfurlBlocks= { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
 const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {

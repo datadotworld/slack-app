@@ -56,7 +56,7 @@ const getEntityType = event => {
   return lang.isArray(event) ? event[0].entity : event.entity;
 };
 
-const getNewDatasetAttachment = (
+const getNewDatasetBlocks = (
   params,
   dataset,
   event,
@@ -181,7 +181,7 @@ const getNewDatasetAttachment = (
   return blocks;
 };
 
-const getLinkedDatasetAttachment = (
+const getLinkedDatasetBlocks = (
   params,
   dataset,
   event,
@@ -243,7 +243,7 @@ const getLinkedDatasetAttachment = (
   return blocks;
 };
 
-const getNewProjectAttachment = (
+const getNewProjectBlocks = (
   params,
   project,
   event,
@@ -387,7 +387,7 @@ const getNewProjectAttachment = (
   return blocks;
 };
 
-const getNewInsightAttachment = (
+const getNewInsightBlocks = (
   params,
   insight,
   event,
@@ -452,7 +452,7 @@ const getNewInsightAttachment = (
   return blocks;
 };
 
-const getFileUploadAttachment = (
+const getFileUploadBlocks = (
   params,
   files,
   event,
@@ -520,7 +520,8 @@ const getFileUploadAttachment = (
           "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
         }
       ]
-    }]
+    }
+  ]
   return blocks;
 };
 
@@ -568,12 +569,12 @@ const handleDatasetEvent = async (
     );
     const dwOwner = dwOwnerResponse.data;
     // Create attachment
-    let attachment = null;
+    let blocks = null;
 
     if (event.action === CREATE) {
       //handle datasets/projects create event
-      attachment = isProject
-        ? getNewProjectAttachment(
+      blocks = isProject
+        ? getNewProjectBlocks(
           params,
           data,
           event,
@@ -582,7 +583,7 @@ const handleDatasetEvent = async (
           actorSlackId,
           serverBaseUrl
         )
-        : getNewDatasetAttachment(
+        : getNewDatasetBlocks(
           params,
           data,
           event,
@@ -612,7 +613,7 @@ const handleDatasetEvent = async (
             "name"
           );
 
-          const fileAttachment = getFileUploadAttachment(
+          const fileBlocks = getFileUploadBlocks(
             params,
             addedFiles,
             event,
@@ -621,7 +622,7 @@ const handleDatasetEvent = async (
             isProject,
             serverBaseUrl
           );
-          return sendEventToSlack(channelIds, fileAttachment);
+          return sendEventToSlack(channelIds, fileBlocks);
         }
 
         // Check size diff to ensure we send notification only when dataset are linked not removed.
@@ -639,7 +640,7 @@ const handleDatasetEvent = async (
           );
           const dwActor = dwActorResponse.data;
           collection.forEach(linkedDatasets, linkedDataset => {
-            const attachment = getLinkedDatasetAttachment(
+            const blocks = getLinkedDatasetBlocks(
               params,
               linkedDataset,
               event,
@@ -647,7 +648,7 @@ const handleDatasetEvent = async (
               actorSlackId,
               serverBaseUrl
             );
-            sendEventToSlack(channelIds, attachment);
+            sendEventToSlack(channelIds, blocks);
           });
           return;
         }
@@ -661,9 +662,9 @@ const handleDatasetEvent = async (
         return;
       }
     }
-    if (attachment) {
+    if (blocks) {
       // Send message
-      sendEventToSlack(channelIds, attachment);
+      sendEventToSlack(channelIds, blocks);
     }
   } catch (error) {
     console.error("Failed to handle dataset event : ", error);
@@ -695,7 +696,7 @@ const handleInsightEvent = async (
     dwActorId
   );
   const dwActor = dwActorResponse.data;
-  const attachment = getNewInsightAttachment(
+  const blocks = getNewInsightBlocks(
     params,
     insight,
     event,
@@ -703,7 +704,7 @@ const handleInsightEvent = async (
     actorSlackId,
     serverBaseUrl
   );
-  sendEventToSlack(channelIds, attachment);
+  sendEventToSlack(channelIds, blocks);
 };
 
 const handleFileEvents = async (
@@ -748,7 +749,7 @@ const handleFileEvents = async (
     }
   });
 
-  const block = getFileUploadAttachment(
+  const blocks = getFileUploadBlocks(
     params,
     files,
     event,
@@ -757,28 +758,21 @@ const handleFileEvents = async (
     isProjectFiles,
     serverBaseUrl
   );
-  sendEventToSlack(channelIds, block);
+  sendEventToSlack(channelIds, blocks);
 };
 
-const sendEventToSlack = async (channelIds, attachment) => {
-  //send attachment to all subscribed channels
+const sendEventToSlack = async (channelIds, blocks) => {
+  //send blocks to all subscribed channels
   collection.forEach(channelIds, async channelId => {
     const channel = await Channel.findOne({ where: { channelId: channelId } });
-    sendSlackMessage(channelId, attachment, channel.teamId);
+    sendSlackMessage(channelId, blocks, channel.teamId);
   });
 };
 
 
-const sendSlackMessage = async (channelId, attachment, teamId) => {
+const sendSlackMessage = async (channelId, blocks, teamId) => {
   const token = await getBotAccessTokenForTeam(teamId)
-  //slack.sendMessageWithAttachments(token, channelId, [attachment]);
-  slack.sendMessageWithBlocks(token, channelId, attachment);
-};
-
-const sendSlackMessage1 = async (channelId, text, block, teamId) => {
-  const token = await getBotAccessTokenForTeam(teamId)
-  //slack.sendMessageWithAttachments(token, channelId, [attachment]);
-  slack.sendMessageWithBlocks(token, channelId, text, attachment);
+  slack.sendMessageWithBlocks(token, channelId, blocks);
 };
 
 const webhook = {
