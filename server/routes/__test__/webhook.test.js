@@ -51,8 +51,8 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     links: {
       api: {
         actor: `https://${process.env.DW_BASE_URL}/users/user8`,
-        owner: `https://${process.env.DW_BASE_URL}/v0/users/user8`,
-        dataset: `https://${process.env.DW_BASE_URL}/v0/datasets/user8/cool-dog-pics`
+        owner: `https://${process.env.DW_BASE_URL}/users/user8`,
+        dataset: `https://${process.env.DW_BASE_URL}/datasets/user8/cool-dog-pics`
       },
       web: {
         actor: `https://${dwDomain}/user8`,
