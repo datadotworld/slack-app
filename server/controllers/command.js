@@ -548,16 +548,16 @@ const sendSlackMessage = async (
   }
 };
 
-const sendSlackAttachment = (responseUrl, attachment) => {
+const sendSlackBlock = (responseUrl, block) => {
   try {
     //data.blocks = attachment;
-    slack.sendResponse(responseUrl, { blocks: attachment }).catch(console.error);
+    slack.sendResponse(responseUrl, { blocks: block }).catch(console.error);
   } catch (error) {
     console.error("Failed to send attachment to slack", error.message);
   }
 };
 
-const sendSlackAttachments = async (
+const sendSlackBlocks = async (
   responseUrl,
   message,
   blocks,
@@ -568,8 +568,7 @@ const sendSlackAttachments = async (
   if (blocks && !lang.isEmpty(blocks)) {
     data.blocks = blocks;
   }
-  //data.replace_original = replaceOriginal ? replaceOriginal : false;
-  data.replace_original = true;
+  data.replace_original = replaceOriginal ? replaceOriginal : false;
   data.delete_original = deleteOriginal ? deleteOriginal : false;
   try {
     await slack.sendResponse(responseUrl, data);
@@ -691,13 +690,13 @@ const handleButtonAction = async (payload, action, user) => {
         return element.action_id === "dataset_subscribe_button";
       });
       // update unfurl attachment
-      sendSlackAttachment(payload.response_url, payload.app_unfurl.blocks);
+      sendSlackBlock(payload.response_url, payload.app_unfurl.blocks);
     } else {
       // update message attachments
       array.remove(payload.message.blocks.find(t => t.type === 'actions').elements, element => {
         return element.action_id === "dataset_subscribe_button";
       });
-      sendSlackAttachments(payload.response_url, '', payload.message.blocks, true);
+      sendSlackBlocks(payload.response_url, '', payload.message.blocks, true);
     }
   } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
     const { requestid, agentid, datasetid } = JSON.parse(action.value);
@@ -948,8 +947,8 @@ module.exports = {
   addSubscriptionRecord,
   removeSubscriptionRecord,
   sendSlackMessage,
-  sendSlackAttachment,
-  sendSlackAttachments,
+  sendSlackBlock,
+  sendSlackBlocks,
   getType,
   subscribeOrUnsubscribe,
   showHelp,
