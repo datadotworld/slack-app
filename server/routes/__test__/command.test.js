@@ -149,7 +149,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           },
           \"accessory\": {
             \"type\": \"image\",
-            \"image_url\": \"https://nowhere.com/assets/avatar.png\",
+            \"image_url\": \"https://cdn.filepicker.io/api/file/YB2O14XWSJ2X0AMXHJLf\",
             \"alt_text\": \"avatar\"
           }
         },
@@ -159,7 +159,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           \"elements\": [
             {
               \"type\": \"image\",
-              \"image_url\": \"https://nowhere.com/assets/dataset.png\",
+              \"image_url\": \"https://cdn.filepicker.io/api/file/YB2O14XWSJ2X0AMXHJLf\",
               \"alt_text\": \"dataset\"
             },
             {
