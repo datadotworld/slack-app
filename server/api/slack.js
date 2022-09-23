@@ -102,10 +102,10 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
         "text": {
           "type": "mrkdwn",
           "text": "You've successfully installed data.world on this Slack workspace :tada: \n" +
-          "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
-          `• _/${commandText} subscribe account_ \n` +
-          `• _/${commandText} subscribe dataset_url_ \n` +
-          `• _/${commandText} subscribe project_url_`
+            "To subscribe a channel to an account, dataset or project use either of the following slash commands: \n" +
+            `• _/${commandText} subscribe account_ \n` +
+            `• _/${commandText} subscribe dataset_url_ \n` +
+            `• _/${commandText} subscribe project_url_`
         }
       },
       {
@@ -113,10 +113,10 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
         "text": {
           "type": "mrkdwn",
           "text": `Looking for additional help? Try \`/${commandText} help\``
-      }
-    }]
-      
-      slackBot.chat.postMessage({ channel: dmChannelId, text : "You've successfully installed data.world on this Slack workspace", blocks: blocks});
+        }
+      }]
+
+      slackBot.chat.postMessage({ channel: dmChannelId, text: "You've successfully installed data.world on this Slack workspace", blocks: blocks });
     } else {
       console.warn("Unable to start Bot DM chat with user.");
     }
@@ -138,29 +138,30 @@ const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUs
       }
     },
     {
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
           "style": "primary",
-					"text": {
-						"type": "plain_text",
-						"text": "Connect data.world account",
-					},
-					"url": `${associationUrl}`
-				},
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Dismiss"
-					},
-					"value": `${nonce}`
-				}
+          "text": {
+            "type": "plain_text",
+            "text": "Connect data.world account",
+          },
+          "url": `${associationUrl}`
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Dismiss"
+          },
+          "value": `${nonce}`
+        }
       ]
-		}]
-    
-    await slackBot.chat.postEphemeral({channel : channelId, user : slackUserId, blocks : blocks, text : "Linking your data.world account", 
+    }]
+
+    await slackBot.chat.postEphemeral({
+      channel: channelId, user: slackUserId, blocks: blocks, text: "Linking your data.world account",
     });
   } catch (error) {
     console.error("SendAuthRequiredMessage failed : ", error);
@@ -186,7 +187,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
       // Fallback to slack default style of requesting auth for unfurl action.
       const slackWebApi = new SlackWebClient(teamAccessToken);
       const opts = { user_auth_required: true, user_auth_url: associationUrl }
-      await slackWebApi.chat.unfurl({ts : messageTs, channel : channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
+      await slackWebApi.chat.unfurl({ ts: messageTs, channel: channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
     } else {
       const blocks = [{
         "type": "section",
@@ -217,7 +218,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
           }
         ]
       }]
-      await slackBot.chat.postEphemeral({channel : channel, user : slackUserId, text : "Link your data.world account to Slack", blocks : blocks});
+      await slackBot.chat.postEphemeral({ channel: channel, user: slackUserId, text: "Link your data.world account to Slack", blocks: blocks });
     }
   } catch (error) {
     console.error("Failed to send begin unfurl message to slack : ", error);
@@ -251,10 +252,9 @@ const sendCompletedAssociationMessage = async (botAccessToken, slackUserId) => {
           `Looking for additional help? Try \`/${commandText} help\``
       }
     }
-    
   ];
 
-  await slackBot.chat.postMessage({channel : dmChannelId, text : "Thanks for completing authentication", blocks : blocks /*attachments : { attachments }*/});
+  await slackBot.chat.postMessage({ channel: dmChannelId, text: "Thanks for completing authentication", blocks: blocks /*attachments : { attachments }*/ });
 };
 
 const deleteSlackMessage = async (botAccessToken, channel, ts) => {
@@ -273,9 +273,9 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
       text: {
         type: "mrkdwn",
         text:
-        `Hi! You can tell me what you'd like me to do using the \`/${commandText}\` command. ` +
-        `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
-        `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.`
+          `Hi! You can tell me what you'd like me to do using the \`/${commandText}\` command. ` +
+          `You can use it here, if you would like to receive private notifications that only you and I can see. ` +
+          `Alternatively, you can use it in any channel to receive notifications that are visible to all members in that channel.`
       }
     },
     {
@@ -286,20 +286,20 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
           `Try \`/${commandText} help\`, if you'd like help getting started`
       }
     }
-    
+
   ];
 
-  await slackBot.chat.postMessage({channel : dmChannelId, text: "howto", blocks: blocks/*attachments : { attachments }*/});
+  await slackBot.chat.postMessage({ channel: dmChannelId, text: "howto", blocks: blocks/*attachments : { attachments }*/ });
 };
 
 const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
   const slackTeam = new SlackWebClient(teamAccessToken);
-  slackTeam.chat.unfurl({ts : ts, channel : channel, unfurls : unfurls});
+  slackTeam.chat.unfurl({ ts: ts, channel: channel, unfurls: unfurls });
 };
 
 const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  slackBot.chat.postMessage({ channel : channelId, attachments :  attachments });
+  slackBot.chat.postMessage({ channel: channelId, attachments: attachments });
 };
 
 const sendMessageWithBlocks = async (botAccessToken, channelId, blocks) => {
