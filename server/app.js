@@ -1,4 +1,3 @@
-
 /*
  * data.world Slack Application
  * Copyright 2018 data.world, Inc.
