@@ -158,7 +158,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         DW_BASE_URL=https://api.data.world/v0
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)
         DW_CLIENT_SECRET= (client secret from the DW Oauth Client created earlier in step 4.)
-        DW_AUTH_BASE_URL=https://data.world/oauth/authorize
+        DW_AUTH_BASE_URL=https://auth.data.world/oauth/authorize
         DW_GET_TOKEN_BASE_URL=https://data.world/oauth/access_token
         DW_REDIRECT_URI= <ngrok url>/oauth/code_callback
 
