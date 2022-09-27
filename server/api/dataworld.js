@@ -192,7 +192,7 @@ const verifyDwToken = async token => {
     const res = await get(requestUrl, token);
     return res.data ? true : false;
   } catch (error) {
-    //console.error("DW token verification failed : ", error.message);
+    console.error("DW token verification failed : ", error.message);
     return false;
   }
 };
