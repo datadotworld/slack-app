@@ -36,7 +36,6 @@ const slackOauth = (req, res) => {
   if (!req.query.code) {
     return res.redirect(`${baseUrl}/failed`);
   }
-  let code = req.query.code;
   // If it's there...
   // call slack api
   slack
