@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/slack-app
     docker:
-      - image: circleci/node:8.9.4
+      - image: circleci/node:14.15.4
       - image: postgres:10.4
     steps:
       - checkout
