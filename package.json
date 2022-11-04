@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "12.0.0"
+    "node": "14.19.2"
   },
   "dependencies": {
     "@slack/client": "^3.16.0",
@@ -28,8 +28,8 @@
     "react-router": "4.2.0",
     "react-router-dom": "4.2.2",
     "react-scripts": "^1.1.5",
-    "sequelize": "^4.37.6",
-    "sequelize-cli": "^4.0.0",
+    "sequelize": "^6.21.1",
+    "sequelize-cli": "^6.4.1",
     "serve-favicon": "~2.4.5",
     "url": "^0.11.0",
     "uuid": "^3.2.1"
@@ -49,6 +49,7 @@
     "husky": "^0.14.3",
     "jest": "^23.3.0",
     "jest-junit": "^5.1.0",
+    "sequelize-cli": "^6.4.1",
     "supertest": "^3.1.0"
   }
 }
