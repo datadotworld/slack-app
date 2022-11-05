@@ -711,7 +711,7 @@ const handleMenuAction = async (payload, action, user) => {
 const performAction = async (req, res) => {
   // respond with 200 within 3secs
   res.status(200).send();
-  console.warn("Perform action command :", ${process.env.DW_AUTH_BASE_URL});
+  console.warn(`Perform action command : ${process.env.DW_AUTH_BASE_URL}`);
   // If it's ssl check no need for further processing.
   if (req.body.ssl_check) {
     return;
@@ -840,7 +840,7 @@ const validateAndProcessCommand = async (req, res, next) => {
     text: `*\`${req.body.command} ${req.body.text}\`*`
   });
   
-    console.warn("Valid and process command :", ${process.env.DW_AUTH_BASE_URL});
+    console.warn(`Valid and process command : ${process.env.DW_AUTH_BASE_URL}`);
   try {
     if (
       await isBotPresent(
