@@ -737,7 +737,7 @@ const performAction = async (req, res) => {
     const [isAssociated, user] = await auth.checkSlackAssociationStatus(
       payload.user.id
     );
-    if (!isAssociated) {
+    //if (!isAssociated) {
       // User is not associated begin association process.
       await beginSlackAssociation(
         payload.user.id,
@@ -745,7 +745,7 @@ const performAction = async (req, res) => {
         payload.team.id
       );
       return;
-    }
+    //}
 
     if ("callback_id" in payload) {
       // Handle legacy Slack actions
