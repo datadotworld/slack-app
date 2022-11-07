@@ -864,6 +864,11 @@ const validateAndProcessCommand = async (req, res, next) => {
       ) {
         showHelp(req.body.response_url);
       } else {
+          await beginSlackAssociation(
+            req.body.user_id,
+            req.body.channel_id,
+            req.body.team_id
+          );
         if (isAssociated) {
           // User is associated, carry on and validate command
           if (
