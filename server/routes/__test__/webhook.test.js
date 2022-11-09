@@ -27,6 +27,7 @@ const Team = require("../../models").Team;
 const Channel = require("../../models").Channel;
 const tokenHelpers = require("../../helpers/tokens");
 const fixtures = require("../../jest/fixtures");
+const dwDomain = require("../../helpers/helper").DW_DOMAIN;
 
 jest.mock("../../api/slack");
 jest.mock("../../helpers/tokens");
@@ -49,14 +50,14 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     dataset: "Cool pictures of dogs",
     links: {
       api: {
-        actor: "https://api.data.world/v0/users/user8",
-        owner: "https://api.data.world/v0/users/user8",
-        dataset: "https://api.data.world/v0/datasets/user8/cool-dog-pics"
+        actor: `https://${process.env.DW_BASE_URL}/users/user8`,
+        owner: `https://${process.env.DW_BASE_URL}/users/user8`,
+        dataset: `https://${process.env.DW_BASE_URL}/datasets/user8/cool-dog-pics`
       },
       web: {
-        actor: "https://data.world/user8",
-        owner: "https://data.world/user8",
-        dataset: "https://data.world/user8/cool-dog-pics"
+        actor: `https://${dwDomain}/user8`,
+        owner: `https://${dwDomain}/user8`,
+        dataset: `https://${dwDomain}/user8/cool-dog-pics`
       }
     },
     timestamp: "2017-10-24T17:36:23.533Z",
@@ -72,14 +73,14 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     project: "Cool pictures of dogs",
     links: {
       api: {
-        actor: "https://api.data.world/v0/users/user8",
-        owner: "https://api.data.world/v0/users/user8",
-        project: "https://api.data.world/v0/projects/user8/cool-dog-pics"
+        actor: `https://${process.env.DW_BASE_URL}/users/user8`,
+        owner: `https://${process.env.DW_BASE_URL}/users/user8`,
+        project: `https://${process.env.DW_BASE_URL}/projects/user8/cool-dog-pics`
       },
       web: {
-        actor: "https://data.world/user8",
-        owner: "https://data.world/user8",
-        project: "https://data.world/user8/cool-dog-pics"
+        actor: `https://${dwDomain}/user8`,
+        owner: `https://${dwDomain}/user8`,
+        project: `https://${dwDomain}/user8/cool-dog-pics`
       }
     },
     timestamp: "2017-10-24T17:36:23.533Z",
@@ -247,48 +248,78 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
 
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
+    const ts = 1508866583
 
-    const expectedAttachment = {
-      fallback: "user8 created a new dataset",
-      pretext: "<@slackId> created a *new dataset*",
-      title: "TrumpWorld",
-      title_link: "https://data.world/user8/cool-dog-pics",
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      color: "#5CC0DE",
-      text: "TrumpWorld Data",
-      footer: "user8/cool-dog-pics",
-      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-      ts: 1508866583,
-      mrkdwn_in: ["text", "pretext", "fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: "https://data.world/user8/cool-dog-pics/workspace"
+    let blockText = `<@slackId> created a *new dataset*\n\n*<https://${dwDomain}/user8/cool-dog-pics|TrumpWorld>*\nTrumpWorld Data\n`
+    const fields = [
+      {
+        title: "Files",
+        value:
+          `• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://${dwDomain}/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n`,
+      },
+      {
+        value:
+          "`trump` `trump world` `president` `connections` `swamp` `business network` ",
+      }
+    ]
+
+    if (fields.length > 0) {
+      fields.forEach(field => {
+        blockText += `${field.title}\n${field.value}\n`
+      })
+    }
+
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": blockText
         },
-        {
-          name: "subscribe",
-          text: "Subscribe",
-          style: "primary",
-          type: "button",
-          value: "user8/cool-dog-pics"
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
         }
-      ],
-      fields: [
-        {
-          title: "Files",
-          value:
-            "• <https://data.world/user8/cool-dog-pics/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_\n• <https://data.world/user8/cool-dog-pics/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_\n• <https://data.world/user8/cool-dog-pics/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_\n",
-          short: false
-        },
-        {
-          value:
-            "`trump` `trump world` `president` `connections` `swamp` `business network` ",
-          short: false
-        }
-      ]
-    };
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/dataset.png`,
+            "alt_text": "dataset"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^user8/cool-dog-pics  {date_short_pretty} at {time}|user8/cool-dog-pics>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/user8/cool-dog-pics/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "user8/cool-dog-pics"
+          }
+        ]
+      }
+    ]
 
     User.findOne = jest
       .fn()
@@ -300,7 +331,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     dataworld.getDataset = jest.fn(() => Promise.resolve({ data }));
     dataworld.getDWUser = jest.fn(() => Promise.resolve(ownerResponse));
 
-    slack.sendMessageWithAttachments = jest.fn();
+    slack.sendMessageWithBlocks = jest.fn();
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
@@ -313,10 +344,10 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       );
       expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
       expect(Channel.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendMessageWithAttachments).toBeCalledWith(
+      expect(slack.sendMessageWithBlocks).toBeCalledWith(
         botAccessToken,
         channelId,
-        [expectedAttachment]
+        expectedBlocks
       );
       done();
     });
@@ -444,7 +475,7 @@ describe("POST /api/v1/webhook/:webhookId", () => {
       .end((err, res) => {
         if (err) return done(err);
         done();
-        expect(Channel.findAll).toBeCalledWith({ 
+        expect(Channel.findAll).toBeCalledWith({
           where: { webhookId: "mockWebhookId" }
         });
       });

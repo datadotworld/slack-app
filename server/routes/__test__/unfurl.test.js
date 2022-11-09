@@ -25,6 +25,7 @@ const slack = require("../../api/slack");
 const Channel = require("../../models").Channel;
 const Team = require("../../models").Team;
 const Subscription = require("../../models").Subscription;
+const dwDomain = require("../../helpers/helper").DW_DOMAIN;
 
 describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
   const linkSharedEvent = {
@@ -37,7 +38,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
       channel: "GBRPJRPDH",
       message_ts: "1532076310.000245",
       links: [
-        { url: "https://data.world/kehesjay/actors-proj", domain: "data.world" }
+        { url: `https://${dwDomain}/kehesjay/actors-proj`, domain: "data.world" }
       ]
     },
     type: "event_callback",
@@ -177,8 +178,9 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
-    const team = { accessToken };
+    const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
+    const team = { teamId: "teamId", botAccessToken: "accessToken" };
+    const ts = 1522193271;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = {
@@ -205,52 +207,66 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
 
-    const expectedAttachment = {
-      fallback: "An Example Project that Shows What To Put in data.world",
-      color: "#F6BD68",
-      title: "An Example Project that Shows What To Put in data.world",
-      title_link: "https://data.world/kehesjay/actors-proj",
-      text:
-        "Link to a dataset, extract some data from a PDF, make some insights!",
-      footer: "kehesjay/actors-proj",
-      footer_icon: `${serverBaseUrl}/assets/project.png`,
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      ts: 1522193271,
-      mrkdwn_in: ["fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: "https://data.world/kehesjay/actors-proj/workspace"
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|An Example Project that Shows What To Put in data.world>\nLinked dataset\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n\nundefined\n\`new feature\` \n`
         },
-        {
-          name: "subscribe",
-          text: "Subscribe :nerd_face:",
-          style: "primary",
-          type: "button",
-          value: "kehesjay/actors-proj"
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
         }
-      ],
-      fields: [
-        { value: "`new feature` ", short: false },
-        {
-          title: "Linked dataset",
-          value:
-            "• <https://data.world/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n",
-          short: false
-        }
-      ]
-    };
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/project.png`,
+            "alt_text": "project"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^kehesjay/actors-proj  {date_short_pretty} at {time}|kehesjay/actors-proj>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/kehesjay/actors-proj/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "kehesjay/actors-proj"
+          }
+        ]
+      }
+    ]
 
     const expectedUnfurlObject = {
-      "https://data.world/kehesjay/actors-proj": expectedAttachment
+      [`https://${dwDomain}/kehesjay/actors-proj`]: { blocks: expectedBlocks }
     };
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toBeCalledWith(
         dwResourceId,
         dwAgentId,
@@ -263,6 +279,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         dwAgentId,
         dwAccessToken
       );
+
       expect(slack.sendUnfurlAttachments).toBeCalledWith(
         event.message_ts,
         event.channel,
@@ -278,8 +295,9 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
-    const accessToken = process.env.SLACK_TEAM_TOKEN || "accessToken";
-    const team = { accessToken };
+    const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
+    const team = { teamId: "teamId", botAccessToken: "accessToken" };
+    const ts = 1486421719;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
     const data = dwDataset;
@@ -302,56 +320,67 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
 
     const port = agent.app.address().port;
     const serverBaseUrl = `http://127.0.0.1:${port}`;
-
-    const expectedAttachment = {
-      fallback: "TrumpWorld",
-      color: "#5CC0DE",
-      title: "TrumpWorld",
-      title_link: "https://data.world/kehesjay/actors-proj",
-      text: "TrumpWorld Data",
-      thumb_url: `${serverBaseUrl}/assets/avatar.png`,
-      footer: "kehesjay/actors-proj",
-      footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-      ts: 1486421719,
-      callback_id: "dataset_subscribe_button",
-      mrkdwn_in: ["fields"],
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: "https://data.world/kehesjay/actors-proj/workspace"
+  
+    const expectedBlocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|TrumpWorld>\nFiles\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n\nundefined\n\`trump\` \`trump world\` \`president\` \`connections\` \`swamp\` \`business network\` \n`
         },
-        {
-          name: "subscribe",
-          text: "Subscribe :nerd_face:",
-          style: "primary",
-          type: "button",
-          value: "kehesjay/actors-proj"
+        "accessory": {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
         }
-      ],
-      fields: [
-        {
-          value:
-            "`trump` `trump world` `president` `connections` `swamp` `business network` ",
-          short: false
-        },
-        {
-          title: "Files",
-          value:
-            "• <https://data.world/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://data.world/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://data.world/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n",
-          short: false
-        }
-      ]
-    };
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/dataset.png`,
+            "alt_text": "dataset"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^kehesjay/actors-proj  {date_short_pretty} at {time}|kehesjay/actors-proj>`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Explore :microscope:",
+            },
+            "url": `https://${dwDomain}/kehesjay/actors-proj/workspace`
+          },
+          {
+            "type": "button",
+            "action_id": "dataset_subscribe_button",
+            "style": "primary",
+            "text": {
+              "type": "plain_text",
+              "text": "Subscribe"
+            },
+            "value": "kehesjay/actors-proj"
+          }
+        ]
+      }
+    ]
 
-    const expectedUnfurlObject = {
-      "https://data.world/kehesjay/actors-proj": expectedAttachment
+    let expectedUnfurlObject = {
+      [`https://${dwDomain}/kehesjay/actors-proj`]: { blocks: expectedBlocks }
     };
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toBeCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toBeCalledWith(
         dwResourceId,
         dwAgentId,

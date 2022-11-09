@@ -40,6 +40,8 @@ const {
 } = require("../helpers/requests");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 
+const dwDomain = helper.DW_DOMAIN;
+
 // Possible event actions
 const CREATE = "create";
 const UPDATE = "update";
@@ -54,7 +56,7 @@ const getEntityType = event => {
   return lang.isArray(event) ? event[0].entity : event.entity;
 };
 
-const getNewDatasetAttachment = (
+const getNewDatasetBlocks = (
   params,
   dataset,
   event,
@@ -74,36 +76,6 @@ const getNewDatasetAttachment = (
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
   const resourceId = `${params.owner}/${params.datasetId}`;
-  const attachment = {
-    fallback: `${dwActorId} created a new dataset`,
-    pretext: `${slackUserMentionText} created a *new dataset*`,
-    title: dataset.title,
-    title_link: event.links.web.dataset,
-    thumb_url:
-      dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
-    color: "#5CC0DE",
-    text: dataset.description || "_No Description_",
-    footer: `${resourceId}`,
-    footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-    ts: ts,
-    mrkdwn_in: ["text", "pretext", "fields"],
-    callback_id: "dataset_subscribe_button",
-    actions: [
-      {
-        type: "button",
-        text: "Explore :microscope:",
-        url: `${event.links.web.dataset}/workspace`
-      },
-      {
-        name: "subscribe",
-        text: "Subscribe",
-        style: "primary",
-        type: "button",
-        value: `${resourceId}`
-      }
-    ]
-  };
-
   const fields = [];
 
   const files = dataset.files;
@@ -111,15 +83,13 @@ const getNewDatasetAttachment = (
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
       if (index < helper.FILES_LIMIT) {
-        fieldValue += `• <https://data.world/${params.owner}/${
-          params.datasetId
-        }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
-          file.sizeInBytes
-        )})_\n`;
+        fieldValue += `• <https://${dwDomain}/${params.owner}/${params.datasetId
+          }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
+            file.sizeInBytes
+          )})_\n`;
       } else {
-        fieldValue += `<https://data.world/${params.owner}/${
-          params.datasetId
-        }|See more>\n`;
+        fieldValue += `<https://${dwDomain}/${params.owner}/${params.datasetId
+          }|See more>\n`;
         return false;
       }
     });
@@ -132,7 +102,7 @@ const getNewDatasetAttachment = (
   } else {
     fields.push({
       title: "File(s)",
-      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+      value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
     });
   }
 
@@ -148,14 +118,70 @@ const getNewDatasetAttachment = (
     });
   }
 
+  let datasetDescription = dataset.description || "_No Description_"
+  let blockText = `${slackUserMentionText} created a *new dataset*\n\n*<${event.links.web.dataset}|${dataset.title}>*\n${datasetDescription}\n`
+
   if (!lang.isEmpty(fields)) {
-    attachment.fields = fields;
+    collection.forEach(fields, field => {
+      blockText += `${field.title}\n${field.value}\n`
+    })
   }
 
-  return attachment;
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": blockText
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/dataset.png`,
+          "alt_text": "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore :microscope:",
+          },
+          "url": `${event.links.web.dataset}/workspace`
+        },
+        {
+          "type": "button",
+          "action_id": "dataset_subscribe_button",
+          "style": "primary",
+          "text": {
+            "type": "plain_text",
+            "text": "Subscribe"
+          },
+          "value": `${resourceId}`
+        }
+      ]
+    }]
+
+  return blocks;
 };
 
-const getLinkedDatasetAttachment = (
+const getLinkedDatasetBlocks = (
   params,
   dataset,
   event,
@@ -174,46 +200,50 @@ const getLinkedDatasetAttachment = (
   const slackUserMentionText = actorSlackId
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
-
-  const attachment = {
-    fallback: `${dwActorId} linked a dataset to a project`,
-    color: "#F6BD68",
-    pretext: `${slackUserMentionText} linked a *dataset* to a *project*`,
-    author_name: event.actor,
-    author_link: event.links.web.actor,
-    author_icon: dwActor.avatarUrl,
-    title: dataset.title,
-    title_link: `${event.links.web.project}/workspace`,
-    text: dataset.description || "_No Description_",
-    thumb_url: `${serverBaseUrl}/assets/link_dataset.png`,
-    footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: `${serverBaseUrl}/assets/project.png`,
-    ts: 123456789,
-    mrkdwn_in: ["text", "pretext", "fields"]
-  };
-
-  const fields = [];
+  let fieldValue = "";
 
   const tags = dataset.tags;
   if (!lang.isEmpty(tags)) {
-    let fieldValue = "";
     collection.forEach(tags, tag => {
       fieldValue += `\`${tag}\` `;
     });
-    fields.push({
-      value: fieldValue,
-      short: false
-    });
   }
 
-  if (!lang.isEmpty(fields)) {
-    attachment.fields = fields;
-  }
+  let datasetDescription = dataset.description || "_No Description_"
+  let blockText = `${slackUserMentionText} linked a *dataset* to a *project*\n\n*<${event.links.web.actor}|${event.actor}>*\n<${event.links.web.project}/workspace|${dataset.title}>\n${datasetDescription}\n${fieldValue}\n`
 
-  return attachment;
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": blockText
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": `${serverBaseUrl}/assets/link_dataset.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+        }
+      ]
+    }]
+
+  return blocks;
 };
 
-const getNewProjectAttachment = (
+const getNewProjectBlocks = (
   params,
   project,
   event,
@@ -234,38 +264,6 @@ const getNewProjectAttachment = (
     : `<${event.links.web.actor}|${dwActorId}>`;
 
   const resourceId = `${params.owner}/${params.datasetId}`;
-
-  const attachment = {
-    fallback: `${dwActorId} created a new project`,
-    pretext: `${slackUserMentionText} created a *new project*`,
-    title: project.title,
-    title_link: event.links.web.project,
-    thumb_url:
-      dwOwner.avatarUrl ||
-      `${serverBaseUrl}/assets/avatar.png`,
-    color: "#F6BD68",
-    text: project.objective || "_No Description_",
-    footer: `${resourceId}`,
-    footer_icon: `${serverBaseUrl}/assets/project.png`,
-    ts: ts,
-    mrkdwn_in: ["text", "pretext", "fields"],
-    callback_id: "dataset_subscribe_button",
-    actions: [
-      {
-        type: "button",
-        text: "Explore :microscope:",
-        url: `${event.links.web.dataset}/workspace`
-      },
-      {
-        name: "subscribe",
-        text: "Subscribe",
-        style: "primary",
-        type: "button",
-        value: `${resourceId}`
-      }
-    ]
-  };
-
   const fields = [];
 
   if (lang.isEmpty(project.linkedDatasets)) {
@@ -274,11 +272,10 @@ const getNewProjectAttachment = (
       let fieldValue = "";
       collection.forEach(files, (file, index) => {
         if (index < helper.FILES_LIMIT) {
-          fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
-            file.name
-          }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
+          fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/file?filename=${file.name
+            }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
         } else {
-          fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+          fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
           return false;
         }
       });
@@ -291,7 +288,7 @@ const getNewProjectAttachment = (
     } else {
       fields.push({
         title: "File(s)",
-        value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+        value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
       });
     }
   } else {
@@ -300,11 +297,10 @@ const getNewProjectAttachment = (
     let fieldValue = "";
     collection.forEach(linkedDatasets, (linkedDataset, index) => {
       if (index < helper.LINKED_DATASET_LIMIT) {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
-          linkedDataset.id
-        }|${linkedDataset.description || linkedDataset.title}>\n`;
+        fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/dataset?datasetid=${linkedDataset.id
+          }|${linkedDataset.description || linkedDataset.title}>\n`;
       } else {
-        fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+        fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
         return false;
       }
     });
@@ -328,14 +324,70 @@ const getNewProjectAttachment = (
     });
   }
 
+  let projectDescription = project.objective || "_No Description_"
+  let blockText = `${slackUserMentionText} created a *new project*\n\n*<${event.links.web.project}|${project.title}>*\n${projectDescription}\n`
+
   if (!lang.isEmpty(fields)) {
-    attachment.fields = fields;
+    collection.forEach(fields, field => {
+      blockText += `${field.title}\n${field.value}\n`
+    })
   }
 
-  return attachment;
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": blockText
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": dwOwner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "project"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore :microscope:",
+          },
+          "url": `${event.links.web.dataset}/workspace`
+        },
+        {
+          "type": "button",
+          "style": "primary",
+          "action_id": "dataset_subscribe_button",
+          "text": {
+            "type": "plain_text",
+            "text": "Subscribe"
+          },
+          "value": `${resourceId}`
+        }
+      ]
+    }]
+
+  return blocks;
 };
 
-const getNewInsightAttachment = (
+const getNewInsightBlocks = (
   params,
   insight,
   event,
@@ -355,37 +407,52 @@ const getNewInsightAttachment = (
     ? `<@${actorSlackId}>`
     : `<${event.links.web.actor}|${dwActorId}>`;
 
-  const attachment = {
-    fallback: `${dwActorId} shared a new insight`,
-    pretext: `${slackUserMentionText} shared a *new insight*`,
-    author_name: event.actor,
-    author_link: event.links.web.actor,
-    author_icon: dwActor.avatarUrl,
-    title: insight.title,
-    title_link: event.links.web.insight,
-    thumb_url: `${serverBaseUrl}/assets/insight.png`,
-    image_url: insight.thumbnail,
-    color: "#9581CA",
-    text: insight.description,
-    footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: `${serverBaseUrl}/assets/project.png`,
-    ts: ts,
-    mrkdwn_in: ["text", "pretext"],
-    actions: [
-      {
-        type: "button",
-        text: "Discuss :left_speech_bubble:",
-        url: `https://data.world/${params.owner}/${params.datasetId}/insights/${
-          insight.id
-        }`
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": `${slackUserMentionText} shared a *new insight*\n\n*<${event.links.web.actor}|${event.actor}>*\n<${event.links.web.insight}|${insight.title}>\n${insight.title}`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": `${serverBaseUrl}/assets/insight.png`,
+        "alt_text": "insight"
       }
-    ]
-  };
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "project"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Discuss :left_speech_bubble:",
+          },
+          "url": `https://${dwDomain}/${params.owner}/${params.datasetId}/insights/${insight.id
+            }`
+        }
+      ]
+    }]
 
-  return attachment;
+  return blocks;
 };
 
-const getFileUploadAttachment = (
+const getFileUploadBlocks = (
   params,
   files,
   event,
@@ -414,41 +481,48 @@ const getFileUploadAttachment = (
     fileCount > 1
       ? `${dwActorId} uploaded *${fileCount} files*`
       : `${dwActorId} uploaded *a file*`;
-  const attachment = {
-    fallback: fallback,
-    pretext: pretext,
-    color: isProjectFiles ? "#F6BD68" : "#5CC0DE", // changes if it's project file upload
-    thumb_url: isProjectFiles
-      ? `${serverBaseUrl}/assets/file_upload_project.png`
-      : `${serverBaseUrl}/assets/file_upload_dataset.png`, // changes if it's project file upload
-    footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: isProjectFiles
-      ? `${serverBaseUrl}/assets/project.png`
-      : `${serverBaseUrl}/assets/dataset.png`, // changes if it's project file upload
-    ts: ts,
-    mrkdwn_in: ["pretext", "fields"]
-  };
-
-  const fields = [];
   let fieldValue = "";
 
   collection.forEach(files, file => {
-    fieldValue += `• <https://data.world/${params.owner}/${
-      params.datasetId
-    }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
-      file.sizeInBytes
-    )})_\n`;
+    fieldValue += `• <https://${dwDomain}/${params.owner}/${params.datasetId
+      }/workspace/file?filename=${file.name}|${file.name}> _(${pretty(
+        file.sizeInBytes
+      )})_\n`;
   });
 
-  fields.push({
-    title: fileCount > 1 ? "Files Uploaded" : "File Uploaded",
-    value: fieldValue,
-    short: false
-  });
-
-  attachment.fields = fields;
-
-  return attachment;
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": fileCount > 1 ? `${dwActorId} uploaded *${fileCount} files*\n\n*Files Uploaded*\n\n${fieldValue}` : `${dwActorId} uploaded *a file*\n\n*File Uploaded*\n\n${fieldValue}`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": isProjectFiles
+          ? `${serverBaseUrl}/assets/file_upload_project.png`
+          : `${serverBaseUrl}/assets/file_upload_dataset.png`,
+        "alt_text": isProjectFiles ? "file upload project" : "file upload dataset"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": isProjectFiles
+            ? `${serverBaseUrl}/assets/project.png`
+            : `${serverBaseUrl}/assets/dataset.png`,
+          "alt_text": isProjectFiles ? "project" : "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+        }
+      ]
+    }
+  ]
+  return blocks;
 };
 
 const extractResouceIdFromWebLink = (webLink, action) => {
@@ -476,15 +550,15 @@ const handleDatasetEvent = async (
     );
     const response = isProject
       ? await dataworld.getProject(
-          params.datasetId,
-          params.owner,
-          user.dwAccessToken
-        )
+        params.datasetId,
+        params.owner,
+        user.dwAccessToken
+      )
       : await dataworld.getDataset(
-          params.datasetId,
-          params.owner,
-          user.dwAccessToken
-        );
+        params.datasetId,
+        params.owner,
+        user.dwAccessToken
+      );
     const data = response.data;
 
     // dw owner object
@@ -495,29 +569,29 @@ const handleDatasetEvent = async (
     );
     const dwOwner = dwOwnerResponse.data;
     // Create attachment
-    let attachment = null;
+    let blocks = null;
 
     if (event.action === CREATE) {
       //handle datasets/projects create event
-      attachment = isProject
-        ? getNewProjectAttachment(
-            params,
-            data,
-            event,
-            dwOwner,
-            dwActorId,
-            actorSlackId,
-            serverBaseUrl
-          )
-        : getNewDatasetAttachment(
-            params,
-            data,
-            event,
-            dwOwner,
-            dwActorId,
-            actorSlackId,
-            serverBaseUrl
-          );
+      blocks = isProject
+        ? getNewProjectBlocks(
+          params,
+          data,
+          event,
+          dwOwner,
+          dwActorId,
+          actorSlackId,
+          serverBaseUrl
+        )
+        : getNewDatasetBlocks(
+          params,
+          data,
+          event,
+          dwOwner,
+          dwActorId,
+          actorSlackId,
+          serverBaseUrl
+        );
     } else {
       // handle dataset/project update events
       if (isProject) {
@@ -539,7 +613,7 @@ const handleDatasetEvent = async (
             "name"
           );
 
-          const fileAttachment = getFileUploadAttachment(
+          const fileBlocks = getFileUploadBlocks(
             params,
             addedFiles,
             event,
@@ -548,7 +622,7 @@ const handleDatasetEvent = async (
             isProject,
             serverBaseUrl
           );
-          return sendEventToSlack(channelIds, fileAttachment);
+          return sendEventToSlack(channelIds, fileBlocks);
         }
 
         // Check size diff to ensure we send notification only when dataset are linked not removed.
@@ -566,7 +640,7 @@ const handleDatasetEvent = async (
           );
           const dwActor = dwActorResponse.data;
           collection.forEach(linkedDatasets, linkedDataset => {
-            const attachment = getLinkedDatasetAttachment(
+            const blocks = getLinkedDatasetBlocks(
               params,
               linkedDataset,
               event,
@@ -574,7 +648,7 @@ const handleDatasetEvent = async (
               actorSlackId,
               serverBaseUrl
             );
-            sendEventToSlack(channelIds, attachment);
+            sendEventToSlack(channelIds, blocks);
           });
           return;
         }
@@ -588,9 +662,9 @@ const handleDatasetEvent = async (
         return;
       }
     }
-    if (attachment) {
+    if (blocks) {
       // Send message
-      sendEventToSlack(channelIds, attachment);
+      sendEventToSlack(channelIds, blocks);
     }
   } catch (error) {
     console.error("Failed to handle dataset event : ", error);
@@ -622,7 +696,7 @@ const handleInsightEvent = async (
     dwActorId
   );
   const dwActor = dwActorResponse.data;
-  const attachment = getNewInsightAttachment(
+  const blocks = getNewInsightBlocks(
     params,
     insight,
     event,
@@ -630,7 +704,7 @@ const handleInsightEvent = async (
     actorSlackId,
     serverBaseUrl
   );
-  sendEventToSlack(channelIds, attachment);
+  sendEventToSlack(channelIds, blocks);
 };
 
 const handleFileEvents = async (
@@ -654,15 +728,15 @@ const handleFileEvents = async (
   // get DW project or dataset
   const response = isProjectFiles
     ? await dataworld.getProject(
-        params.datasetId,
-        params.owner,
-        user.dwAccessToken
-      )
+      params.datasetId,
+      params.owner,
+      user.dwAccessToken
+    )
     : await dataworld.getDataset(
-        params.datasetId,
-        params.owner,
-        user.dwAccessToken
-      );
+      params.datasetId,
+      params.owner,
+      user.dwAccessToken
+    );
   const data = response.data;
 
   // get newly added file names from event.
@@ -675,7 +749,7 @@ const handleFileEvents = async (
     }
   });
 
-  const attachment = getFileUploadAttachment(
+  const blocks = getFileUploadBlocks(
     params,
     files,
     event,
@@ -684,20 +758,21 @@ const handleFileEvents = async (
     isProjectFiles,
     serverBaseUrl
   );
-  sendEventToSlack(channelIds, attachment);
+  sendEventToSlack(channelIds, blocks);
 };
 
-const sendEventToSlack = async (channelIds, attachment) => {
-  //send attachment to all subscribed channels
+const sendEventToSlack = async (channelIds, blocks) => {
+  //send blocks to all subscribed channels
   collection.forEach(channelIds, async channelId => {
     const channel = await Channel.findOne({ where: { channelId: channelId } });
-    sendSlackMessage(channelId, attachment, channel.teamId);
+    sendSlackMessage(channelId, blocks, channel.teamId);
   });
 };
 
-const sendSlackMessage = async (channelId, attachment, teamId) => {
+
+const sendSlackMessage = async (channelId, blocks, teamId) => {
   const token = await getBotAccessTokenForTeam(teamId)
-  slack.sendMessageWithAttachments(token, channelId, [attachment]);
+  slack.sendMessageWithBlocks(token, channelId, blocks);
 };
 
 const webhook = {
@@ -708,7 +783,7 @@ const webhook = {
       // Get resource id
 
       // When insigts are added the action in event payload is Create not Update (of project as expected), this help nomalize things.
-      const action = event.links.web.insight ? UPDATE : event.action; 
+      const action = event.links.web.insight ? UPDATE : event.action;
       const resourceId = extractResouceIdFromWebLink(
         event.links.web.project || event.links.web.dataset,
         action

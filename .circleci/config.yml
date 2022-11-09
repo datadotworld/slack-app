@@ -1,10 +1,16 @@
-version: 2
+version: 2.1
+
+resources:
+  defaults: &defaults
+    docker:
+      - image: cimg/node:14.19.2
+      - image: cimg/postgres:13.6
+
+    working_directory: ~/slack-app
+
 jobs:
   build:
-    working_directory: ~/slack-app
-    docker:
-      - image: circleci/node:12.0.0
-      - image: postgres:10.4
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -19,6 +25,9 @@ jobs:
       - run:
           name: Build react app
           command: yarn build
+      - run: 
+          name: Set Node Env
+          command: export NODE_ENV=development
       - run:
           name: Run tests with JUnit as reporter
           command: yarn test-with-reporter

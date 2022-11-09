@@ -245,7 +245,7 @@ const completeSlackAssociation = async (req, res) => {
       }
     }
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     return res.status(500).send("Slack association failed.");
   }
 };

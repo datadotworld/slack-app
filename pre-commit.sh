@@ -11,7 +11,7 @@ if [ "$branch" = "main" ]; then
 fi
 
 # Prevent renaming of assets
-if [[ "$directories" = *"public/assets"* ]]; then
+if [ "$directories" = *"public/assets"* ]; then
   echo "You can't rename or delete files in directory : public/assets"
   exit 1
 fi

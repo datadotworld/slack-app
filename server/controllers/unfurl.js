@@ -32,10 +32,23 @@ const auth = require("./auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
+const dwDomain = helper.DW_DOMAIN;
 
-const dwLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+).*/i;
-const insightLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
-const queryLinkFormat = /^(https:\/\/data.world\/[\w-]+\/[\w-]+\/workspace\/query\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$/i;
+const dwLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*`,
+  "i"
+);
+
+const insightLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  "i"
+);
+
+const queryLinkFormat = new RegExp(
+  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/workspace\/query\\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  "i"
+);
 
 const messageAttachmentFromLink = async (
   token,
@@ -111,62 +124,17 @@ const unfurlDataset = (
   const resourceId = `${params.owner}/${params.datasetId}`;
   //Check if it's a project object.
   const ts = getTimestamp(dataset);
-
-  const attachment = {
-    fallback: dataset.title,
-    color: "#5CC0DE",
-    title: dataset.title,
-    title_link: params.link,
-    text: dataset.description,
-    thumb_url: owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
-    footer: `${resourceId}`,
-    footer_icon: `${serverBaseUrl}/assets/dataset.png`,
-    ts: ts,
-    callback_id: "dataset_subscribe_button",
-    mrkdwn_in: ["fields"],
-    actions: [
-      {
-        type: "button",
-        text: "Explore :microscope:",
-        url: `https://data.world/${resourceId}/workspace`
-      }
-    ],
-    url: params.link
-  };
-
-  if (addSubcribeAction) {
-    attachment.actions.push({
-      name: "subscribe",
-      text: "Subscribe :nerd_face:",
-      style: "primary",
-      type: "button",
-      value: `${resourceId}`
-    });
-  }
-
   const fields = [];
-  const tags = dataset.tags;
-  if (!lang.isEmpty(tags)) {
-    let fieldValue = "";
-    collection.forEach(tags, tag => {
-      fieldValue += `\`${tag}\` `;
-    });
-    fields.push({
-      value: fieldValue,
-      short: false
-    });
-  }
 
   const files = dataset.files;
   if (!lang.isEmpty(files)) {
     let fieldValue = "";
     collection.forEach(files, (file, index) => {
       if (index < helper.FILES_LIMIT) {
-        fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
-          file.name
-        }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
+        fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/file?filename=${file.name
+          }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
       } else {
-        fieldValue += `<https://data.world/${resourceId}|See more>\n`;
+        fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
         return false;
       }
     });
@@ -179,14 +147,89 @@ const unfurlDataset = (
   } else {
     fields.push({
       title: "File(s)",
-      value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
+      value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
     });
   }
 
-  if (fields.length > 0) {
-    attachment.fields = fields;
+  const tags = dataset.tags;
+  if (!lang.isEmpty(tags)) {
+    let fieldValue = "";
+    collection.forEach(tags, tag => {
+      fieldValue += `\`${tag}\` `;
+    });
+    fields.push({
+      value: fieldValue,
+      short: false
+    });
   }
-  return attachment;
+
+  let blockText = `<${params.link}|${dataset.title}>\n`
+
+  if (!lang.isEmpty(fields)) {
+    collection.forEach(fields, field => {
+      blockText += `${field.title}\n${field.value}\n`
+    })
+  }
+  
+  const actions = {
+    "type": "actions",
+    "elements": [
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "Explore :microscope:",
+        },
+        "url": `https://${dwDomain}/${resourceId}/workspace`
+      }
+    ]
+  }
+
+  if (addSubcribeAction) {
+    actions.elements.push({
+      "type": "button",
+      "action_id": "dataset_subscribe_button",
+      "style": "primary",
+      "text": {
+        "type": "plain_text",
+        "text": "Subscribe"
+      },
+      "value": `${resourceId}`
+    });
+  }
+
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": blockText
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+        "alt_text": "avatar"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/dataset.png`,
+          "alt_text": "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+        }
+      ]
+    },
+    actions
+  ]
+
+  const unfurlBlocks = { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
 const unfurlProject = async (
@@ -204,41 +247,54 @@ const unfurlProject = async (
     );
     const project = response.data;
     const resourceId = `${params.owner}/${params.datasetId}`;
-
     const ts = getTimestamp(project);
-    const attachment = {
-      fallback: project.title,
-      color: "#F6BD68",
-      title: project.title,
-      title_link: params.link,
-      text: project.objective,
-      footer: `${resourceId}`,
-      footer_icon: `${serverBaseUrl}/assets/project.png`,
-      thumb_url: owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
-      ts: ts,
-      mrkdwn_in: ["fields"],
-      callback_id: "dataset_subscribe_button",
-      actions: [
-        {
-          type: "button",
-          text: "Explore :microscope:",
-          url: `https://data.world/${resourceId}/workspace`
-        }
-      ],
-      url: params.link
-    };
+    const fields = [];
 
-    if (addSubcribeAction) {
-      attachment.actions.push({
-        name: "subscribe",
-        text: "Subscribe :nerd_face:",
-        style: "primary",
-        type: "button",
-        value: `${resourceId}`
+    if (lang.isEmpty(project.linkedDatasets)) {
+      const files = project.files;
+      if (!lang.isEmpty(files)) {
+        let fieldValue = "";
+        collection.forEach(files, (file, index) => {
+          if (index < helper.FILES_LIMIT) {
+            fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/file?filename=${file.name
+              }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
+          } else {
+            fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
+            return false;
+          }
+        });
+
+        fields.push({
+          title: files.length > 1 ? "Files" : "File",
+          value: fieldValue,
+          short: false
+        });
+      } else {
+        fields.push({
+          title: "File(s)",
+          value: `_none found_\n_need some ?_\n_be the first to <https://${dwDomain}/${resourceId}|add one>_`
+        });
+      }
+    } else {
+      // there are linked datasets
+      const linkedDatasets = project.linkedDatasets;
+      let fieldValue = "";
+      collection.forEach(linkedDatasets, (linkedDataset, index) => {
+        if (index < helper.LINKED_DATASET_LIMIT) {
+          fieldValue += `• <https://${dwDomain}/${resourceId}/workspace/dataset?datasetid=${linkedDataset.id
+            }|${linkedDataset.description || linkedDataset.title}>\n`;
+        } else {
+          fieldValue += `<https://${dwDomain}/${resourceId}|See more>\n`;
+          return false;
+        }
+      });
+
+      fields.push({
+        title: linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
+        value: fieldValue,
+        short: false
       });
     }
-
-    const fields = [];
 
     const tags = project.tags;
     if (!lang.isEmpty(tags)) {
@@ -252,58 +308,73 @@ const unfurlProject = async (
       });
     }
 
-    if (lang.isEmpty(project.linkedDatasets)) {
-      const files = project.files;
-      if (!lang.isEmpty(files)) {
-        let fieldValue = "";
-        collection.forEach(files, (file, index) => {
-          if (index < helper.FILES_LIMIT) {
-            fieldValue += `• <https://data.world/${resourceId}/workspace/file?filename=${
-              file.name
-            }|${file.name}> _(${pretty(file.sizeInBytes)})_ \n`;
-          } else {
-            fieldValue += `<https://data.world/${resourceId}|See more>\n`;
-            return false;
-          }
-        });
+    let blockText = `<${params.link}|${project.title}>\n`
 
-        fields.push({
-          title: files.length > 1 ? "Files" : "File",
-          value: fieldValue,
-          short: false
-        });
-      } else {
-        fields.push({
-          title: "File(s)",
-          value: `_none found_\n_need some ?_\n_be the first to <https://data.world/${resourceId}|add one>_`
-        });
-      }
-    } else {
-      // there are linked datasets
-      const linkedDatasets = project.linkedDatasets;
-      let fieldValue = "";
-      collection.forEach(linkedDatasets, (linkedDataset, index) => {
-        if (index < helper.LINKED_DATASET_LIMIT) {
-          fieldValue += `• <https://data.world/${resourceId}/workspace/dataset?datasetid=${
-            linkedDataset.id
-          }|${linkedDataset.description || linkedDataset.title}>\n`;
-        } else {
-          fieldValue += `<https://data.world/${resourceId}|See more>\n`;
-          return false;
+    if (!lang.isEmpty(fields)) {
+      collection.forEach(fields, field => {
+        blockText += `${field.title}\n${field.value}\n`
+      })
+    }
+
+    const actions = {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore :microscope:",
+          },
+          "url": `https://${dwDomain}/${resourceId}/workspace`
         }
-      });
+      ]
+    }
 
-      fields.push({
-        title: linkedDatasets.length > 1 ? "Linked datasets" : "Linked dataset",
-        value: fieldValue,
-        short: false
+    if (addSubcribeAction) {
+      actions.elements.push({
+        "type": "button",
+        "action_id": "dataset_subscribe_button",
+        "style": "primary",
+        "text": {
+          "type": "plain_text",
+          "text": "Subscribe"
+        },
+        "value": `${resourceId}`
       });
     }
 
-    if (fields.length > 0) {
-      attachment.fields = fields;
-    }
-    return attachment;
+    const blocks = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": blockText
+        },
+        "accessory": {
+          "type": "image",
+          "image_url": owner.avatarUrl || `${serverBaseUrl}/assets/avatar.png`,
+          "alt_text": "avatar"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/project.png`,
+            "alt_text": "project"
+          },
+          {
+            "type": "mrkdwn",
+            "text": `<!date^${ts}^${resourceId}  {date_short_pretty} at {time}|${resourceId}>`
+          }
+        ]
+      },
+      actions
+    ]
+
+    const unfurlBlocks = { blocks: blocks, url: params.link }
+    return unfurlBlocks;
   } catch (error) {
     console.error("failed to get project attachment : ", error.message);
     return;
@@ -321,7 +392,7 @@ const unfurlInsight = (params, serverBaseUrl) => {
         insight.author
       );
       const author = authorResponse.data;
-      return getInsightAttachment(insight, author, params, serverBaseUrl);
+      return getInsightUnfurlBlocks(insight, author, params, serverBaseUrl);
     })
     .catch(error => {
       console.error("failed to fetch insight : ", error.message);
@@ -345,7 +416,7 @@ const unfurlQuery = async (params, token, serverBaseUrl) => {
 
     const owner = ownerResponse.data;
 
-    return getQueryAttachment(
+    return getQueryUnfurlBlocks(
       query,
       owner,
       params,
@@ -358,68 +429,99 @@ const unfurlQuery = async (params, token, serverBaseUrl) => {
   }
 };
 
-const getInsightAttachment = (insight, author, params, serverBaseUrl) => {
+const getInsightUnfurlBlocks = (insight, author, params, serverBaseUrl) => {
   const ts = getTimestamp(insight);
-  const attachment = {
-    fallback: insight.title,
-    color: "#9581CA",
-    author_name: author.displayName,
-    author_link: `http://data.world/${author.id}`,
-    author_icon: author.avatarUrl,
-    title: insight.title,
-    title_link: params.link,
-    text: insight.description,
-    image_url: insight.thumbnail,
-    footer: `${params.owner}/${params.projectId}`,
-    footer_icon: `${serverBaseUrl}/assets/project.png`,
-    url: params.link,
-    ts: ts,
-    actions: [
-      {
-        type: "button",
-        text: "Discuss :left_speech_bubble:",
-        url: params.link
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": `*<http://${dwDomain}/${author.id}|${author.displayName}>*\n<${params.link}|${insight.title}>\n${insight.description}`
       }
-    ]
-  };
-  if (!attachment.image_url) {
-    attachment.image_url = insight.body.imageUrl;
-  }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": `${serverBaseUrl}/assets/project.png`,
+          "alt_text": "project"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.projectId}  {date_short_pretty} at {time}|${params.owner}/${params.projectId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Discuss :left_speech_bubble:",
+          },
+          "url": params.link
+        }
+      ]
+    }]
 
-  return attachment;
+  const unfurlBlocks = { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
-const getQueryAttachment = (query, owner, params, isProject, serverBaseUrl) => {
+const getQueryUnfurlBlocks = (query, owner, params, isProject, serverBaseUrl) => {
   const ts = getTimestamp(query);
   const isSql = query.language === "SQL";
-  const attachment = {
-    fallback: query.name,
-    color: isSql ? "#0e33cb" : "#ac40be",
-    author_name: owner.displayName,
-    author_link: `http://data.world/${owner.id}`,
-    author_icon: owner.avatarUrl,
-    thumb_url: isSql
-      ? `${serverBaseUrl}/assets/icon-sql.png`
-      : `${serverBaseUrl}/assets/icon-sparql.png`,
-    title: query.name,
-    title_link: params.link,
-    text: `\`\`\`${query.body}\`\`\``,
-    footer: `${params.owner}/${params.datasetId}`,
-    footer_icon: isProject
-      ? `${serverBaseUrl}/assets/project.png`
-      : `${serverBaseUrl}/assets/dataset.png`,
-    url: params.link,
-    ts: ts,
-    actions: [
-      {
-        type: "button",
-        text: "Run query :zap:",
-        url: params.link
+  const blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n<${params.link}|${query.name}>\n\`\`\`${query.body}\`\`\`\n`
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": isSql
+          ? `${serverBaseUrl}/assets/icon-sql.png`
+          : `${serverBaseUrl}/assets/icon-sparql.png`,
+        "alt_text": "avatar"
       }
-    ]
-  };
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "image",
+          "image_url": isProject
+            ? `${serverBaseUrl}/assets/project.png`
+            : `${serverBaseUrl}/assets/dataset.png`,
+          "alt_text": isProject ? "project" : "dataset"
+        },
+        {
+          "type": "mrkdwn",
+          "text": `<!date^${ts}^${params.owner}/${params.datasetId}  {date_short_pretty} at {time}|${params.owner}/${params.datasetId}>`
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Run query :zap:",
+          },
+          "url": params.link
+        }
+      ]
+    }
+  ]
 
-  return attachment;
+  const unfurlBlocks= { blocks: blocks, url: params.link }
+  return unfurlBlocks;
 };
 
 const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
@@ -435,6 +537,8 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         let token = user.dwAccessToken;
         const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
 
+        const botToken = await getBotAccessTokenForTeam(team.teamId);
+
         Promise.all(
           event.links.map(
             messageAttachmentFromLink.bind(
@@ -447,7 +551,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
         )
           // Transform the array of attachments to an unfurls object keyed by URL
           .then(attachments => collection.keyBy(attachments, "url")) // group by url
-          .then(unfurls =>
+          .then(unfurls => 
             object.mapValues(unfurls, attachment =>
               object.omit(attachment, "url")
             )
@@ -458,7 +562,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               event.message_ts,
               event.channel,
               unfurls,
-              teamToken
+              botToken
             )
           )
           .catch(console.error);
@@ -514,7 +618,10 @@ const handleMessage = async data => {
   try {
     const { event, team_id } = data;
     const message = event.text ? event.text : "";
-    const dwLinkFormat = /((<https:\/\/data.world\/[\w-]+\/[\w-]+).*>)/i;
+    const dwLinkFormat = new RegExp(
+      `(<https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*>`,
+      "i"
+    );
     const command = `/${process.env.SLASH_COMMAND}`;
     const ignoredSubTypes = ["bot_message", "message_deleted"];
     const isBotMessage =
@@ -577,6 +684,7 @@ const getTimestamp = resource => {
 
 const unfurl = {
   async processRequest(req, res) {
+
     // respond to request immediately no need to wait.
     res.json({ response_type: "in_channel" });
     const event = req.body.event;

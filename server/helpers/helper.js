@@ -24,7 +24,8 @@ const FILES_LIMIT = 5;
 const LINKED_DATASET_LIMIT = 5;
 const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
   process.env.DW_CLIENT_ID
-}&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
+}&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
+const DW_DOMAIN = process.env.DW_DOMAIN || "data.world";
 
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
@@ -40,9 +41,9 @@ const extractParamsFromCommand = (command, isAccountCommand) => {
 
 const extractDatasetOrProjectParamsFromLink = link => {
   let params = {};
-  const cleanLink = link.replace(/(https\:\/\/data.world\/|)/g, "");
+  const cleanLink = link.replace(/(^.*\:\/\/[^\/]+\/)/g, '');
   const pathNames = cleanLink.split("/");
-
+  
   params.owner = pathNames[0];
   params.datasetId = pathNames[1];
   params.link = link;
@@ -97,7 +98,7 @@ const extractIdFromLink = link => {
 };
 
 const cleanSlackLinkInput = link => {
-  return link.replace(/(<https\:\/\/data.world\/|>)/g, "");
+  return link.replace(/(<.*\:\/\/[^\/]+\/|>)/g, "");
 };
 
 const getDelay = (retryCount) => {
@@ -140,6 +141,7 @@ const getServerBaseUrl = (req) => {
 module.exports = {
   FILES_LIMIT,
   LINKED_DATASET_LIMIT,
+  DW_DOMAIN,
   DW_AUTH_URL,
   extractParamsFromCommand,
   extractDatasetOrProjectParamsFromLink,
