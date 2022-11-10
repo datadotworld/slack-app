@@ -36,17 +36,17 @@ const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 const dwDomain = helper.DW_DOMAIN;
 
 const dwLinkFormat = new RegExp(
-  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+).*`,
+  `^(https:\/\/[a-z0-9-.]*${dwDomain}\/[\\w-]+\/[\\w-]+).*`,
   "i"
 );
 
 const insightLinkFormat = new RegExp(
-  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  `^(https:\/\/[a-z0-9-.]*${dwDomain}\/[\\w-]+\/[\\w-]+\/insights\/[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
   "i"
 );
 
 const queryLinkFormat = new RegExp(
-  `^(https:\/\/${dwDomain}\/[\\w-]+\/[\\w-]+\/workspace\/query\\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
+  `^(https:\/\/[a-z0-9-.]*${dwDomain}\/[\\w-]+\/[\\w-]+\/workspace\/query\\?queryid=[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})$`,
   "i"
 );
 
