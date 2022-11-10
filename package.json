@@ -4,7 +4,7 @@
   "private": true,
   "type": "commonjs",
   "engines": {
-    "node": "14.15.4"
+    "node": "14.19.2"
   },
   "dependencies": {
     "@slack/web-api": "~6.7.2",
@@ -36,7 +36,7 @@
   },
   "scripts": {
     "precommit": "./pre-commit.sh",
-    "start": "yarn run migration --env development && node --trace-warnings ./server/bin/www",
+    "start": "yarn run migration --env production && node --trace-warnings ./server/bin/www",
     "dev": "yarn run heroku-prebuild && yarn run migration && yarn run start",
     "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
