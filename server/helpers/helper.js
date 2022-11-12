@@ -47,6 +47,7 @@ const extractDatasetOrProjectParamsFromLink = link => {
   params.owner = pathNames[0];
   params.datasetId = pathNames[1];
   params.link = link;
+  console.log('ssb link :' + link)
 
   return params;
 };
