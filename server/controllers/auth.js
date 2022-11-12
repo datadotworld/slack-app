@@ -38,10 +38,12 @@ const slackOauth = (req, res) => {
   }
   // If it's there...
   // call slack api
+  console.log('ssb baseurl : ' + baseUrl )
   slack
     .oauthAccess(req.query.code)
     .then(async response => {
       // create team with returned data
+      console.log('ssb response : ' + response.data.team.name )
       const [team, created] = await Team.findOrCreate({
         where: { teamId: response.data.team.id },
         defaults: {
@@ -207,6 +209,7 @@ const beginUnfurlSlackAssociation = async (
 
 const completeSlackAssociation = async (req, res) => {
   try {
+    console.log('ssb completeSlackAssociation:' + req.get("host"))
     const response = await dataworld.exchangeAuthCode(req.query.code);
     if (response.error) {
       return res.status(400).send("failed");
