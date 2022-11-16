@@ -1,8 +1,8 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "mdn_123",
-    "database": "slackapp",
+    "username": "PG_USERNAME",
+    "password": "PG_PASSWORD",
+    "database": "PG_DATABASE",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
