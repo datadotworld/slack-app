@@ -36,11 +36,12 @@
   },
   "scripts": {
     "precommit": "./pre-commit.sh",
-    "start": "yarn run migration --env development && node --trace-warnings ./server/bin/www",
+    "start": "yarn run migration --env production && node --trace-warnings ./server/bin/www",
+    "start-dev": "yarn run migration --env development && node --trace-warnings ./server/bin/www",
     "dev": "yarn run heroku-prebuild && yarn run migration && yarn run start",
     "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
-    "migration": "sequelize-cli db:migrate",
+    "migration": "sequelize db:migrate",
     "test": "jest --notify --forceExit  --clearMocks --detectOpenHandles",
     "test-with-reporter": "jest --forceExit --detectOpenHandles --ci --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"

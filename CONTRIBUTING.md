@@ -173,7 +173,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
 #### 6. Start the server
 
-    1. From the project root dir run : yarn dev (server should build and start on port 5000 or any other port you decide to go with)
+    1. From the project root dir run : yarn start-dev (server should build and start on port 5000 or any other port you decide to go with)
 
 #### 7. Event subscription & Interactive Components request url
 
@@ -201,7 +201,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         3. Click install application button.
         4. Copy the "OAuth Access Token" and use it as the value of SLACK_TEAM_TOKEN in .env
         5. Copy the "Bot User OAuth Access Token" and use it as the value of SLACK_BOT_TOKEN in .env
-        6. Shutdown the server and restart with "yarn start" / "yarn dev"
+        6. Shutdown the server and restart with "yarn start-dev"
 
     B. Install as an integration in any workspace 
 
