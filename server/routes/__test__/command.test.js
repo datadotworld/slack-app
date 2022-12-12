@@ -47,12 +47,11 @@ describe("POST /api/v1/command/ - Process slash command", () => {
   });
 
   it("should handle slack ssl check properly", done => {
-    const token = process.env.SLACK_VERIFICATION_TOKEN;
     const ssl_check = "ssl_check";
     auth.verifySlackRequest = jest.fn(() => true);
     request(server)
       .post("/api/v1/command/")
-      .send({ ssl_check, token })
+      .send({ ssl_check })
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
