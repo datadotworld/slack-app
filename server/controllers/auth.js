@@ -100,7 +100,7 @@ const slackOauth = (req, res) => {
     });
 };
 
-const verifySlackRequest = async (headers, body) => {
+const verifySlackRequest = (headers, body) => {
   const slackSigningSecret = process.env.SLACK_SIGNING_SECRET;
   const slackTimestamp = headers["x-slack-request-timestamp"];
   const slackSignature = headers["x-slack-signature"];
