@@ -118,6 +118,7 @@ const verifySlackRequest = (headers, body) => {
 };
 
 const verifySlackClient = (req, res, next) => {
+  console.log("valid slack client");
   if (verifySlackRequest(req.headers, req.rawBody)) {
     console.log("valid slack request12");
     if (req.body.challenge) {
