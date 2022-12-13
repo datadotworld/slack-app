@@ -29,7 +29,6 @@ const dwDomain = require("../../helpers/helper").DW_DOMAIN;
 
 describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
   const linkSharedEvent = {
-    token: process.env.SLACK_VERIFICATION_TOKEN,
     team_id: "teamId",
     api_app_id: "appId",
     event: {
@@ -401,7 +400,6 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
 
 describe("POST /api/v1/unfurl/action - Process member joined channel event", () => {
   const joinedChannelEvent = {
-    token: process.env.SLACK_VERIFICATION_TOKEN,
     team_id: "teamId",
     api_app_id: "appId",
     event: {

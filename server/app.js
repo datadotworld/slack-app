@@ -28,11 +28,17 @@ const command = require("./routes/command");
 const unfurl = require("./routes/unfurl");
 const webhook = require("./routes/webhook");
 
+const rawBodySaver = function (req, res, buf, encoding) {
+  if (buf && buf.length) {
+    req.rawBody = buf.toString(encoding || 'utf8');
+  }
+}
+
 const app = express();
 
 app.use(logger("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({ verify: rawBodySaver }));
+app.use(bodyParser.urlencoded({ verify: rawBodySaver, extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../build")));
 

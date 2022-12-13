@@ -145,7 +145,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         SLACK_APP_ID= slack app id
         SLACK_CLIENT_ID= slack client id
         SLACK_CLIENT_SECRET= slack client secret
-        SLACK_VERIFICATION_TOKEN= slack verification token
+        SLACK_SIGNING_SECRET= slack signing secret
         SLASH_COMMAND=data.world (The slash command text for this app)
 
         SLACK_TEAM_TOKEN & SLACK_BOT_TOKEN should be added to the .env file with no values yet(we'll come back to them).

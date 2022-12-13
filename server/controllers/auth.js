@@ -17,6 +17,9 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const crypto = require('crypto');
+const qs = require('qs');
+
 const Subscription = require("../models").Subscription;
 const User = require("../models").User;
 const Team = require("../models").Team;
@@ -78,8 +81,7 @@ const slackOauth = (req, res) => {
 
         // deep link to slack app or redirect to slack team in web.
         res.redirect(
-          `https://slack.com/app_redirect?app=${
-            process.env.SLACK_APP_ID
+          `https://slack.com/app_redirect?app=${process.env.SLACK_APP_ID
           }&team=${team.teamId}`
         );
       } catch (error) {
@@ -98,12 +100,29 @@ const slackOauth = (req, res) => {
     });
 };
 
+const verifySlackRequest = async (headers, body) => {
+  const slackSigningSecret = process.env.SLACK_SIGNING_SECRET;
+  const slackTimestamp = headers["x-slack-request-timestamp"];
+  const slackSignature = headers["x-slack-signature"];
+
+  if (!(slackSigningSecret && slackTimestamp && slackSignature)) return false;
+
+  // It could be a replay attack, if the request timestamp is more than five minutes from local time.
+  const now = Math.floor(Date.now() / 1000);
+  if (now - parseInt(slackTimestamp, 10) > 60 * 5) return false;
+
+  // Validate the slack signature by comparing with computed signature
+  const signatureBaseString = "v0:" + slackTimestamp + ":" + body;
+  const mySignature = "v0=" + crypto.createHmac("sha256", slackSigningSecret).update(signatureBaseString, 'utf8').digest("hex");
+  return crypto.timingSafeEqual(Buffer.from(mySignature, 'utf8'), Buffer.from(slackSignature, 'utf8'));
+};
+
 const verifySlackClient = (req, res, next) => {
-  if (req.body.challenge) {
-    // Respond to slack challenge.
-    return res.status(200).send({ challenge: req.body.challenge });
-  }
-  if (req.body.token === process.env.SLACK_VERIFICATION_TOKEN) {
+  if (verifySlackRequest(req.headers, req.rawBody)) {
+    if (req.body.challenge) {
+      // Respond to slack challenge.
+      return res.status(200).send({ challenge: req.body.challenge });
+    }
     if (req.body.ssl_check) {
       return res.status(200).send();
     }
@@ -230,9 +249,8 @@ const completeSlackAssociation = async (req, res) => {
         );
 
         res.status(200).json({
-          url: `https://slack.com/app_redirect?app=${
-            process.env.SLACK_APP_ID
-          }&team=${user.teamId}`
+          url: `https://slack.com/app_redirect?app=${process.env.SLACK_APP_ID
+            }&team=${user.teamId}`
         });
 
         //inform user via slack that authentication was successful
@@ -253,6 +271,7 @@ const completeSlackAssociation = async (req, res) => {
 module.exports = {
   slackOauth,
   verifySlackClient,
+  verifySlackRequest,
   checkSlackAssociationStatus,
   beginSlackAssociation,
   beginUnfurlSlackAssociation,
