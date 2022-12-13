@@ -778,6 +778,7 @@ const sendSlackMessage = async (channelId, blocks, teamId) => {
 const webhook = {
   async processSubscriptionEvent(req, res) {
     try {
+      console.log("processSubscriptionEvent", req.body)
       const event = lang.isArray(req.body) ? req.body[0] : req.body;
       // process event based on type
       // Get resource id
@@ -790,6 +791,7 @@ const webhook = {
       );
       // Get DW subscriber id
       const subscriberId = event.subscriberid.split(":")[1];
+      console.log("event subscribe id ", subscriberId, event)
       // Get subscriber
       const subscriber = await User.findOne({
         where: { dwUserId: subscriberId }
