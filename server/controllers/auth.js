@@ -119,6 +119,7 @@ const verifySlackRequest = async (headers, body) => {
 
 const verifySlackClient = (req, res, next) => {
   if (verifySlackRequest(req.headers, req.rawBody)) {
+    console.log("valid slack request");
     if (req.body.challenge) {
       // Respond to slack challenge.
       return res.status(200).send({ challenge: req.body.challenge });
@@ -128,6 +129,7 @@ const verifySlackClient = (req, res, next) => {
     }
     next();
   } else {
+    console.log("invalid slack request")
     next(new Error("Could not verify the request originated from Slack."));
   }
 };

@@ -689,6 +689,7 @@ const unfurl = {
     res.json({ response_type: "in_channel" });
     const event = req.body.event;
     const serverBaseUrl = helper.getServerBaseUrl(req);
+    console.log("event recieved", event)
     switch (event.type) {
       case "link_shared":
         await handleLinkSharedEvent(event, req.body.team_id, serverBaseUrl);
