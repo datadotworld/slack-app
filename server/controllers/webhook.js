@@ -652,9 +652,7 @@ const handleDatasetEvent = async (
           });
           return;
         }
-        console.warn(
-          "We don't process all project update event, we handle new files and link"
-        );
+        console.warn("We don't process all project update event, we handle new files and link");
         return;
       } else {
         // return we don't want to process dataset meta data update events for now.
@@ -858,6 +856,7 @@ const webhook = {
   },
 
   async processWebhookEvent(req, res) {
+    console.log(`Received webhook event : ${JSON.stringify(req.body)}`)
     try {
       const body = req.body;
       const webhookId = req.params.webhookId;
@@ -876,7 +875,7 @@ const webhook = {
       } else if (Object.values(CONTRIBUTION_REQUEST_TYPES).includes(eventType)) {
         await handleContributionRequest(body, channelIds);
       } else {
-        const errorMessage = `Invalid eventType: ${eventType}`;
+        const errorMessage = `Invalid eventType in : ${JSON.stringify(body)}`;
         console.error(errorMessage);
         res.status(400).send(errorMessage);
       }

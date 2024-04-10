@@ -836,11 +836,8 @@ const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
     // inform user that bot user must be invited to channel
     const commandText = process.env.SLASH_COMMAND;
     const message = slack.isDMChannel(channelid)
-      ? `Oops! \`/${commandText}\` cannot be used here. Use it in public or private channels, or in DMs with <@${team.botUserId
-      }>.`
-      : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${team.botUserId
-      }> to this channel. Run \`/invite <@${team.botUserId
-      }>\`, then try again.`;
+      ? `Oops! \`/${commandText}\` cannot be used here. Use it in public or private channels, or in DMs with <@${team.botUserId}>.`
+      : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${team.botUserId}> to this channel. Run \`/invite <@${team.botUserId}>\`, then try again.`;
     sendSlackMessage(responseUrl, message);
   }
   return isPresent;

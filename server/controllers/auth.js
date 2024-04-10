@@ -216,8 +216,7 @@ const beginUnfurlSlackAssociation = async (
       channel,
       userId,
       messageTs,
-      teamAccessToken,
-      team.id
+      teamAccessToken
     );
   } catch (error) {
     console.error("Begin unfurl slack association error : ", error);

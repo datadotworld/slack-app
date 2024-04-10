@@ -54,12 +54,15 @@ const isPrivateChannel = channelId => {
 // https://api.slack.com/docs/pagination#classic
 const botBelongsToChannel = async (channelId, botAccessToken) => {
   const slackBot = new SlackWebClient(botAccessToken);
+  slackBot.bots.info
   const type = getChannelType(channelId);
   switch (type) {
     case DM_CHANNEL:
       const imsRes = await slackBot.conversations.list({ types: 'im' });
       return imsRes.channels.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
+      // TODO: Why was this changed to return both public and private channels ? Does that mean both private and public now have the same prefix
+      // We used to just have conversations.list() here, which returns only public channels by default
       const channelsRes = await slackBot.conversations.list({ types: 'public_channel,private_channel' });
       return channelsRes.channels.some(
         channel => channel.id === channelId && channel.is_member
@@ -177,7 +180,7 @@ const dismissAuthRequiredMessage = async (responseUrl) => {
   }
 };
 
-const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken, teamId) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
     const slackBot = new SlackWebClient(botAccessToken);

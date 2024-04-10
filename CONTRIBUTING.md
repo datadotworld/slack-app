@@ -94,45 +94,77 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
 #### 4. Create slack app
 
-    A. Go to https://api.slack.com/start/overview#creating
-    B. Click on the `Create a Slack app` button
+    #### Create slack app using a manifest
 
-    C. Under features section in the left panel, configure each of the following :
+        A. Go to https://api.slack.com/start/overview#creating
 
-        1. Interactive Components
+        B. Click on the `Create a Slack app` button
 
-            a. Enable Interactivity
-            b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
+        C. Select create from app manifest option
 
-        1. Slash Commands 
+        D. Copy and paste the content of manifest.yml in the root directory
 
-            a. Click create new command 
-            b. Fill the form with the data below and save.
-                i.  Command : /data.world (you can use any text here, not necessarily data.world)
-                ii. Request url : <ngrok url>/api/v1/command/
-                iii.Add a short description of the command.
-                iv. Enable Escape channels, users, and links sent to your app 
+        E. Update all url parameters to refelect your app domain. 
 
-        2. Oauth & Permission 
+            1. Slash_commands url
+            2. Oauth_config redirect_urls
+            3. Event_subscriptions request_url
+            4. Interactivity request_url
 
-            a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
-            b. Click save urls
-            c. Add the following scopes : channels:read, chat:write, commands, groups:read, im:history, im:read, im:write, links:read, links:write
-            d. Click save changes
+        F. Click Next and review the app configuration.
 
-        3. Add Bot user 
+        G. Click Create
 
-            a. Set display name and default name to : dataworld (you can use any text here, not necessarily data.world)
-            b. Enable : Always show my bot as online
+    #### Create slack app from the UI
 
-        4. Event Subscriptions 
+        A. Go to https://api.slack.com/start/overview#creating
 
-            a. Enable events 
-            b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
-            c. Add workspace event : link_shared, app_uninstalled
-            d. Add bot events : link_shared, member_joined_channel, message.im
-            e. Add app unfurl domain : data.world
-            f. Click save changes
+        B. Click on the `Create a Slack app` button
+
+        C. Select create from scratch option
+
+        D. Under features section in the left panel, configure each of the following :
+
+            1. App Home 
+
+                a. Go to App Home
+                b. Set bot display and default name to : dataworld (you can use any text here, not necessarily data.world)
+                c. Enable : Always show my bot as online
+                d. Ensure Messages Tab is enabled.
+
+            2. Org apps program
+            
+                a. Opt-In for the Org apps program, this will makes it easy for administrators to add our app across multiple workspaces in an enterprise organization.
+
+            3. Interactive & Shortcut
+
+                a. Enable Interactivity
+                b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
+
+            4. Slash Commands 
+
+                a. Click create new command 
+                b. Fill the form with the data below and save.
+                    i.  Command : /data.world (you can use any text here, not necessarily data.world)
+                    ii. Request url : <ngrok url>/api/v1/command/
+                    iii.Add a short description of the command.
+                    iv. Enable Escape channels, users, and links sent to your app 
+
+            5. Oauth & Permission 
+
+                a. Add new redirect url : <ngrok url>/api/v1/auth/oauth
+                b. Click save urls
+                c. Add the following scopes : channels:read, chat:write, commands, groups:read, im:history, im:read, im:write, links:read, links:write
+                d. Click save changes
+
+            6. Event Subscriptions 
+
+                a. Enable events 
+                b. Add request url, this require passing a challenge (We'll skip this step for now and add later when the app is up and running)
+                c. Add workspace event : link_shared, app_uninstalled
+                d. Add bot events : link_shared, member_joined_channel, message.im
+                e. Add app unfurl domain : data.world
+                f. Click save changes
 
 #### 5. Add env variables 
 
@@ -153,7 +185,7 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         SLACK_TEAM_TOKEN= (only required When app is installed as internal integration.)
         SLACK_BOT_TOKEN= (only required When app is installed as internal integration.)
     
-    3. Set data.world env variables :
+    3. Set data.world oauth client env variables :
 
         DW_BASE_URL=https://api.data.world/v0
         DW_CLIENT_ID= (client id from the DW Oauth Client created earlier in step 4.)
@@ -173,9 +205,9 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
 
 #### 6. Start the server
 
-    1. From the project root dir run : yarn start-dev (server should build and start on port 5000 or any other port you decide to go with)
+    1. From the project root dir run : yarn start-dev (server should build and start on port 8000 or any other port you decide to go with)
 
-#### 7. Event subscription & Interactive Components request url
+#### 7. Event subscription & Interactive Components request url (Not required if app was created with a manifest)
 
     1. Go to slack app settings page 
     2. Go to event subscription section

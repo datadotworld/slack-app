@@ -1,0 +1,53 @@
+display_information:
+  name: Data.World
+  description: Data.world slack application.
+  background_color: "#0355d8"
+features:
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
+  bot_user:
+    display_name: dataworld
+    always_online: true
+  slash_commands:
+    - command: /data.world
+      url: https://major-cougar-adequately.ngrok-free.app/api/v1/command/
+      description: Data.world command
+      usage_hint: "[subscribe dataset datasetid] or [unsubscribe dataset datasetid] or [list] or [help]"
+      should_escape: true
+  unfurl_domains:
+    - data.world
+oauth_config:
+  redirect_urls:
+    - https://major-cougar-adequately.ngrok-free.app/api/v1/auth/oauth
+  scopes:
+    bot:
+      - channels:read
+      - chat:write
+      - commands
+      - groups:read
+      - im:history
+      - im:read
+      - im:write
+      - links:read
+      - links:write
+      - mpim:read
+      - mpim:write
+settings:
+  event_subscriptions:
+    request_url: https://major-cougar-adequately.ngrok-free.app/api/v1/unfurl/action
+    user_events:
+      - app_uninstalled
+      - link_shared
+      - tokens_revoked
+    bot_events:
+      - link_shared
+      - member_joined_channel
+      - message.im
+  interactivity:
+    is_enabled: true
+    request_url: https://major-cougar-adequately.ngrok-free.app/api/v1/command/action
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
