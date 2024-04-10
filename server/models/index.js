@@ -28,7 +28,12 @@ const db = {};
 
 let sequelize;
 if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false, ssl: true });
+  sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false,  dialectOptions: {
+    ssl: {
+      require: true, // This will enable SSL
+      rejectUnauthorized: false // This will allow you to connect to a server with a self-signed certificate
+    }
+  } });
 } else {
   const options = {
     host: "127.0.0.1",
