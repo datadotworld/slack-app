@@ -1,13 +1,16 @@
 {
   "development": {
-    "username": "postgres",
-    "password": null,
-    "database": "slackapp",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "database": "slackapp"
   },
   "production": {
     "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    },
     "use_env_variable": "DATABASE_URL"
   }
 }

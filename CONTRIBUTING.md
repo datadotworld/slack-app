@@ -199,9 +199,9 @@ We definitely appreciate pull requests that highlight or reproduce a problem, ev
         SERVER_PUBLIC_HOSTNAME= <ngrok url>
 
         PORT= node server port (defaults to 5000, if you decide to use a different port number, please revisit your ngrok config and ensure it's listening on the same port you've choosen.)
-        PG_USERNAME= Postgres username
-        PG_PASSWORD= Postgres password
-        PG_DATABASE=slackapp  (Postgres database name, ensure it correlates with database created earlier in step 2 above.)
+        DB_USER= Postgres username
+        DB_PASS= Postgres password
+        DB_NAME =slackapp  (Postgres database name, ensure it correlates with database created earlier in step 2 above.)
 
 #### 6. Start the server
 

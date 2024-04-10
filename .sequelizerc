@@ -1,4 +1,5 @@
 const path = require('path');
+const dotenv = require("dotenv").config();
 
 module.exports = {
   "config": path.resolve('./server/config', 'config.json'),
