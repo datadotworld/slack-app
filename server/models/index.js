@@ -30,8 +30,8 @@ let sequelize;
 if (process.env.DATABASE_URL) {
   sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false,  dialectOptions: {
     ssl: {
-      require: true,
-      rejectUnauthorized: true
+      require: true, // This will enable SSL
+      rejectUnauthorized: false // This will allow us to connect to a server with a self-signed certificate
     }
   } });
 } else {
