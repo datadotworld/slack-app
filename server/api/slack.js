@@ -54,7 +54,6 @@ const isPrivateChannel = channelId => {
 // https://api.slack.com/docs/pagination#classic
 const botBelongsToChannel = async (channelId, botAccessToken) => {
   const slackBot = new SlackWebClient(botAccessToken);
-  slackBot.bots.info
   const type = getChannelType(channelId);
   switch (type) {
     case DM_CHANNEL:
