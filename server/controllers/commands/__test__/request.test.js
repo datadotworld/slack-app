@@ -49,7 +49,7 @@ describe('Test request command methods', () => {
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
 
-      expect(dataworld.acceptDatasetRequest).toBeCalledWith(
+      expect(dataworld.acceptDatasetRequest).toHaveBeenCalledWith(
         dwAccessToken,
         requestid,
         agentid,
@@ -70,7 +70,7 @@ describe('Test request command methods', () => {
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
 
-      expect(dataworld.rejectDatasetRequest).toBeCalledWith(
+      expect(dataworld.rejectDatasetRequest).toHaveBeenCalledWith(
         dwAccessToken,
         requestid,
         agentid,
@@ -91,7 +91,7 @@ describe('Test request command methods', () => {
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
 
-      expect(dataworld.cancelDatasetRequest).toBeCalledWith(
+      expect(dataworld.cancelDatasetRequest).toHaveBeenCalledWith(
         dwAccessToken,
         requestid,
         agentid,

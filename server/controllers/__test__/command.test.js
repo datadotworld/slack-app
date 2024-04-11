@@ -258,7 +258,7 @@ describe("Test Auth controller methods", () => {
       token
     );
 
-    expect(helper.getSubscriptionStatus).toBeCalledWith(
+    expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
       "owner/datasetid",
       channelid,
       userid
@@ -298,7 +298,7 @@ describe("Test Auth controller methods", () => {
         token
       );
 
-      expect(helper.getSubscriptionStatus).toBeCalledWith(
+      expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
         "owner/datasetid",
         channelid,
         userid

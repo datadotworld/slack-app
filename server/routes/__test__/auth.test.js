@@ -80,11 +80,11 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
             process.env.SLACK_APP_ID
           }&team=${teamId}`
         );
-        expect(slack.oauthAccess).toBeCalledWith(code);
+        expect(slack.oauthAccess).toHaveBeenCalledWith(code);
         expect(slack.sendWelcomeMessage).toHaveBeenCalledTimes(1);
         expect(Team.findOrCreate).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledTimes(1);
-        expect(slack.sendWelcomeMessage).toBeCalledWith(
+        expect(slack.sendWelcomeMessage).toHaveBeenCalledWith(
           process.env.SLACK_BOT_TOKEN || botToken,
           userId
         );
@@ -109,7 +109,7 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
         if (err) return done(err);
         expect(res.text).toEqual("failed");
         expect(dataworld.exchangeAuthCode).toHaveBeenCalledTimes(1);
-        expect(dataworld.exchangeAuthCode).toBeCalledWith(code);
+        expect(dataworld.exchangeAuthCode).toHaveBeenCalledWith(code);
         done();
       });
   });
@@ -147,12 +147,12 @@ describe("GET /api/v1/auth/exchange - Complete slack association", () => {
             process.env.SLACK_APP_ID
           }&team=${teamId}`
         );
-        expect(dataworld.exchangeAuthCode).toBeCalledWith(code);
-        expect(dataworld.getActiveDWUser).toBeCalledWith(access_token);
+        expect(dataworld.exchangeAuthCode).toHaveBeenCalledWith(code);
+        expect(dataworld.getActiveDWUser).toHaveBeenCalledWith(access_token);
         expect(User.findOne).toHaveBeenCalledTimes(1);
         expect(update).toHaveBeenCalledTimes(1);
         expect(Team.findOne).toHaveBeenCalledTimes(1);
-        expect(slack.sendCompletedAssociationMessage).toBeCalledWith(
+        expect(slack.sendCompletedAssociationMessage).toHaveBeenCalledWith(
           botAccessToken, slackId
         );
 
