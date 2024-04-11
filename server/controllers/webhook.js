@@ -890,7 +890,7 @@ async function getUserByDwUserId(dwUserId) {
   return await User.findOne({
     where: { dwUserId },
     // It's possible for a DW user to be binded to two slack user. Select the most recent one.
-    order: [['CreatedAt', 'DESC']]
+    order: [['createdAt', 'DESC']]
   });
 }
 
