@@ -789,9 +789,7 @@ const webhook = {
       // Get DW subscriber id
       const subscriberId = event.subscriberid.split(":")[1];
       // Get subscriber
-      const subscriber = await User.findOne({
-        where: { dwUserId: subscriberId }
-      });
+      const subscriber = await getUserByDwUserId(subscriberId);
       if (!subscriber) {
         console.error("Active DW subscriber not found in DB : ", subscriberId);
         return res.status(404).send();
@@ -806,7 +804,7 @@ const webhook = {
         // Get subscribed channelIds
         const channelIds = collection.map(subscriptions, "channelId");
         const dwActorId = helper.extractIdFromLink(event.links.web.actor);
-        const actor = await User.findOne({ where: { dwUserId: dwActorId } });
+        const actor = await getUserByDwUserId(dwActorId);
         const actorSlackId = actor ? actor.slackId : null;
         const serverBaseUrl = helper.getServerBaseUrl(req);
         switch (getEntityType(event)) {
@@ -887,5 +885,13 @@ const webhook = {
     }
   }
 };
+
+async function getUserByDwUserId(dwUserId) {
+  return await User.findOne({
+    where: { dwUserId },
+    // It's possible for a DW user to be binded to two slack user. Select the most recent one.
+    order: [['CreatedAt', 'DESC']]
+  });
+}
 
 module.exports = { webhook };
