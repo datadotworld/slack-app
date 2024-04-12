@@ -211,7 +211,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": `<https://${dwDomain}/kehesjay/actors-proj|An Example Project that Shows What To Put in data.world>\nLinked dataset\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n\nundefined\n\`new feature\` \n`
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|An Example Project that Shows What To Put in data.world>\nLinked dataset\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/dataset?datasetid=uscg-search-rescue-summary|USCG Search and Rescue Summary Statistics>\n\nTags\n\`new feature\` \n`
         },
         "accessory": {
           "type": "image",
@@ -265,7 +265,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toHaveBeenCalledWith(
         dwResourceId,
         dwAgentId,
@@ -325,7 +325,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": `<https://${dwDomain}/kehesjay/actors-proj|TrumpWorld>\nFiles\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n\nundefined\n\`trump\` \`trump world\` \`president\` \`connections\` \`swamp\` \`business network\` \n`
+          "text": `<https://${dwDomain}/kehesjay/actors-proj|TrumpWorld>\nFiles\n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=org-org-connections.csv|org-org-connections.csv> _(95.4 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-org-connections.csv|person-org-connections.csv> _(226.2 kB)_ \n• <https://${dwDomain}/kehesjay/actors-proj/workspace/file?filename=person-person-connections.csv|person-person-connections.csv> _(31.8 kB)_ \n\nTags\n\`trump\` \`trump world\` \`president\` \`connections\` \`swamp\` \`business network\` \n`
         },
         "accessory": {
           "type": "image",
@@ -379,7 +379,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(1);
+      expect(Team.findOne).toHaveBeenCalledTimes(2);
       expect(dataworld.getDataset).toHaveBeenCalledWith(
         dwResourceId,
         dwAgentId,

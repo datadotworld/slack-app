@@ -179,7 +179,7 @@ const dismissAuthRequiredMessage = async (responseUrl) => {
   }
 };
 
-const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
     const slackBot = new SlackWebClient(botAccessToken);
@@ -187,8 +187,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
     const belongsToChannel = await botBelongsToChannel(channel, botAccessToken);
     if ((isDMChannel(channel) || isPrivateChannel(channel)) && !belongsToChannel) {
       // Fallback to slack default style of requesting auth for unfurl action.
-      const slackWebApi = new SlackWebClient(teamAccessToken);
-      const opts = { user_auth_required: true, user_auth_url: associationUrl }
+      const slackWebApi = new SlackWebClient(botAccessToken);
       await slackWebApi.chat.unfurl({ ts: messageTs, channel: channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
     } else {
       const blocks = [{
@@ -294,8 +293,8 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
   await slackBot.chat.postMessage({ channel: dmChannelId, text: "howto", blocks: blocks/*attachments : { attachments }*/ });
 };
 
-const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
-  const slackTeam = new SlackWebClient(teamAccessToken);
+const sendUnfurlAttachments = (ts, channel, unfurls, botAccessToken) => {
+  const slackTeam = new SlackWebClient(botAccessToken);
   slackTeam.chat.unfurl({ ts: ts, channel: channel, unfurls: unfurls });
 };
 

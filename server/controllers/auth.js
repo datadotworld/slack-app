@@ -202,8 +202,6 @@ const beginUnfurlSlackAssociation = async (
     const nonce = uuidv1();
     const team = await Team.findOne({ where: { teamId: teamId } });
     const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-    const teamAccessToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-
     // create user with nonce and the slackdata
     const [user, created] = await User.findOrCreate({
       where: { slackId: userId },
@@ -215,8 +213,7 @@ const beginUnfurlSlackAssociation = async (
       botAccessToken,
       channel,
       userId,
-      messageTs,
-      teamAccessToken
+      messageTs
     );
   } catch (error) {
     console.error("Begin unfurl slack association error : ", error);

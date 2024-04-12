@@ -22,6 +22,8 @@ oauth_config:
   redirect_urls:
     - https://major-cougar-adequately.ngrok-free.app/api/v1/auth/oauth
   scopes:
+    user:
+      - links:read
     bot:
       - channels:read
       - chat:write
@@ -32,8 +34,6 @@ oauth_config:
       - im:write
       - links:read
       - links:write
-      - mpim:read
-      - mpim:write
 settings:
   event_subscriptions:
     request_url: https://major-cougar-adequately.ngrok-free.app/api/v1/unfurl/action
@@ -43,7 +43,6 @@ settings:
       - tokens_revoked
     bot_events:
       - link_shared
-      - member_joined_channel
       - message.im
   interactivity:
     is_enabled: true
