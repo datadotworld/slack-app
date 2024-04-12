@@ -283,6 +283,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         event.message_ts,
         event.channel,
         expectedUnfurlObject,
+        team.botAccessToken,
         accessToken
       );
       done();
@@ -391,6 +392,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
         event.message_ts,
         event.channel,
         expectedUnfurlObject,
+        team.botAccessToken,
         accessToken
       );
       done();

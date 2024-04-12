@@ -537,6 +537,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
       if (isAssociated) {
         // User is associated, carry on and unfold url
         let token = user.dwAccessToken;
+        const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
         const botToken = process.env.SLACK_BOT_TOKEN || await getBotAccessTokenForTeam(team.teamId);
 
         Promise.all(
@@ -562,7 +563,8 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               event.message_ts,
               event.channel,
               unfurls,
-              botToken
+              botToken,
+              teamToken
             )
           )
           .catch(console.error);
