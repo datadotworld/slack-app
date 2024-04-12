@@ -337,14 +337,14 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       if (err) return done(err);
       expect(User.findOne).toHaveBeenCalledTimes(2);
       expect(Subscription.findAll).toHaveBeenCalledTimes(1);
-      expect(dataworld.getDataset).toBeCalledWith(
+      expect(dataworld.getDataset).toHaveBeenCalledWith(
         dwResourceId,
         dwAgentId,
         dwAccessToken
       );
-      expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
+      expect(dataworld.getDWUser).toHaveBeenCalledWith(dwAccessToken, dwAgentId);
       expect(Channel.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendMessageWithBlocks).toBeCalledWith(
+      expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
         botAccessToken,
         channelId,
         expectedBlocks
@@ -404,12 +404,12 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
         done();
         expect(User.findOne).toHaveBeenCalledTimes(2);
         expect(Subscription.findAll).toHaveBeenCalledTimes(1);
-        expect(dataworld.getProject).toBeCalledWith(
+        expect(dataworld.getProject).toHaveBeenCalledWith(
           dwResourceId,
           dwAgentId,
           dwAccessToken
         );
-        expect(dataworld.getDWUser).toBeCalledWith(dwAccessToken, dwAgentId);
+        expect(dataworld.getDWUser).toHaveBeenCalledWith(dwAccessToken, dwAgentId);
         // expect(Team.findOne).toHaveBeenCalledTimes(1);
         // expect(Channel.findOne).toHaveBeenCalledTimes(1);
         // expect(slack.sendMessageWithAttachments).toBeCalledWith(
@@ -475,7 +475,7 @@ describe("POST /api/v1/webhook/:webhookId", () => {
       .end((err, res) => {
         if (err) return done(err);
         done();
-        expect(Channel.findAll).toBeCalledWith({
+        expect(Channel.findAll).toHaveBeenCalledWith({
           where: { webhookId: "mockWebhookId" }
         });
       });

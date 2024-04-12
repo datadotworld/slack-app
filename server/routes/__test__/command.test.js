@@ -258,28 +258,28 @@ describe("POST /api/v1/command/action - Process an action", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(slack.botBelongsToChannel).toBeCalledWith(
+        expect(slack.botBelongsToChannel).toHaveBeenCalledWith(
           payloadObject.channel.id,
           botAccessToken
         );
         expect(Team.findOne).toHaveBeenCalledTimes(2);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
         expect(Subscription.destroy).toHaveBeenCalledTimes(1);
-        expect(auth.checkSlackAssociationStatus).toBeCalledWith(
+        expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(
           payloadObject.user.id
         );
-        expect(helper.getSubscriptionStatus).toBeCalledWith(
+        expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
           resourceId,
           payloadObject.channel.id,
           payloadObject.user.id
         );
         const parts = resourceId.split("/");
-        expect(dataworld.unsubscribeFromDataset).toBeCalledWith(
+        expect(dataworld.unsubscribeFromDataset).toHaveBeenCalledWith(
           parts.shift(),
           parts.shift(),
           dwAccessToken
         );
-        expect(slack.sendResponse).toBeCalledWith(payloadObject.response_url, {
+        expect(slack.sendResponse).toHaveBeenCalledWith(payloadObject.response_url, {
           replace_original: false,
           delete_original: false,
           text: message
@@ -336,23 +336,23 @@ describe("POST /api/v1/command/action - Process an action", () => {
         if (err) return done(err);
         expect(Team.findOne).toHaveBeenCalledTimes(2);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
-        expect(slack.botBelongsToChannel).toBeCalledWith(
+        expect(slack.botBelongsToChannel).toHaveBeenCalledWith(
           payloadObject.channel.id,
           botAccessToken
         );
-        expect(auth.checkSlackAssociationStatus).toBeCalledWith(
+        expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(
           payloadObject.user.id
         );
         expect(Subscription.findOne).toHaveBeenCalledTimes(1);
         expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
         expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
         expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
-        expect(dataworld.subscribeToProject).toBeCalledWith(
+        expect(dataworld.subscribeToProject).toHaveBeenCalledWith(
           owner,
           id,
           dwAccessToken
         );
-        expect(slack.sendResponse).toBeCalledWith(
+        expect(slack.sendResponse).toHaveBeenCalledWith(
           payloadObject.response_url,
           {
             delete_original: false,
@@ -416,7 +416,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
             agentid,
             datasetid
           );
-          expect(slack.sendResponse).toBeCalledWith(
+          expect(slack.sendResponse).toHaveBeenCalledWith(
             datasetRequestActionPayload.response_url,
             {
               replace_original: true,

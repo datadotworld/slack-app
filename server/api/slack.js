@@ -60,6 +60,8 @@ const botBelongsToChannel = async (channelId, botAccessToken) => {
       const imsRes = await slackBot.conversations.list({ types: 'im' });
       return imsRes.channels.some(channel => channel.id === channelId);
     case PUBLIC_CHANNEL:
+      // TODO: Why was this changed to return both public and private channels ? Does that mean both private and public now have the same prefix
+      // We used to just have conversations.list() here, which returns only public channels by default
       const channelsRes = await slackBot.conversations.list({ types: 'public_channel,private_channel' });
       return channelsRes.channels.some(
         channel => channel.id === channelId && channel.is_member
@@ -177,17 +179,15 @@ const dismissAuthRequiredMessage = async (responseUrl) => {
   }
 };
 
-const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken, teamId) => {
+const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserId, messageTs, teamAccessToken) => {
   try {
     const associationUrl = `${DW_AUTH_URL}${nonce}`;
     const slackBot = new SlackWebClient(botAccessToken);
     const commandText = process.env.SLASH_COMMAND;
     const belongsToChannel = await botBelongsToChannel(channel, botAccessToken);
-    if ((isDMChannel(channel) || isPrivateChannel(channel)) && !belongsToChannel) {
+    if (!belongsToChannel) {
       // Fallback to slack default style of requesting auth for unfurl action.
-      const slackWebApi = new SlackWebClient(teamAccessToken);
-      const opts = { user_auth_required: true, user_auth_url: associationUrl }
-      await slackWebApi.chat.unfurl({ ts: messageTs, channel: channel, user_auth_required: true, user_auth_url: associationUrl }) // With opts, this will prompt user to authenticate using the association Url above.
+      await chatUnfurl({ ts: messageTs, channel: channel, user_auth_required: true, user_auth_url: associationUrl }, botAccessToken, teamAccessToken);
     } else {
       const blocks = [{
         "type": "section",
@@ -221,7 +221,7 @@ const startUnfurlAssociation = async (nonce, botAccessToken, channel, slackUserI
       await slackBot.chat.postEphemeral({ channel: channel, user: slackUserId, text: "Link your data.world account to Slack", blocks: blocks });
     }
   } catch (error) {
-    console.error("Failed to send begin unfurl message to slack : ", error);
+    console.error(`Failed to send begin unfurl message to slack : ${channel}`, error);
   }
 };
 
@@ -292,9 +292,8 @@ const sendHowToUseMessage = async (botAccessToken, slackUserId) => {
   await slackBot.chat.postMessage({ channel: dmChannelId, text: "howto", blocks: blocks/*attachments : { attachments }*/ });
 };
 
-const sendUnfurlAttachments = (ts, channel, unfurls, teamAccessToken) => {
-  const slackTeam = new SlackWebClient(teamAccessToken);
-  slackTeam.chat.unfurl({ ts: ts, channel: channel, unfurls: unfurls });
+const sendUnfurlAttachments = async (ts, channel, unfurls, botAccessToken, teamAccessToken) => {
+  await chatUnfurl({ ts: ts, channel: channel, unfurls: unfurls }, botAccessToken, teamAccessToken);
 };
 
 const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
@@ -333,3 +332,16 @@ module.exports = {
   deleteSlackMessage,
   openView
 };
+
+async function chatUnfurl(opts, botAccessToken, teamAccessToken) {
+  try {
+    console.error("Using bot token for unfurl.... ");
+    await new SlackWebClient(botAccessToken).chat.unfurl(opts);
+  } catch (error) {
+    console.error("Chat.unfurl call failed with bot token", error.data.error);
+    if (error.data && error.data.error === 'not_allowed_token_type') {
+      console.log("Retrying with team token", error);
+      await new SlackWebClient(teamAccessToken).chat.unfurl(opts);
+    }
+  }
+}

@@ -658,9 +658,9 @@ const showHelp = async responseUrl => {
     `_Unsubscribe from a data.world dataset:_ \n \`/${commandText} unsubscribe dataset_url\``,
     `_Unsubscribe from a data.world project:_ \n \`/${commandText} unsubscribe project_url\``,
     `_Unsubscribe from a data.world account:_ \n \`/${commandText} unsubscribe account\``,
-    `_List active subscriptions._ : \n \`/${commandText} list\``
+    `_List active subscriptions._ : \n \`/${commandText} list\``,
     //Note: This feature is not tested fully. So disabling this feature.
-    //`_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\`` 
+    `_Get a webhook URL for the current channel:_ \n \`/${commandText} webhook\``
   ];
 
   collection.forEach(commandsInfo, value => {
@@ -836,11 +836,8 @@ const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
     // inform user that bot user must be invited to channel
     const commandText = process.env.SLASH_COMMAND;
     const message = slack.isDMChannel(channelid)
-      ? `Oops! \`/${commandText}\` cannot be used here. Use it in public or private channels, or in DMs with <@${team.botUserId
-      }>.`
-      : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${team.botUserId
-      }> to this channel. Run \`/invite <@${team.botUserId
-      }>\`, then try again.`;
+      ? `Oops! \`/${commandText}\` cannot be used here. Use it in public or private channels, or in DMs with <@${team.botUserId}>.`
+      : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${team.botUserId}> to this channel. Run \`/invite <@${team.botUserId}>\`, then try again.`;
     sendSlackMessage(responseUrl, message);
   }
   return isPresent;

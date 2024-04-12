@@ -28,16 +28,21 @@ const db = {};
 
 let sequelize;
 if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false });
+  sequelize = new Sequelize(process.env.DATABASE_URL, { logging : false,  dialectOptions: {
+    ssl: {
+      require: true, // This will enable SSL
+      rejectUnauthorized: false // This will allow us to connect to a server with a self-signed certificate
+    }
+  } });
 } else {
   const options = {
     host: "127.0.0.1",
     dialect: "postgres"
   };
   sequelize = new Sequelize(
-    process.env.PG_DATABASE,
-    process.env.PG_USERNAME,
-    process.env.PG_PASSWORD,
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
     options
   );
 }

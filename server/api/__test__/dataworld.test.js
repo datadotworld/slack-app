@@ -22,7 +22,7 @@ describe("Test dataworld api wrapper.", () => {
 
     dataworld.exchangeAuthCode(authCode);
 
-    expect(axios.post).toBeCalledWith(requestUrl, {}, { headers });
+    expect(axios.post).toHaveBeenCalledWith(requestUrl, {}, { headers });
 
     done();
   });

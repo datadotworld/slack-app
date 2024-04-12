@@ -38,7 +38,7 @@
     "precommit": "./pre-commit.sh",
     "start": "yarn run migration --env production && node --trace-warnings ./server/bin/www",
     "start-dev": "yarn run migration --env development && node --trace-warnings ./server/bin/www",
-    "dev": "yarn run heroku-prebuild && yarn run migration && yarn run start",
+    "dev": "yarn run heroku-prebuild && yarn run start-dev",
     "heroku-prebuild": "yarn && yarn run build",
     "build": "react-scripts build",
     "migration": "sequelize db:migrate",
