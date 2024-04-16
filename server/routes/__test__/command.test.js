@@ -26,6 +26,7 @@ const helper = require("../../helpers/helper");
 const fixtures = require("../../jest/fixtures");
 
 const Team = require("../../models").Team;
+const User = require("../../models").User;
 const Channel = require("../../models").Channel;
 const Subscription = require("../../models").Subscription;
 
@@ -238,10 +239,14 @@ describe("POST /api/v1/command/action - Process an action", () => {
     const isAssociated = true;
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
+    const subscription = {  slackUserId: "slackUserId" };
     const message = `No problem! You'll no longer receive notifications about *${dwDatasetId}* here.`;
     const response = { data: { message } };
 
     Team.findOne = jest.fn(() => Promise.resolve({ teamId, botAccessToken }));
+    User.findOne = jest.fn(() => Promise.resolve(user));
+    Subscription.findOne = jest.fn(() => Promise.resolve({ subscription }));
+
     Channel.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
     Subscription.destroy = jest.fn(() => Promise.resolve());
     auth.checkSlackAssociationStatus = jest.fn(() =>
@@ -264,14 +269,15 @@ describe("POST /api/v1/command/action - Process an action", () => {
         );
         expect(Team.findOne).toHaveBeenCalledTimes(2);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
+        expect(User.findOne).toHaveBeenCalledTimes(1);
+        expect(Subscription.findOne).toHaveBeenCalledTimes(1);
         expect(Subscription.destroy).toHaveBeenCalledTimes(1);
         expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(
           payloadObject.user.id
         );
         expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
           resourceId,
-          payloadObject.channel.id,
-          payloadObject.user.id
+          payloadObject.channel.id
         );
         const parts = resourceId.split("/");
         expect(dataworld.unsubscribeFromDataset).toHaveBeenCalledWith(

@@ -212,6 +212,7 @@ const unsubscribeFromDatasetOrProject = async (
   command,
   responseUrl
 ) => {
+  let token;
   try {
     const commandText = process.env.SLASH_COMMAND;
 
@@ -236,7 +237,7 @@ const unsubscribeFromDatasetOrProject = async (
         where: { slackId: channelSubscription.slackUserId }
       });
 
-      const token = user.dwAccessToken;
+      token = user.dwAccessToken;
 
       // will be true if user subscribed to this resource in one channel
       if (removeDWSubscription) {
