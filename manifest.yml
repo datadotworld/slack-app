@@ -24,7 +24,6 @@ oauth_config:
   scopes:
     user:
       - links:read
-      - links:write
     bot:
       - channels:read
       - chat:write

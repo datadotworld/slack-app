@@ -109,12 +109,11 @@ const shouldRetry = (error) => {
   return error.response && error.response.status === 429;
 }
 
-const getSubscriptionStatus = async (resourceid, channelid, userId) => {
+const getSubscriptionStatus = async (resourceid, channelid) => {
   try {
     const subscriptions = await Subscription.findAll({
       where: {
-        resourceId: resourceid,
-        slackUserId: userId
+        resourceId: resourceid
       }
     });
     const channelSubscriptions = collection.filter(subscriptions, function(o) {

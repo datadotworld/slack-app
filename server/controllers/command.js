@@ -208,11 +208,9 @@ const subscribeToAccount = async (
 };
 
 const unsubscribeFromDatasetOrProject = async (
-  userId,
   channelid,
   command,
-  responseUrl,
-  token
+  responseUrl
 ) => {
   try {
     const commandText = process.env.SLASH_COMMAND;
@@ -223,10 +221,23 @@ const unsubscribeFromDatasetOrProject = async (
     const [
       hasSubscriptionInChannel,
       removeDWSubscription
-    ] = await helper.getSubscriptionStatus(resourceId, channelid, userId);
+    ] = await helper.getSubscriptionStatus(resourceId, channelid);
 
     // If subscription belongs to channel and the actor(user), then go ahead and unsubscribe
     if (hasSubscriptionInChannel) {
+      const channelSubscription = await Subscription.findOne({
+        where: {
+          resourceId: `${commandParams.owner}/${commandParams.id}`,
+          channelId: channelid
+        }
+      });
+
+      const user = await User.findOne({
+        where: { slackId: channelSubscription.slackUserId }
+      });
+
+      const token = user.dwAccessToken;
+
       // will be true if user subscribed to this resource in one channel
       if (removeDWSubscription) {
         // use dataworld wrapper to unsubscribe from dataset
@@ -241,7 +252,6 @@ const unsubscribeFromDatasetOrProject = async (
       await removeSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
-        userId,
         channelid
       );
       // send successful unsubscription message to Slack
@@ -259,7 +269,6 @@ const unsubscribeFromDatasetOrProject = async (
     console.warn("Failed to unsubscribe from dataset : ", error.message);
     // Handle as project
     await unsubscribeFromProject(
-      userId,
       channelid,
       command,
       responseUrl,
@@ -269,7 +278,6 @@ const unsubscribeFromDatasetOrProject = async (
 };
 
 const unsubscribeFromProject = async (
-  userId,
   channelId,
   command,
   responseUrl,
@@ -282,7 +290,7 @@ const unsubscribeFromProject = async (
     const [
       hasSubscriptionInChannel,
       removeDWSubscription
-    ] = await helper.getSubscriptionStatus(resourceId, channelId, userId);
+    ] = await helper.getSubscriptionStatus(resourceId, channelId);
 
     if (removeDWSubscription) {
       await dataworld.unsubscribeFromProject(
@@ -295,7 +303,6 @@ const unsubscribeFromProject = async (
     await removeSubscriptionRecord(
       commandParams.owner,
       commandParams.id,
-      userId,
       channelId
     );
     // send successful unsubscription message to Slack
@@ -314,11 +321,9 @@ const unsubscribeFromProject = async (
 };
 
 const unsubscribeFromAccount = async (
-  userId,
   channelid,
   command,
-  responseUrl,
-  token
+  responseUrl
 ) => {
   const commandText = process.env.SLASH_COMMAND;
 
@@ -328,16 +333,26 @@ const unsubscribeFromAccount = async (
   const [
     hasSubscriptionInChannel,
     removeDWSubscription
-  ] = await helper.getSubscriptionStatus(resourceId, channelid, userId);
+  ] = await helper.getSubscriptionStatus(resourceId, channelid);
   if (hasSubscriptionInChannel) {
     try {
+      const channelSubscription = await Subscription.findOne({
+        where: {
+          resourceId: `${commandParams.owner}/${commandParams.id}`,
+          channelId: channelid
+        }
+      });
+
+      const user = await User.findOne({
+        where: { slackId: channelSubscription.slackUserId }
+      });
+
       if (removeDWSubscription) {
-        await dataworld.unsubscribeFromAccount(commandParams.id, token);
+        await dataworld.unsubscribeFromAccount(commandParams.id, user.dwAccessToken);
       }
       await removeSubscriptionRecord(
         commandParams.owner,
         commandParams.id,
-        userId,
         channelid
       );
       // send successful unsubscription message to Slack
@@ -373,10 +388,6 @@ const listSubscription = async (
       where: { channelId: channelid }
     });
 
-    const user = await User.findOne({
-      where: { slackId: userId }
-    });
-
     let message;
     let blocks;
     let options = [];
@@ -388,6 +399,10 @@ const listSubscription = async (
       await Promise.all(
         subscriptions.map(async subscription => {
           try {
+            const user = await User.findOne({
+              where: { slackId: subscription.slackUserId }
+            });
+
             let isProject = false;
             if (subscription.resourceId.includes("/")) {
               const data = subscription.resourceId.split("/");
@@ -520,11 +535,11 @@ const addSubscriptionRecord = async (owner, id, userId, channelId) => {
   }
 };
 
-const removeSubscriptionRecord = async (owner, id, userId, channelId) => {
+const removeSubscriptionRecord = async (owner, id, channelId) => {
   // delete subscription
   const resourceId = owner ? `${owner}/${id}` : `${id}`;
   await Subscription.destroy({
-    where: { resourceId: resourceId, slackUserId: userId, channelId: channelId }
+    where: { resourceId: resourceId, channelId: channelId }
   });
 };
 
@@ -622,20 +637,16 @@ const subscribeOrUnsubscribe = (req, token) => {
       break;
     case UNSUBSCRIBE_DATASET_OR_PROJECT:
       unsubscribeFromDatasetOrProject(
-        req.body.user_id,
         req.body.channel_id,
         command,
-        responseUrl,
-        token
+        responseUrl
       );
       break;
     case UNSUBSCRIBE_ACCOUNT:
       unsubscribeFromAccount(
-        req.body.user_id,
         req.body.channel_id,
         command,
-        responseUrl,
-        token
+        responseUrl
       );
       break;
     default:
@@ -721,29 +732,25 @@ const handleButtonAction = async (payload, action, user) => {
   }
 };
 
-const handleMenuAction = async (payload, action, user) => {
+const handleMenuAction = async (payload, action) => {
   if (action.action_id === "unsubscribe_menu") {
     const value = action.selected_option.value;
     if (value.includes("/")) {
       //unsubscribe from project of dataset
       await unsubscribeFromDatasetOrProject(
-        payload.user.id,
         payload.channel.id,
         `unsubscribe ${value}`,
-        payload.response_url,
-        user.dwAccessToken
+        payload.response_url
       );
     } else {
       // unsubscribe from account
       await unsubscribeFromAccount(
-        payload.user.id,
         payload.channel.id,
         `unsubscribe ${value}`,
-        payload.response_url,
-        user.dwAccessToken
+        payload.response_url
       );
     }
-    // Update list of subscriptions
+    // Updated list of subscriptions
     await listSubscription(
       payload.response_url,
       payload.channel.id,
@@ -801,7 +808,7 @@ const performAction = async (req, res) => {
       if (action.type === "button") {
         await handleButtonAction(payload, action, user);
       } else if (action.type === "static_select") {
-        await handleMenuAction(payload, action, user);
+        await handleMenuAction(payload, action);
       } else {
         console.warn("Unknown action type : ", action.action_id)
       }
