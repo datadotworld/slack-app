@@ -109,7 +109,7 @@ describe("Test helper methods", () => {
     const [
       hasSubscriptionInChannel,
       removeDWsubscription
-    ] = await helper.getSubscriptionStatus(resourceid, channelId, userId);
+    ] = await helper.getSubscriptionStatus(resourceid, channelId);
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(hasSubscriptionInChannel).toBeTruthy();
@@ -129,7 +129,7 @@ describe("Test helper methods", () => {
     const [
       hasSubscriptionInChannel,
       removeDWsubscription
-    ] = await helper.getSubscriptionStatus(resourceid, channelid, userId);
+    ] = await helper.getSubscriptionStatus(resourceid, channelid);
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(hasSubscriptionInChannel).toBeFalsy();

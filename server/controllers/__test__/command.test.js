@@ -241,27 +241,22 @@ describe("Test Auth controller methods", () => {
   });
 
   it("should send appropiate message to slack when subscription is not present in channel", async done => {
-    const userid = "userid";
     const channelid = "channelid";
     const cmd = "unsubscribe owner/datasetid";
     const responseUrl = "responseUrl";
-    const token = "token";
 
     helper.getSubscriptionStatus = jest.fn(() => [false, false]);
     slack.sendResponse = jest.fn(() => Promise.resolve());
 
     await command.unsubscribeFromDatasetOrProject(
-      userid,
       channelid,
       cmd,
-      responseUrl,
-      token
+      responseUrl
     );
 
     expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
       "owner/datasetid",
-      channelid,
-      userid
+      channelid     
     );
     expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
       replace_original: false,
@@ -275,11 +270,9 @@ describe("Test Auth controller methods", () => {
   it(
     "should send appropiate message to slack when unsubscribeFromDatasetOrProject fails",
     async done => {
-      const userid = "userid";
       const channelid = "channelid";
       const cmd = "subscribe owner/datasetid";
       const responseUrl = "responseUrl";
-      const token = "token";
       const error = new Error("Test - error");
       const data = {
         replace_original: false,
@@ -291,17 +284,14 @@ describe("Test Auth controller methods", () => {
       helper.getSubscriptionStatus = jest.fn(() => Promise.reject(error));
 
       await command.unsubscribeFromDatasetOrProject(
-        userid,
         channelid,
         cmd,
         responseUrl,
-        token
       );
 
       expect(helper.getSubscriptionStatus).toHaveBeenCalledWith(
         "owner/datasetid",
         channelid,
-        userid
       );
 
       expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, data);
@@ -314,7 +304,6 @@ describe("Test Auth controller methods", () => {
   it(
     "should unsubscribe from project",
     async done => {
-      const userid = "userid";
       const channelId = "channelid";
       const cmd = "subscribe owner/datasetid";
       const responseUrl = "responseUrl";
@@ -336,7 +325,6 @@ describe("Test Auth controller methods", () => {
 
       await command.unsubscribeFromProject(
         channelId,
-        userid,
         cmd,
         responseUrl,
         token
@@ -353,11 +341,9 @@ describe("Test Auth controller methods", () => {
   it(
     "should unsubscribe from account",
     async done => {
-      const userid = "userid";
       const cmd = "subscribe agentid";
       const responseUrl = "responseUrl";
       const channelid = "channelid";
-      const token = "token";
       const message = "No problem! You'll no longer receive notifications about *agentid* here.";
       const data = { message };
       const slackData = {
@@ -365,8 +351,13 @@ describe("Test Auth controller methods", () => {
         delete_original: false,
         text: message
       };
+      const user = { dwAccessToken: "dwAccessToken" };
+      const subscription = {  slackUserId: "slackUserId" };
 
+      Subscription.findOne = jest.fn(() => Promise.resolve({ subscription }));
+      User.findOne = jest.fn(() => Promise.resolve({ user }));
       Subscription.destroy = jest.fn(() => Promise.resolve());
+
       helper.getSubscriptionStatus = jest.fn(() => [true, true]);
       dataworld.unsubscribeFromAccount = jest.fn(() =>
         Promise.resolve({ data })
@@ -374,13 +365,13 @@ describe("Test Auth controller methods", () => {
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
       await command.unsubscribeFromAccount(
-        userid,
         channelid,
         cmd,
         responseUrl,
-        token
       );
       expect(helper.getSubscriptionStatus).toHaveBeenCalledTimes(1);
+      expect(User.findOne).toHaveBeenCalledTimes(1);
+      expect(Subscription.findOne).toHaveBeenCalledTimes(1);
       expect(Subscription.destroy).toHaveBeenCalledTimes(1);
       expect(dataworld.unsubscribeFromAccount).toHaveBeenCalledTimes(1);
       expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
