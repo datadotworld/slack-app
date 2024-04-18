@@ -426,15 +426,13 @@ const listSubscription = async (
               isProject
             );
             if (existsInDW) {
-              if (subscription.slackUserId === userId) {
-                options.push({
-                  "text": {
-                    "type": "plain_text",
-                    "text": subscription.resourceId
-                  },
-                  "value": subscription.resourceId
-                });
-              }
+              options.push({
+                "text": {
+                  "type": "plain_text",
+                  "text": subscription.resourceId
+                },
+                "value": subscription.resourceId
+              });
               blockText += `• ${baseUrl}/${subscription.resourceId
                 } \n *created by :* <@${subscription.slackUserId}> \n`;
             }
