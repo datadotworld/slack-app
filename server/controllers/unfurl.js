@@ -33,6 +33,7 @@ const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
+const { link } = require("../routes/auth");
 const dwDomain = helper.DW_DOMAIN;
 
 const dwLinkFormat = new RegExp(
@@ -229,8 +230,7 @@ const unfurlDataset = (
     actions
   ]
 
-  const unfurlBlocks = { blocks: blocks, url: params.link }
-  return unfurlBlocks;
+  return { blocks: blocks, url: params.link }
 };
 
 const unfurlProject = async (
@@ -566,8 +566,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               botToken,
               teamToken
             )
-          )
-          .catch(console.error);
+          ).catch(console.error)
       } else {
         // User is not associated, begin association for unfurl
         auth.beginUnfurlSlackAssociation(
@@ -625,7 +624,7 @@ const handleMessage = async data => {
       "i"
     );
     const command = `/${process.env.SLASH_COMMAND}`;
-    const ignoredSubTypes = ["bot_message", "message_deleted"];
+    const ignoredSubTypes = ["bot_message", "message_deleted", "message_changed"];
     const isBotMessage =
       event.bot_id ||
       (event.subtype && ignoredSubTypes.includes(event.subtype));
@@ -640,7 +639,7 @@ const handleMessage = async data => {
     const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
     await slack.sendHowToUseMessage(botAccessToken, event.user);
   } catch (error) {
-    console.error("Failed to handle dm message event : " + error.message);
+    console.error("Failed to handle dm message event : ", error.message, data);
   }
 };
 

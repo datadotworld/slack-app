@@ -336,7 +336,8 @@ module.exports = {
 async function chatUnfurl(opts, botAccessToken, teamAccessToken) {
   try {
     console.error("Using bot token for unfurl.... ");
-    await new SlackWebClient(botAccessToken).chat.unfurl(opts);
+    let result = await new SlackWebClient(botAccessToken).chat.unfurl(opts);
+    console.log('Slack unfurl response : ' + JSON.stringify(result));
   } catch (error) {
     console.error("Chat.unfurl call failed with bot token", error.data.error);
     if (error.data && error.data.error === 'not_allowed_token_type') {
