@@ -685,13 +685,13 @@ const getTimestamp = resource => {
 
 const unfurl = {
   async processRequest(req, res) {
-
     // respond to request immediately no need to wait.
     res.json({ response_type: "in_channel" });
     const event = req.body.event;
     const serverBaseUrl = helper.getServerBaseUrl(req);
     switch (event.type) {
       case "link_shared":
+        console.log('Received link shared event : ' + event);
         await handleLinkSharedEvent(event, req.body.team_id, serverBaseUrl);
         break;
       case "member_joined_channel":
@@ -701,6 +701,7 @@ const unfurl = {
         await handleAppUninstalledEvent(req.body);
         break;
       case "message":
+        console.log('Received message event : ' + event);
         await handleMessage(req.body);
         break;
       default:
