@@ -19,7 +19,7 @@
  */
 const request = require("supertest");
 const server = require("../../app");
-const auth = require("../../controllers/auth");
+const auth = require("../../services/auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
 const Channel = require("../../models").Channel;

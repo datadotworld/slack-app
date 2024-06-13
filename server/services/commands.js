@@ -17,17 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const express = require("express");
 
-const auth = require("../middlewares/auth");
-const command = require("../controllers/command");
-
-const router = express.Router();
-
-/* Slack command. */
-router.post("/", auth.verifySlackClient, command.validateAndProcessCommand);
-
-/* Slack action button events. */
-router.post("/action", command.performAction);
-
-module.exports = router;
+// Visible for testing
+module.exports = {
+};
