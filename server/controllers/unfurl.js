@@ -28,7 +28,7 @@ const object = require("lodash/object");
 const pretty = require("prettysize");
 const moment = require("moment");
 
-const auth = require("./auth");
+const auth = require("../services/auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");

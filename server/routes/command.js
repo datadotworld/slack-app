@@ -19,7 +19,7 @@
  */
 const express = require("express");
 
-const auth = require("../controllers/auth");
+const auth = require("../middlewares/auth");
 const command = require("../controllers/command");
 
 const router = express.Router();
@@ -27,6 +27,7 @@ const router = express.Router();
 /* Slack command. */
 router.post("/", auth.verifySlackClient, command.validateAndProcessCommand);
 
+// TODO : This should be moved to 
 /* Slack action button events. */
 router.post("/action", command.performAction);
 

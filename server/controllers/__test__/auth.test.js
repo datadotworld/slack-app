@@ -17,7 +17,7 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const auth = require("../auth");
+const auth = require("../../services/auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
 const User = require("../../models").User;
