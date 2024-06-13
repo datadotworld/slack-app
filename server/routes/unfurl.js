@@ -24,7 +24,6 @@ const { unfurl } = require("../controllers/unfurl");
 
 const router = express.Router();
 
-// Deperecated : to be replaced by new /events endpoint
 /* Slack incomming webhook. */
 router.post("/action", auth.verifySlackClient, unfurl.processRequest);
 
