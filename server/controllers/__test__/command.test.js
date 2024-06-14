@@ -21,7 +21,8 @@ const collection = require("lodash/collection");
 const dataworld = require("../../api/dataworld");
 const helper = require("../../helpers/helper");
 const slack = require("../../api/slack");
-const command = require("../command");
+const commandService = require("../../services/commands");
+const subscriptionService = require("../../services/subscription");
 const Subscription = require("../../models").Subscription;
 const User = require("../../models").User;
 const dwDomain = helper.DW_DOMAIN;
@@ -45,7 +46,7 @@ describe("Test Auth controller methods", () => {
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
-      await command.subscribeToProjectOrDataset(
+      await commandService.handleDatasetorProjectSubscribeCommand(
         userid,
         channelid,
         cmd,
@@ -88,7 +89,7 @@ describe("Test Auth controller methods", () => {
       dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-      await command.subscribeToProjectOrDataset(
+      await commandService.handleDatasetorProjectSubscribeCommand(
         userid,
         channelid,
         cmd,
@@ -123,7 +124,7 @@ describe("Test Auth controller methods", () => {
     );
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
 
-    await command.subscribeToProjectOrDataset(
+    await commandService.handleDatasetorProjectSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -158,7 +159,7 @@ describe("Test Auth controller methods", () => {
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
     slack.sendResponse = jest.fn(() => Promise.resolve());
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -191,7 +192,7 @@ describe("Test Auth controller methods", () => {
     slack.sendResponse = jest.fn(() => Promise.resolve());
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -222,7 +223,7 @@ describe("Test Auth controller methods", () => {
     slack.sendResponse = jest.fn(() => Promise.resolve());
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -248,7 +249,7 @@ describe("Test Auth controller methods", () => {
     helper.getSubscriptionStatus = jest.fn(() => [false, false]);
     slack.sendResponse = jest.fn(() => Promise.resolve());
 
-    await command.unsubscribeFromDatasetOrProject(
+    await commandService.handleDatasetOrProjectUnsubscribeCommand(
       channelid,
       cmd,
       responseUrl
@@ -283,7 +284,7 @@ describe("Test Auth controller methods", () => {
       slack.sendResponse = jest.fn(() => Promise.resolve());
       helper.getSubscriptionStatus = jest.fn(() => Promise.reject(error));
 
-      await command.unsubscribeFromDatasetOrProject(
+      await commandService.handleDatasetOrProjectUnsubscribeCommand(
         channelid,
         cmd,
         responseUrl,
@@ -305,7 +306,8 @@ describe("Test Auth controller methods", () => {
     "should unsubscribe from project",
     async done => {
       const channelId = "channelid";
-      const cmd = "subscribe owner/datasetid";
+      const owner = "owner";
+      const id = "datasetid";
       const responseUrl = "responseUrl";
       const token = "token";
       const message = "No problem! You'll no longer receive notifications about *datasetid* here.";
@@ -323,9 +325,10 @@ describe("Test Auth controller methods", () => {
       );
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
-      await command.unsubscribeFromProject(
+      await subscriptionService.unsubscribeFromProject(
         channelId,
-        cmd,
+        id,
+        owner,
         responseUrl,
         token
       );
@@ -364,7 +367,7 @@ describe("Test Auth controller methods", () => {
       );
       slack.sendResponse = jest.fn(() => Promise.resolve());
 
-      await command.unsubscribeFromAccount(
+      await commandService.handleUnsubscribeFromAccount(
         channelid,
         cmd,
         responseUrl,
@@ -465,7 +468,7 @@ describe("Test Auth controller methods", () => {
     User.findOne = jest.fn(() => Promise.resolve({ dwAccessToken }));
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
       req.body.user_id
@@ -496,7 +499,7 @@ describe("Test Auth controller methods", () => {
     slack.sendResponse = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() => []);
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
       req.body.user_id,
@@ -528,7 +531,7 @@ describe("Test Auth controller methods", () => {
       Promise.reject(new Error("Test error"))
     );
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
       req.body.user_id,
@@ -577,7 +580,7 @@ describe("Test Auth controller methods", () => {
       delete_original: false
     };
 
-    await command.showHelp(responseUrl);
+    await commandService.showHelp(responseUrl);
 
     expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
 
