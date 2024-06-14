@@ -27,6 +27,11 @@ const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
 }&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
 const DW_DOMAIN = process.env.DW_DOMAIN || "data.world";
 
+const extractSearchTermFromCommand = (command) => {
+  const parts = command.split(" ");
+  return parts[parts.length - 1];
+};
+
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
   const parts = command.split(" ");
@@ -148,6 +153,7 @@ module.exports = {
   extractInsightsParams,
   extractIdFromLink,
   extractQueryParams,
+  extractSearchTermFromCommand,
   cleanSlackLinkInput,
   getSubscriptionStatus,
   getDelay,

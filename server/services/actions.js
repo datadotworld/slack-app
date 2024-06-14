@@ -101,7 +101,7 @@ const handleButtonAction = async (payload, action, user) => {
     })
   } else {
     // unknow action
-    console.warn('Unknown action_id in button action event.')
+    console.warn(`Unknown action_id in button action event ${action.action_id}.`)
     return
   }
 }

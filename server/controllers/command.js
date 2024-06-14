@@ -39,6 +39,10 @@ const dwWebhookCommandRegex = new RegExp(
   `^((\\\/${commandText})(webhook))$`,
   "i"
 );
+const dwSearchTermCommandRegex = new RegExp(
+  `^((\\\/${commandText})(search-term) [\\w-\\\/\\:\\.]+)$`,
+  "i"
+);
 
 
 const performAction = async (req, res) => {
@@ -72,7 +76,7 @@ const performAction = async (req, res) => {
     );
     if (!isAssociated) {
       // User is not associated begin association process.
-      await auth.beginSlackAssociation(payload.user.id, payload.channel.id, payload.team.id)
+      await auth.beginSlackAssociation(payload.user.id, payload.team.id, payload.channel.id)
       return;
     }
 
@@ -145,6 +149,8 @@ const validateAndProcessCommand = async (req, res, next) => {
               req.body.channel_id,
               req.body.response_url
             );
+          } else if (dwSearchTermCommandRegex.test(req.body.command + option)) {
+            commandService.handleSearchTermCommand(req, user.dwAccessToken);
           } else {
             // Show help if there's no match found.
             commandService.showHelp(req.body.response_url);
@@ -152,15 +158,14 @@ const validateAndProcessCommand = async (req, res, next) => {
         } else {
           // User is not associated begin association process.
           await auth.beginSlackAssociation(req.body.user_id,
-            req.body.channel_id,
-            req.body.team_id);
+            req.body.team_id, req.body.channel_id);
         }
       }
     }
   } catch (error) {
     // An internal error has occured send a descriptive message
     console.error("Failed to process command : ", error);
-    commandService.sendErrorMessage(req);
+    commandService.sendErrorMessage(req.body);
   }
 };
 

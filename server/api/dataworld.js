@@ -231,6 +231,20 @@ const acceptDatasetRequest = async (token, requestid, agentid, datasetid) => {
   return post(requestUrl, data, token);
 }
 
+// https://ddw-dwapipublic.dev.data.world/v0/search/resources?size=1
+
+const searchTerm = async (token, query, size) => {
+  const requestUrl = `${baseUrl}/search/resources?size=${size}`;
+  const data = {
+    "category": [
+      "catalogBusinessTerm"
+    ],
+    "includeCommunityResults": true,
+    query
+  }
+  return post(requestUrl, data, token);
+}
+
 const rejectDatasetRequest = async (token, requestid, agentid, datasetid) => {
   const requestUrl = `${baseUrl}/requests/reject`;
   const data = { requestid, owner: agentid, resourceid: datasetid };
@@ -265,6 +279,7 @@ module.exports = {
   unsubscribeFromAccount,
   acceptDatasetRequest,
   rejectDatasetRequest,
+  searchTerm,
   cancelDatasetRequest,
   verifyDwToken,
   refreshToken,

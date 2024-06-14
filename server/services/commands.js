@@ -27,7 +27,10 @@ const lang = require('lodash/lang')
 const helper = require('../helpers/helper')
 const slack = require('../api/slack')
 const subscriptionService = require('../services/subscription')
+const searchService = require('../services/search')
 const { getBotAccessTokenForTeam } = require('../helpers/tokens')
+const { query } = require('express')
+const { size } = require('lodash')
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND
@@ -61,6 +64,13 @@ const handleDatasetorProjectSubscribeCommand = async (
   // Extract params from command
   const { id, owner } = helper.extractParamsFromCommand(command, false);
   await subscriptionService.subscribeToProjectOrDataset(userid, channelid, id, owner, responseUrl, token);
+}
+
+const handleSearchTermCommand = async (req, token) => {
+    const command = req.body.command + helper.cleanSlackLinkInput(req.body.text)
+    const query = helper.extractSearchTermFromCommand(command);
+    const responseUrl = req.body.response_url;
+    await searchService.searchTerm(token, query, 1, responseUrl);
 }
 
 // Subscribe to a DW account
@@ -238,7 +248,7 @@ const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
 
 const sendErrorMessage = (payload) => {
   message = `Sorry <@${payload.user_id}>, I am unable to process command \`${payload.command}\` right now. Please, try again later.`
-  sendSlackMessage(req.body.response_url, message)
+  sendSlackMessage(payload.response_url, message)
 }
 
 // Visible for testing
@@ -250,6 +260,7 @@ module.exports = {
   handleDatasetOrProjectUnsubscribeCommand,
   handleUnsubscribeFromAccount,
   handleListSubscriptionCommand,
+  handleSearchTermCommand,
   sendSlackMessage,
   getType,
   subscribeOrUnsubscribe,
