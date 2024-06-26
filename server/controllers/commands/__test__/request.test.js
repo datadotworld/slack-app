@@ -122,7 +122,7 @@ describe('Test request command methods', () => {
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
 
-      expect(slack.sendResponse).not.toHaveBeenCalled()
+      expect(slack.sendResponseMessageAndBlocks).not.toHaveBeenCalled()
       expect(slack.openView).toHaveBeenCalledTimes(1)
       expect(slack.openView).toHaveBeenCalledWith(
         botToken,
@@ -143,7 +143,7 @@ describe('Test request command methods', () => {
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
 
-      expect(slack.sendResponse).not.toHaveBeenCalled()
+      expect(slack.sendResponseMessageAndBlocks).not.toHaveBeenCalled()
       expect(slack.openView).toHaveBeenCalledTimes(1)
       expect(slack.openView).toHaveBeenCalledWith(
         botToken,
