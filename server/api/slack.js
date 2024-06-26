@@ -371,7 +371,6 @@ module.exports = {
   botBelongsToChannel,
   isDMChannel,
   oauthAccess,
-  sendResponse,
   sendWelcomeMessage,
   sendAuthRequiredMessage,
   startUnfurlAssociation,
