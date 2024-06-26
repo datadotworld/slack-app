@@ -78,7 +78,7 @@ describe("GET /api/v1/auth/oauth - Complete slack app installation", () => {
         expect(res.header.location).toEqual(
           `https://slack.com/app_redirect?app=${
             process.env.SLACK_APP_ID
-          }&team=${teamId}`
+          }&team=${teamId}&tab=messages`
         );
         expect(slack.oauthAccess).toHaveBeenCalledWith(code);
         expect(slack.sendWelcomeMessage).toHaveBeenCalledTimes(1);

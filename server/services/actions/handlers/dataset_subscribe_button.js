@@ -18,63 +18,35 @@
  * data.world, Inc. (http://data.world/).
  */
 const commandService = require("../../../services/commands");
-const sendSlackBlock = (responseUrl, block) => {
-    try {
-      //data.blocks = attachment;
-      slack.sendResponse(responseUrl, { blocks: block }).catch(console.error);
-    } catch (error) {
-      console.error("Failed to send attachment to slack", error.message);
-    }
-  };
-  
-const sendSlackBlocks = async (
-    responseUrl,
-    message,
-    blocks,
-    replaceOriginal,
-    deleteOriginal
-  ) => {
-    let data = { text: message };
-    if (blocks && !lang.isEmpty(blocks)) {
-      data.blocks = blocks;
-    }
-    data.replace_original = replaceOriginal ? replaceOriginal : false;
-    data.delete_original = deleteOriginal ? deleteOriginal : false;
-    try {
-      await slack.sendResponse(responseUrl, data);
-    } catch (error) {
-      console.error("Failed to send message to slack", error.message);
-    }
-  };
+const slack = require('../../../api/slack');
+const array = require('lodash/array')
 
-const handler = {
-    async handle (payload, action, user) {
-        // Handle 
-        await commandService.handleDatasetorProjectSubscribeCommand(
-            payload.user.id,
-            payload.channel.id,
-            `subscribe ${action.value}`,
-            payload.response_url,
-            user.dwAccessToken
-          );
-      
-          if (payload.container.is_app_unfurl) {
-            array.remove(payload.app_unfurl.blocks.find(t => t.type === 'actions').elements, element => {
-              return element.action_id === "dataset_subscribe_button";
-            });
-            // update unfurl attachment
-            sendSlackBlock(payload.response_url, payload.app_unfurl.blocks);
-          } else {
-            // update message attachments
-            array.remove(payload.message.blocks.find(t => t.type === 'actions').elements, element => {
-              return element.action_id === "dataset_subscribe_button";
-            });
-            sendSlackBlocks(payload.response_url, '', payload.message.blocks, true);
-          }
+const handle = async (payload, action, user) => {
+    // Handle 
+    await commandService.handleDatasetorProjectSubscribeCommand(
+        payload.user.id,
+        payload.channel.id,
+        `subscribe ${action.value}`,
+        payload.response_url,
+        user.dwAccessToken
+    );
+    if (payload.container.is_app_unfurl) {
+        array.remove(payload.app_unfurl.blocks.find(t => t.type === 'actions').elements, element => {
+            return element.action_id === "dataset_subscribe_button";
+        });
+        // update unfurl attachment
+        await slack.sendResponseMessageAndBlocks(payload.response_url, '', payload.app_unfurl.blocks, true);
+    } else {
+        // update message attachments
+        array.remove(payload.message.blocks.find(t => t.type === 'actions').elements, element => {
+            return element.action_id === "dataset_subscribe_button";
+        });
+        await slack.sendResponseMessageAndBlocks(payload.response_url, '', payload.message.blocks, true);
     }
-}
+
+};
 
 // Visible for testing
 module.exports = {
-    handler
+    handle
 };

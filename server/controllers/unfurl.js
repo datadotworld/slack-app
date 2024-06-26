@@ -31,6 +31,8 @@ const moment = require("moment");
 const auth = require("../services/auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
+const tokenHelper = require("../helpers/tokens");
+const searchService = require("../services/search");
 const slack = require("../api/slack");
 const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 const dwDomain = helper.DW_DOMAIN;
@@ -526,20 +528,20 @@ const getQueryUnfurlBlocks = (query, owner, params, isProject, serverBaseUrl) =>
   return unfurlBlocks;
 };
 
+const handleAppHomeEvent = async (event, teamId) => {
+  await searchService.sendDefaultSearchHomeView(event.user, teamId);
+}
+
 const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
   // verify slack associaton
   try {
     if (verifyLink(event.links)) {
-      const team = await Team.findOne({ where: { teamId: teamId } });
+      const { botToken, teamAccessToken } = await getBotAccessTokenForTeam(teamId);
       const [isAssociated, user] = await auth.checkSlackAssociationStatus(
         event.user
       );
       if (isAssociated) {
-        // User is associated, carry on and unfold url
         let token = user.dwAccessToken;
-        const teamToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
-        const botToken = process.env.SLACK_BOT_TOKEN || await getBotAccessTokenForTeam(team.teamId);
-
         Promise.all(
           event.links.map(
             messageAttachmentFromLink.bind(
@@ -556,7 +558,8 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
             object.mapValues(unfurls, attachment =>
               object.omit(attachment, "url")
             )
-          ) // remove url from attachment object
+          ) 
+          // remove url from attachment object
           // Invoke the Slack Web API to append the attachment
           .then(unfurls =>
             slack.sendUnfurlAttachments(
@@ -564,7 +567,7 @@ const handleLinkSharedEvent = async (event, teamId, serverBaseUrl) => {
               event.channel,
               unfurls,
               botToken,
-              teamToken
+              teamAccessToken
             )
           )
           .catch(console.error);
@@ -636,9 +639,9 @@ const handleMessage = async data => {
     ) {
       return;
     }
-    const team = await Team.findOne({ where: { teamId: team_id } });
-    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-    await slack.sendHowToUseMessage(botAccessToken, event.user);
+    
+    const { botToken } = await tokenHelper.getBotAccessTokenForTeam(team_id);
+    await slack.sendHowToUseMessage(botToken, event.user);
   } catch (error) {
     console.error("Failed to handle dm message event : " + error.message);
   }
@@ -700,6 +703,9 @@ const unfurl = {
         break;
       case "app_uninstalled":
         await handleAppUninstalledEvent(req.body);
+        break;
+      case "app_home_opened":
+        await handleAppHomeEvent(event, req.body.team_id);
         break;
       case "message":
         await handleMessage(req.body);

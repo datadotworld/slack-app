@@ -18,15 +18,15 @@
  * data.world, Inc. (http://data.world/).
  */
 
-const lang = require('lodash/lang')
-
 const dataworld = require('../api/dataworld')
 const helper = require('../helpers/helper')
+const { getBotAccessTokenForTeam } = require('../helpers/tokens')
 const slack = require('../api/slack')
 const moment = require("moment");
 
 // data.world command format
 const dwDomain = helper.DW_DOMAIN
+const serverBaseUrl = `${process.env.SERVER_PUBLIC_HOSTNAME}`;
 
 const getTimestamp = time => {
   const offset = moment(
@@ -39,7 +39,6 @@ const getTimestamp = time => {
   return ts;
 };
 
-// This method handles subscription to projects and datasets
 const searchTerm = async (token, query, size, responseUrl) => {
   try {
     const { data } = await dataworld.searchTerm(token, query, size);
@@ -47,7 +46,6 @@ const searchTerm = async (token, query, size, responseUrl) => {
       const term = data.records[0];
       const ownerResponse = await dataworld.getDWUser(token, term.owner);
       const owner = ownerResponse.data;
-      const serverBaseUrl = 'https://major-cougar-adequately.ngrok-free.app';
 
       const ts = getTimestamp(term.updated);
       const createdTs = getTimestamp(term.created);
@@ -57,12 +55,12 @@ const searchTerm = async (token, query, size, responseUrl) => {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description}\`\`\`\n`
+            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${helper.trimStringToMaxLength(term.description, 2000)}\`\`\`\n`
           },
           "fields": [
             {
               "type": "mrkdwn",
-              "text": `*Status:*\n ${term.assetStatus?.assetStatusLabel||'Unknown'}`
+              "text": `*Status:*\n ${term.assetStatus ? term.assetStatus.assetStatusLabel : 'Unknown'}`
             },
             {
               "type": "mrkdwn",
@@ -83,20 +81,20 @@ const searchTerm = async (token, query, size, responseUrl) => {
             "alt_text": "avatar"
           }
         },
-      {
-        "type": "context",
-        "elements": [
-          {
-            "type": "image",
-            "image_url": `${serverBaseUrl}/assets/dataset.png`,
-            "alt_text": "Business Term"
-          },
-          {
-            "type": "mrkdwn",
-            "text": `${term.owner}/${term.id}`
-          }
-        ]
-      },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": `${serverBaseUrl}/assets/dataset.png`,
+              "alt_text": "Business Term"
+            },
+            {
+              "type": "mrkdwn",
+              "text": `${term.owner}/${term.id}`
+            }
+          ]
+        },
         {
           "type": "actions",
           "elements": [
@@ -110,15 +108,15 @@ const searchTerm = async (token, query, size, responseUrl) => {
             }
           ]
         }
-      ];
-    
-      await sendSlackMessage(
+      ]; 
+
+      await slack.sendResponseMessageAndBlocks(
         responseUrl,
         `Found a matching term!`,
         blocks
       );
     } else {
-      await sendSlackMessage(
+      await slack.sendResponseMessageAndBlocks(
         responseUrl,
         `No matching term found!`,
       )
@@ -126,34 +124,185 @@ const searchTerm = async (token, query, size, responseUrl) => {
   } catch (error) {
     // TODO: Move to message service or slack service 
     console.warn('Search term request failure : ', error.message)
-    await sendSlackMessage(
+    await slack.sendResponseMessageAndBlocks(
       responseUrl,
       `Search term request failed, try again later.`,
     )
   }
 }
 
-const sendSlackMessage = async (
-  responseUrl,
-  message,
-  blocks,
-  replaceOriginal,
-  deleteOriginal,
-) => {
-  let data = { text: message }
-  if (blocks && !lang.isEmpty(blocks)) {
-    data.blocks = blocks
-  }
-  data.replace_original = replaceOriginal ? replaceOriginal : true
-  data.delete_original = deleteOriginal ? deleteOriginal : true
+const getSearchBlocks = async (token, query, size, nextPage) => {
   try {
-    await slack.sendResponse(responseUrl, data)
+    const { data } = await dataworld.searchTerm(token, query, size, nextPage);
+
+    if (data.records.length) {
+      const { count, records, next } = data;
+
+      const blocks = [
+        {
+          "type": "divider"
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "plain_text",
+            "text": `Found ${count} matching term(s)`,
+            "emoji": true
+          }
+        }
+      ];
+
+      for (const term of records) {
+        const ownerResponse = await dataworld.getDWUser(token, term.owner);
+        const owner = ownerResponse.data;  
+        const ts = getTimestamp(term.updated);
+        const createdTs = getTimestamp(term.created);
+
+        const termBlocks = [
+          {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${helper.trimStringToMaxLength(term.description, 2000)}\`\`\`\n`
+          },
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": `*Status:*\n ${term.assetStatus ? term.assetStatus.assetStatusLabel : 'Unknown'}`
+            },
+            {
+              "type": "mrkdwn",
+              "text": `*Category:*\n ${term.category||'Unknown'}`
+            },
+            {
+              "type": "mrkdwn",
+              "text": `*Last Update:*\n <!date^${ts}^  {date_short_pretty} at {time}|Unknown>`
+            },
+            {
+              "type": "mrkdwn",
+              "text": `*Created:*\n <!date^${createdTs}^  {date_short_pretty} at {time}|Unknown>`
+            }
+          ],
+          "accessory": {
+            "type": "image",
+            "image_url": `${serverBaseUrl}/assets/dataset.png`,
+            "alt_text": "avatar"
+          }
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "image",
+              "image_url": `${serverBaseUrl}/assets/dataset.png`,
+              "alt_text": "Business Term"
+            },
+            {
+              "type": "mrkdwn",
+              "text": `${term.owner}/${term.id}`
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "View term :zap:",
+              },
+              "url": term.resourceLink
+            }
+          ]
+        },
+        {
+          "type": "divider"
+        }];
+
+        blocks.push(...termBlocks)
+      }
+
+      const moreButton = {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "More",
+          "emoji": true
+        },
+        "value": `${query} ${next}`,
+        "action_id": "more_terms_button",
+        "style": "primary"
+      }
+
+      const clearResultButton = {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "Clear Result",
+          "emoji": true
+        },
+        "value": "clear_search_results_button",
+        "action_id": "clear_search_results_button",
+        "style": "danger"
+      }; 
+
+      const footerBlock = [
+        {
+          "type": "actions",
+          "elements": next ? [ moreButton, clearResultButton ] : [ clearResultButton ]
+        }
+      ]
+
+      blocks.push(...footerBlock);
+      return blocks;
+    }
   } catch (error) {
-    console.error('Failed to send message to slack', error.message)
+    // TODO: Move to message service or slack service 
+    console.warn('Search term request failure : ', error.message)
   }
+}
+
+const sendDefaultSearchHomeView = async (slackUserId, teamId) => {
+  const { botToken } = await getBotAccessTokenForTeam(teamId);
+
+  const blocks = [
+		{
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "search-term-input-box"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": ":mag: Search for terms",
+				"emoji": true
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Search",
+						"emoji": true
+					},
+					"value": "search_term_button",
+					"action_id": "search_term_button",
+					"style": "primary"
+				}
+			]
+		}
+	];
+
+  await slack.publishAppHomeView(botToken, slackUserId, blocks);
 }
 
 // Visible for testing
 module.exports = {
-  searchTerm
+  searchTerm,
+  getSearchBlocks,
+  sendDefaultSearchHomeView
 }

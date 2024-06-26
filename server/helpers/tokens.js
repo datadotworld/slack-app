@@ -8,8 +8,13 @@ const getBotAccessTokenForChannel = async (channelId) => {
 
 const getBotAccessTokenForTeam = async (teamId) => {
   const team = await Team.findOne({ where: { teamId: teamId } })
-  const token = process.env.SLACK_BOT_TOKEN || team.botAccessToken
-  return token
+  const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken
+  const teamAccessToken = process.env.SLACK_TEAM_TOKEN || team.teamAccessToken
+
+  return {
+    botToken,
+    teamAccessToken
+  }
 }
 
 module.exports = {

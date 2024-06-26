@@ -5,7 +5,7 @@ const { AUTHORIZATION_ACTIONS } = require('../../helpers/requests')
 const { getBotAccessTokenForChannel } = require('../../helpers/tokens')
 
 const openNotificationModal = async (channelId, triggerId, message) => {
-  const token = await getBotAccessTokenForChannel(channelId)
+  const {botToken} = await getBotAccessTokenForChannel(channelId)
   const modalView = {
     type: 'modal',
     title: {
@@ -22,7 +22,7 @@ const openNotificationModal = async (channelId, triggerId, message) => {
       }
     ]
   }
-  slack.openView(token, triggerId, modalView)
+  slack.openView(botToken, triggerId, modalView)
 }
 
 const updateMessageBlocksWithAction = (messageBlocks, blockId, userId, action) => {
@@ -92,10 +92,7 @@ const handleDatasetRequestAction = async ({
     userid,
     action
   )
-  slack.sendResponse(responseUrl, {
-    replace_original: true,
-    blocks: updatedBlocks
-  })
+  slack.sendResponseMessageAndBlocks(responseUrl, '', updatedBlocks, true)
 }
 
 module.exports = {

@@ -16,7 +16,7 @@ afterEach(() => {
 describe('Test request command methods', () => {
   describe('handleDatasetRequestAction', async () => {
     let defaultArguments
-    const botAccessToken = 'botAccessToken'
+    const botToken = 'botAccessToken'
     const dwAccessToken = 'dwAccessToken'
     const blockid = 'blockid'
     const channelid = 'channelid'
@@ -55,13 +55,15 @@ describe('Test request command methods', () => {
         agentid,
         datasetid
       )
-      expect(slack.sendResponse).toHaveBeenCalledTimes(1)
-      expect(slack.sendResponse).toHaveBeenCalledWith(
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledTimes(1)
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
         responseUrl,
-        expect.objectContaining({ replace_original: true })
+        "",
+        expect.anything(),
+        true
       )
       // check that updated message is formatted correctly
-      expect(slack.sendResponse.mock.calls[0][1].blocks).toMatchSnapshot()
+      expect(slack.sendResponseMessageAndBlocks.mock.calls[0][2]).toMatchSnapshot()
     })
 
     it('should reject a dataset request and update the message', async () => {
@@ -76,13 +78,15 @@ describe('Test request command methods', () => {
         agentid,
         datasetid
       )
-      expect(slack.sendResponse).toHaveBeenCalledTimes(1)
-      expect(slack.sendResponse).toHaveBeenCalledWith(
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledTimes(1)
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
         responseUrl,
-        expect.objectContaining({ replace_original: true })
+        "",
+        expect.anything(),
+        true
       )
       // check that updated message is formatted correctly
-      expect(slack.sendResponse.mock.calls[0][1].blocks).toMatchSnapshot()
+      expect(slack.sendResponseMessageAndBlocks.mock.calls[0][2]).toMatchSnapshot()
     })
 
     it('should cancel a dataset request and update the message', async () => {
@@ -97,13 +101,15 @@ describe('Test request command methods', () => {
         agentid,
         datasetid
       )
-      expect(slack.sendResponse).toHaveBeenCalledTimes(1)
-      expect(slack.sendResponse).toHaveBeenCalledWith(
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledTimes(1)
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
         responseUrl,
-        expect.objectContaining({ replace_original: true })
+        "",
+        expect.anything(),
+        true
       )
       // check that updated message is formatted correctly
-      expect(slack.sendResponse.mock.calls[0][1].blocks).toMatchSnapshot()
+      expect(slack.sendResponseMessageAndBlocks.mock.calls[0][2]).toMatchSnapshot()
     })
 
     it('should handle unauthorized users', async () => {
@@ -111,7 +117,7 @@ describe('Test request command methods', () => {
         Promise.reject({ response: { status: 403 }})
       )
       tokensHelpers.getBotAccessTokenForChannel.mockImplementation(() =>
-        Promise.resolve(botAccessToken)
+        Promise.resolve({ botToken })
       )
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
@@ -119,7 +125,7 @@ describe('Test request command methods', () => {
       expect(slack.sendResponse).not.toHaveBeenCalled()
       expect(slack.openView).toHaveBeenCalledTimes(1)
       expect(slack.openView).toHaveBeenCalledWith(
-        botAccessToken,
+        botToken,
         triggerid,
         expect.anything()
       )
@@ -132,7 +138,7 @@ describe('Test request command methods', () => {
         Promise.reject({ response: { status: 400 }})
       )
       tokensHelpers.getBotAccessTokenForChannel.mockImplementation(() =>
-        Promise.resolve(botAccessToken)
+        Promise.resolve({botToken})
       )
 
       await requestCommands.handleDatasetRequestAction(defaultArguments)
@@ -140,7 +146,7 @@ describe('Test request command methods', () => {
       expect(slack.sendResponse).not.toHaveBeenCalled()
       expect(slack.openView).toHaveBeenCalledTimes(1)
       expect(slack.openView).toHaveBeenCalledWith(
-        botAccessToken,
+        botToken,
         triggerid,
         expect.anything()
       )

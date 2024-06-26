@@ -19,6 +19,8 @@
  */
 const axios = require("axios");
 const SlackWebClient = require("@slack/web-api").WebClient;
+const lang = require('lodash/lang')
+
 const headers = {
   Accept: "application/json",
   "Content-Type": "application/json"
@@ -126,6 +128,15 @@ const sendWelcomeMessage = async (botAccessToken, slackUserId) => {
     console.error("SendWelcomeMessage failed : ", error);
   }
 };
+
+const getAppDmChannel = async (botAccessToken, slackUserId) => {
+  // Needed for cases where we need to send user a message but due to actions taken from a non-channel context, e.g action taken on app home tab
+  const slackBot = new SlackWebClient(botAccessToken);
+  const botResponse = await slackBot.conversations.open({ users: slackUserId });
+  if (botResponse && botResponse.channel) {
+    return botResponse.channel.id;
+  }
+} 
 
 const sendAuthRequiredMessage = async (botAccessToken, nonce, channelId, slackUserId) => {
   try {
@@ -301,7 +312,12 @@ const sendMessageWithAttachments = (botAccessToken, channelId, attachments) => {
   slackBot.chat.postMessage({ channel: channelId, attachments: attachments });
 };
 
-const sendMessageWithBlocks = async (botAccessToken, channelId, blocks) => {
+const publishAppHomeView = async (botAccessToken, slackUserId, blocks) => {
+  const slackBot = new SlackWebClient(botAccessToken);
+  await slackBot.views.publish({ user_id: slackUserId, view: { type: 'home', blocks, callback_id: 'publish_app_home_view' }});
+}
+
+const postMessageWithBlocks = async (botAccessToken, channelId, blocks) => {
   const slackBot = new SlackWebClient(botAccessToken);
   await slackBot.chat.postMessage({
     channel: channelId,
@@ -315,23 +331,28 @@ const openView = async (botAccessToken, triggerId, view) => {
   await slackBot.views.open({ trigger_id: triggerId, view });
 }
 
-module.exports = {
-  botBelongsToChannel,
-  isDMChannel,
-  oauthAccess,
-  sendResponse,
-  sendWelcomeMessage,
-  sendAuthRequiredMessage,
-  startUnfurlAssociation,
-  sendCompletedAssociationMessage,
-  sendUnfurlAttachments,
-  sendMessageWithAttachments,
-  sendMessageWithBlocks,
-  dismissAuthRequiredMessage,
-  sendHowToUseMessage,
-  deleteSlackMessage,
-  openView
-};
+const sendResponseMessageAndBlocks = async (
+  responseUrl,
+  message,
+  blocks,
+  replaceOriginal,
+  deleteOriginal,
+) => {
+  let data = {}
+  if (message && message.length > 0) {
+    data.text = message;
+  }
+  if (blocks && !lang.isEmpty(blocks)) {
+    data.blocks = blocks
+  }
+  data.replace_original = replaceOriginal ? replaceOriginal : false
+  data.delete_original = deleteOriginal ? deleteOriginal : false
+  try {
+    await sendResponse(responseUrl, data)
+  } catch (error) {
+    console.error('Failed to send message to slack', error);
+  }
+}
 
 async function chatUnfurl(opts, botAccessToken, teamAccessToken) {
   try {
@@ -345,3 +366,24 @@ async function chatUnfurl(opts, botAccessToken, teamAccessToken) {
     }
   }
 }
+
+module.exports = {
+  botBelongsToChannel,
+  isDMChannel,
+  oauthAccess,
+  sendResponse,
+  sendWelcomeMessage,
+  sendAuthRequiredMessage,
+  startUnfurlAssociation,
+  sendCompletedAssociationMessage,
+  sendUnfurlAttachments,
+  sendMessageWithAttachments,
+  postMessageWithBlocks,
+  dismissAuthRequiredMessage,
+  sendHowToUseMessage,
+  deleteSlackMessage,
+  openView,
+  publishAppHomeView,
+  getAppDmChannel,
+  sendResponseMessageAndBlocks,
+};

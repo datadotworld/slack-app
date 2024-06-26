@@ -231,10 +231,9 @@ const acceptDatasetRequest = async (token, requestid, agentid, datasetid) => {
   return post(requestUrl, data, token);
 }
 
-// https://ddw-dwapipublic.dev.data.world/v0/search/resources?size=1
-
-const searchTerm = async (token, query, size) => {
-  const requestUrl = `${baseUrl}/search/resources?size=${size}`;
+const searchTerm = async (token, query, size, nextPage) => {
+  const path = nextPage ? nextPage : `search/resources?size=${size}`;
+  const requestUrl = `${baseUrl}/${path}`;
   const data = {
     "category": [
       "catalogBusinessTerm"
