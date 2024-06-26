@@ -24,8 +24,16 @@ const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
 const Channel = require("../../models").Channel;
 const Team = require("../../models").Team;
+const tokenHelpers = require("../../helpers/tokens");
 const Subscription = require("../../models").Subscription;
 const dwDomain = require("../../helpers/helper").DW_DOMAIN;
+
+jest.mock("../../helpers/tokens");
+
+beforeAll(() => {
+  tokenHelpers.getBotAccessTokenForTeam.mockImplementation(() => Promise.resolve({ botToken: "botAccessToken", teamAccessToken: "accessToken" }));
+  tokenHelpers.getBotAccessTokenForChannel.mockImplementation(() => Promise.resolve({ botToken: "botAccessToken" }));
+});
 
 describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
   const linkSharedEvent = {
@@ -178,7 +186,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
     const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
-    const team = { teamId: "teamId", botAccessToken: "accessToken", accessToken };
+    const team = { teamId: "teamId", botAccessToken: "botAccessToken", accessToken };
     const ts = 1522193271;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
@@ -265,7 +273,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(2);
+      expect(tokenHelpers.getBotAccessTokenForTeam).toHaveBeenCalledWith("teamId");
       expect(dataworld.getDataset).toHaveBeenCalledWith(
         dwResourceId,
         dwAgentId,
@@ -296,7 +304,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     const dwAccessToken = "dwAccessToken";
     const user = { dwAccessToken };
     const accessToken = process.env.SLACK_BOT_TOKEN || "accessToken";
-    const team = { teamId: "teamId", botAccessToken: "accessToken", accessToken };
+    const team = { teamId: "teamId", botAccessToken: "botAccessToken", accessToken };
     const ts = 1486421719;
     const dwAgentId = "kehesjay";
     const dwResourceId = "actors-proj";
@@ -380,7 +388,7 @@ describe("POST /api/v1/unfurl/action - Process unfurl requests", () => {
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
       expect(auth.checkSlackAssociationStatus).toHaveBeenCalledWith(event.user);
-      expect(Team.findOne).toHaveBeenCalledTimes(2);
+      expect(tokenHelpers.getBotAccessTokenForTeam).toHaveBeenCalledWith("teamId");
       expect(dataworld.getDataset).toHaveBeenCalledWith(
         dwResourceId,
         dwAgentId,

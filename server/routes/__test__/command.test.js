@@ -256,7 +256,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
     helper.getSubscriptionStatus = jest.fn(() => Promise.resolve([true, true]));
     dataworld.unsubscribeFromDataset = jest.fn(() => Promise.resolve(response));
     slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
     request(server)
       .post("/api/v1/command/action")
@@ -268,7 +268,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           payloadObject.channel.id,
           botAccessToken
         );
-        expect(Team.findOne).toHaveBeenCalledTimes(2);
+        expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
         expect(User.findOne).toHaveBeenCalledTimes(1);
         expect(Subscription.findOne).toHaveBeenCalledTimes(1);
@@ -286,11 +286,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
           parts.shift(),
           dwAccessToken
         );
-        expect(slack.sendResponse).toHaveBeenCalledWith(payloadObject.response_url, {
-          replace_original: false,
-          delete_original: false,
-          text: message
-        });
+        expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(payloadObject.response_url, message);
         done();
       });
   });
@@ -333,7 +329,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
     dataworld.subscribeToProject = jest.fn(() => Promise.resolve(response));
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
     slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
     request(server)
       .post("/api/v1/command/action")
@@ -341,7 +337,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(Team.findOne).toHaveBeenCalledTimes(2);
+        expect(Team.findOne).toHaveBeenCalledTimes(1);
         expect(Channel.findOrCreate).toHaveBeenCalledTimes(1);
         expect(slack.botBelongsToChannel).toHaveBeenCalledWith(
           payloadObject.channel.id,
@@ -359,13 +355,9 @@ describe("POST /api/v1/command/action - Process an action", () => {
           id,
           dwAccessToken
         );
-        expect(slack.sendResponse).toHaveBeenCalledWith(
+        expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
           payloadObject.response_url,
-          {
-            delete_original: false,
-            replace_original: false,
-            text: message
-          }
+          message
         );
         done();
       });
@@ -395,7 +387,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
       );
       slack.botBelongsToChannel = jest.fn(() => Promise.resolve(true));
       slack.openView = jest.fn(() => Promise.resolve({}));
-      slack.sendResponse = jest.fn(() => Promise.resolve({}));
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve({}));
     })
 
     it('should handle a successful action', async done => {
@@ -423,12 +415,11 @@ describe("POST /api/v1/command/action - Process an action", () => {
             agentid,
             datasetid
           );
-          expect(slack.sendResponse).toHaveBeenCalledWith(
+          expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
             datasetRequestActionPayload.response_url,
-            {
-              replace_original: true,
-              blocks: updatedBlocks
-            }
+            "",
+            updatedBlocks,
+            true
           );
           expect(slack.openView).not.toHaveBeenCalled();
           done();
@@ -469,7 +460,7 @@ describe("POST /api/v1/command/action - Process an action", () => {
             agentid,
             datasetid
           );
-          expect(slack.sendResponse).not.toHaveBeenCalled();
+          expect(slack.sendResponseMessageAndBlocks).not.toHaveBeenCalled();
           expect(slack.openView).toHaveBeenCalledWith(
             botAccessToken,
             datasetRequestActionPayload.trigger_id,

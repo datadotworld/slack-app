@@ -106,12 +106,12 @@ const subscribeToProjectOrDataset = async (
       )
     }
     // send subscription status message to Slack
-    sendSlackMessage(responseUrl, message)
+    slack.sendResponseMessageAndBlocks(responseUrl, message)
   } catch (error) {
     // TODO: Move to message service or slack service 
     // Failed to subscribe as project, Handle as dataset
     console.warn('Failed to subscribe to Project or Dataset : ', error.message)
-    await sendSlackMessage(
+    await slack.sendResponseMessageAndBlocks(
       responseUrl,
       `Failed to subscribe to *${id}*. Please make sure to subscribe using a valid dataset or project URL.`,
     )
@@ -168,10 +168,10 @@ const subscribeToAccount = async (
     }
 
     // send subscription status message to Slack
-    sendSlackMessage(responseUrl, message)
+    slack.sendResponseMessageAndBlocks(responseUrl, message)
   } catch (error) {
     console.error('Error subscribing to account: ', error.message)
-    sendSlackMessage(
+    slack.sendResponseMessageAndBlocks(
       responseUrl,
       `Failed to subscribe to *${id}*. Is that a valid data.world account ID?`,
     )
@@ -225,9 +225,9 @@ const unsubscribeFromDatasetOrProject = async (
       )
       // send successful unsubscription message to Slack
       const message = `No problem! You'll no longer receive notifications about *${id}* here.`
-      await sendSlackMessage(responseUrl, message)
+      await slack.sendResponseMessageAndBlocks(responseUrl, message)
     } else {
-      await sendSlackMessage(
+      await slack.sendResponseMessageAndBlocks(
         responseUrl,
         `No subscription found for *${resourceId}* here. Use \`/${commandText} list\` to list all active subscriptions.`,
       )
@@ -269,13 +269,13 @@ const unsubscribeFromProject = async (
       channelId,
     )
     // send successful unsubscription message to Slack
-    await sendSlackMessage(
+    await slack.sendResponseMessageAndBlocks(
       responseUrl,
       `No problem! You'll no longer receive notifications about *${id}* here.`,
     )
   } catch (error) {
     console.error('Error unsubscribing from project : ', error.message)
-    await sendSlackMessage(
+    await slack.sendResponseMessageAndBlocks(
       responseUrl,
       `Failed to unsubscribe from *${id}*.`,
     )
@@ -293,6 +293,7 @@ const unsubscribeFromAccount = async (channelid, id, responseUrl) => {
   ] = await helper.getSubscriptionStatus(resourceId, channelid)
   if (hasSubscriptionInChannel) {
     try {
+      console.log('Calling Subscription.findOne 5');
       const channelSubscription = await Subscription.findOne({
         where: {
           resourceId,
@@ -317,16 +318,16 @@ const unsubscribeFromAccount = async (channelid, id, responseUrl) => {
       )
       // send successful unsubscription message to Slack
       const message = `No problem! You'll no longer receive notifications about *${id}* here.`
-      await sendSlackMessage(responseUrl, message)
+      await slack.sendResponseMessageAndBlocks(responseUrl, message)
     } catch (error) {
       console.error('Error unsubscribing from account : ', error.message)
-      await sendSlackMessage(
+      await slack.sendResponseMessageAndBlocks(
         responseUrl,
         `Failed to unsubscribe from *${id}*.`,
       )
     }
   } else {
-    sendSlackMessage(
+    slack.sendResponseMessageAndBlocks(
       responseUrl,
       `No subscription found for *${resourceId}* here. Use \`/${commandText} list\` to list all active subscriptions.`,
     )
@@ -466,7 +467,7 @@ const listSubscription = async (
         ? ''
         : `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`
     }
-    await sendSlackMessage(
+    await slack.sendResponseMessageAndBlocks(
       responseUrl,
       message,
       blocks,
@@ -475,7 +476,7 @@ const listSubscription = async (
     )
   } catch (error) {
     console.error('Error getting subscriptions : ', error.message)
-    await sendSlackMessage(responseUrl, 'Failed to get subscriptions.')
+    await slack.sendResponseMessageAndBlocks(responseUrl, 'Failed to get subscriptions.')
   }
 }
 
@@ -500,55 +501,6 @@ const removeSubscriptionRecord = async (owner, id, channelId) => {
   })
 }
 
-const sendSlackMessage = async (
-  responseUrl,
-  message,
-  blocks,
-  replaceOriginal,
-  deleteOriginal,
-) => {
-  let data = { text: message }
-  if (blocks && !lang.isEmpty(blocks)) {
-    data.blocks = blocks
-  }
-  data.replace_original = replaceOriginal ? replaceOriginal : false
-  data.delete_original = deleteOriginal ? deleteOriginal : false
-  try {
-    await slack.sendResponse(responseUrl, data)
-  } catch (error) {
-    console.error('Failed to send message to slack', error.message)
-  }
-}
-
-const sendSlackBlock = (responseUrl, block) => {
-  try {
-    //data.blocks = attachment;
-    slack.sendResponse(responseUrl, { blocks: block }).catch(console.error)
-  } catch (error) {
-    console.error('Failed to send attachment to slack', error.message)
-  }
-}
-
-const sendSlackBlocks = async (
-  responseUrl,
-  message,
-  blocks,
-  replaceOriginal,
-  deleteOriginal,
-) => {
-  let data = { text: message }
-  if (blocks && !lang.isEmpty(blocks)) {
-    data.blocks = blocks
-  }
-  data.replace_original = replaceOriginal ? replaceOriginal : false
-  data.delete_original = deleteOriginal ? deleteOriginal : false
-  try {
-    await slack.sendResponse(responseUrl, data)
-  } catch (error) {
-    console.error('Failed to send message to slack', error.message)
-  }
-}
-
 // Visible for testing
 module.exports = {
   subscribeToProjectOrDataset,
@@ -559,7 +511,4 @@ module.exports = {
   listSubscription,
   addSubscriptionRecord,
   removeSubscriptionRecord,
-  sendSlackMessage,
-  sendSlackBlock,
-  sendSlackBlocks,
 }
