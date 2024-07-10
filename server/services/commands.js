@@ -17,7 +17,6 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-
 const Channel = require('../models').Channel
 const Team = require('../models').Team
 

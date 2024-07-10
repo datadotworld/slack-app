@@ -22,6 +22,7 @@ const collection = require("lodash/collection");
 const auth = require("../services/auth");
 const commandService = require("../services/commands");
 const actionService = require("../services/actions")
+const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
 const webhookCommands = require("./commands/webhook");
