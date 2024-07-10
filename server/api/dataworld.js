@@ -231,6 +231,19 @@ const acceptDatasetRequest = async (token, requestid, agentid, datasetid) => {
   return post(requestUrl, data, token);
 }
 
+const searchTerm = async (token, query, size, nextPage) => {
+  const path = nextPage ? nextPage : `search/resources?size=${size}`;
+  const requestUrl = `${baseUrl}/${path}`;
+  const data = {
+    "category": [
+      "catalogBusinessTerm"
+    ],
+    "includeCommunityResults": true,
+    query
+  }
+  return post(requestUrl, data, token);
+}
+
 const rejectDatasetRequest = async (token, requestid, agentid, datasetid) => {
   const requestUrl = `${baseUrl}/requests/reject`;
   const data = { requestid, owner: agentid, resourceid: datasetid };
@@ -265,6 +278,7 @@ module.exports = {
   unsubscribeFromAccount,
   acceptDatasetRequest,
   rejectDatasetRequest,
+  searchTerm,
   cancelDatasetRequest,
   verifyDwToken,
   refreshToken,

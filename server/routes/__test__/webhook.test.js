@@ -33,12 +33,8 @@ jest.mock("../../api/slack");
 jest.mock("../../helpers/tokens");
 
 beforeAll(() => {
-  tokenHelpers.getBotAccessTokenForTeam.mockImplementation(() =>
-    "botAccessToken"
-  );
-  tokenHelpers.getBotAccessTokenForChannel.mockImplementation(() =>
-    "botAccessToken"
-  );
+  tokenHelpers.getBotAccessTokenForTeam.mockImplementation(() => Promise.resolve({ botToken: "botAccessToken" }));
+  tokenHelpers.getBotAccessTokenForChannel.mockImplementation(() => Promise.resolve({ botToken: "botAccessToken" }));
 })
 
 describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
@@ -331,7 +327,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
     dataworld.getDataset = jest.fn(() => Promise.resolve({ data }));
     dataworld.getDWUser = jest.fn(() => Promise.resolve(ownerResponse));
 
-    slack.sendMessageWithBlocks = jest.fn();
+    slack.postMessageWithBlocks = jest.fn();
 
     agent.expect(200).end((err, res) => {
       if (err) return done(err);
@@ -344,7 +340,7 @@ describe("POST /api/v1/webhook/dw/events - Process DW webhook events", () => {
       );
       expect(dataworld.getDWUser).toHaveBeenCalledWith(dwAccessToken, dwAgentId);
       expect(Channel.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
+      expect(slack.postMessageWithBlocks).toHaveBeenCalledWith(
         botAccessToken,
         channelId,
         expectedBlocks
@@ -435,12 +431,12 @@ describe("POST /api/v1/webhook/:webhookId", () => {
       .end((err, res) => {
         if (err) return done(err);
         done();
-        expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
+        expect(slack.postMessageWithBlocks).toHaveBeenCalledWith(
           "botAccessToken",
           mockChannelId,
           expect.anything()
         );
-        expect(slack.sendMessageWithBlocks.mock.calls).toMatchSnapshot();
+        expect(slack.postMessageWithBlocks.mock.calls).toMatchSnapshot();
       });
   });
 
@@ -455,12 +451,12 @@ describe("POST /api/v1/webhook/:webhookId", () => {
       .end((err, res) => {
         if (err) return done(err);
         done();
-        expect(slack.sendMessageWithBlocks).toHaveBeenCalledWith(
+        expect(slack.postMessageWithBlocks).toHaveBeenCalledWith(
           "botAccessToken",
           mockChannelId,
           expect.anything()
         );
-        expect(slack.sendMessageWithBlocks.mock.calls).toMatchSnapshot();
+        expect(slack.postMessageWithBlocks.mock.calls).toMatchSnapshot();
       });
   });
 
@@ -498,7 +494,7 @@ describe("POST /api/v1/webhook/:webhookId", () => {
         if (err) return done(err);
         done();
         for (let i = 1; i <= 3; i++) {
-          expect(slack.sendMessageWithBlocks).toHaveBeenNthCalledWith(
+          expect(slack.postMessageWithBlocks).toHaveBeenNthCalledWith(
             i,
             "botAccessToken",
             `mockChannel${i}`,

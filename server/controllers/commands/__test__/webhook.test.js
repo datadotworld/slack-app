@@ -29,9 +29,9 @@ describe('Test webhook command methods', () => {
         mockResponseUrl
       )
 
-      expect(slack.sendResponse).toHaveBeenCalledWith(
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
         mockResponseUrl,
-        { text: expect.stringContaining(mockWebhookUrl) }
+        expect.stringContaining(mockWebhookUrl)
       )
     })
 
@@ -48,9 +48,9 @@ describe('Test webhook command methods', () => {
           mockResponseUrl
         )
 
-        expect(slack.sendResponse).toHaveBeenCalledWith(
+        expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
           mockResponseUrl,
-          { text: expect.stringContaining(existingWebhookId) }
+          expect.stringContaining(existingWebhookId)
         )
       })
     })
@@ -71,9 +71,9 @@ describe('Test webhook command methods', () => {
         )
 
         expect(Channel.update).toHaveBeenCalled()
-        expect(slack.sendResponse).toHaveBeenCalledWith(
+        expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(
           mockResponseUrl,
-          { text: expect.stringContaining(newWebhookId) }
+          expect.stringContaining(newWebhookId)
         )
       })
     })

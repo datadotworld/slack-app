@@ -26,6 +26,7 @@ const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");
 const webhookCommands = require("./commands/webhook");
+const { getBotAccessTokenForTeam } = require("../helpers/tokens");
 // data.world command format
 const commandText = process.env.SLASH_COMMAND;
 const dwCommandRegex = new RegExp(
@@ -38,6 +39,10 @@ const dwSupportCommandRegex = new RegExp(
 );
 const dwWebhookCommandRegex = new RegExp(
   `^((\\\/${commandText})(webhook))$`,
+  "i"
+);
+const dwSearchTermCommandRegex = new RegExp(
+  `^((\\\/${commandText})(search-term) [\\w-\\\/\\:\\.]+)$`,
   "i"
 );
 
@@ -57,23 +62,25 @@ const performAction = async (req, res) => {
       return;
     }
 
-    if (
-      !(await commandService.isBotPresent(
-        payload.team.id,
-        payload.channel.id,
-        payload.user.id,
-        payload.response_url
-      ))
-    ) {
-      return;
+    let channelId = payload.channel ? payload.channel.id : null;
+    if (channelId) {
+      // If this action was taken in a channel we want to check that our bot in present in this channel
+      if (!(await commandService.isBotPresent(payload.team.id, channelId, payload.user.id, payload.response_url))) {
+        return;
+      }
+    } else {
+      const { botToken } = await getBotAccessTokenForTeam(payload.team.id);
+      channelId = await slack.getAppDmChannel(botToken, payload.user.id);
     }
+
     // Assuming that all actions require user to be data.world authenticated
     const [isAssociated, user] = await auth.checkSlackAssociationStatus(
       payload.user.id
     );
+
     if (!isAssociated) {
       // User is not associated begin association process.
-      await auth.beginSlackAssociation(payload.user.id, payload.channel.id, payload.team.id)
+      await auth.beginSlackAssociation(payload.user.id, payload.team.id, payload.channel.id)
       return;
     }
 
@@ -146,6 +153,8 @@ const validateAndProcessCommand = async (req, res, next) => {
               req.body.channel_id,
               req.body.response_url
             );
+          } else if (dwSearchTermCommandRegex.test(req.body.command + option)) {
+            commandService.handleSearchTermCommand(req, user.dwAccessToken);
           } else {
             // Show help if there's no match found.
             commandService.showHelp(req.body.response_url);
@@ -153,15 +162,14 @@ const validateAndProcessCommand = async (req, res, next) => {
         } else {
           // User is not associated begin association process.
           await auth.beginSlackAssociation(req.body.user_id,
-            req.body.channel_id,
-            req.body.team_id);
+            req.body.team_id, req.body.channel_id);
         }
       }
     }
   } catch (error) {
     // An internal error has occured send a descriptive message
     console.error("Failed to process command : ", error);
-    commandService.sendErrorMessage(req);
+    commandService.sendErrorMessage(req.body);
   }
 };
 

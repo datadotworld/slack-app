@@ -767,10 +767,9 @@ const sendEventToSlack = async (channelIds, blocks) => {
   });
 };
 
-
 const sendSlackMessage = async (channelId, blocks, teamId) => {
-  const token = await getBotAccessTokenForTeam(teamId)
-  slack.sendMessageWithBlocks(token, channelId, blocks);
+  const {botToken} = await getBotAccessTokenForTeam(teamId)
+  slack.postMessageWithBlocks(botToken, channelId, blocks);
 };
 
 const webhook = {
