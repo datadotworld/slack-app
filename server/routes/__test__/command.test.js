@@ -19,7 +19,8 @@
  */
 const request = require("supertest");
 const server = require("../../app");
-const auth = require("../../controllers/auth");
+const auth = require("../../services/auth");
+const authMiddleware = require("../../middlewares/auth");
 const dataworld = require("../../api/dataworld");
 const slack = require("../../api/slack");
 const helper = require("../../helpers/helper");
@@ -35,7 +36,7 @@ const dwDomain = helper.DW_DOMAIN;
 describe("POST /api/v1/command/ - Process slash command", () => {
   it("should respond to slack challenge request", done => {
     const challenge = "challenge";
-    auth.verifySlackRequest = jest.fn(() => true);
+    authMiddleware.verifySlackRequest = jest.fn(() => true);
     request(server)
       .post("/api/v1/command/")
       .send({ challenge })
@@ -49,7 +50,7 @@ describe("POST /api/v1/command/ - Process slash command", () => {
 
   it("should handle slack ssl check properly", done => {
     const ssl_check = "ssl_check";
-    auth.verifySlackRequest = jest.fn(() => true);
+    authMiddleware.verifySlackRequest = jest.fn(() => true);
     request(server)
       .post("/api/v1/command/")
       .send({ ssl_check })

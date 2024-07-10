@@ -26,7 +26,7 @@ const array = require("lodash/array");
 const collection = require("lodash/collection");
 const lang = require("lodash/lang");
 
-const auth = require("./auth");
+const auth = require("../services/auth");
 const dataworld = require("../api/dataworld");
 const helper = require("../helpers/helper");
 const slack = require("../api/slack");

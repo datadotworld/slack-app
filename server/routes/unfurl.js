@@ -19,7 +19,7 @@
  */
 const express = require("express");
 
-const auth = require("../controllers/auth");
+const auth = require("../middlewares/auth");
 const { unfurl } = require("../controllers/unfurl");
 
 const router = express.Router();

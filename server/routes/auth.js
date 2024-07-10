@@ -23,9 +23,9 @@ const auth = require("../controllers/auth");
 
 const router = express.Router();
 
-router.get("/exchange", auth.completeSlackAssociation);
+router.get("/exchange", auth.completeDataworldAccountAssociation);
 
 // endpoint for handling slack app installation
-router.get("/oauth", auth.slackOauth);
+router.get("/oauth", auth.handleSlackAppInstallation);
 
 module.exports = router;
