@@ -17,15 +17,26 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
+const authorizationRequestActionButtonsHandler = require('./handlers/authorization_request_action_buttons');
+const clearSearchResultsButton = require('./handlers/search/clear_search_results_button');
 const datasetSubscribeButtonHandler = require('./handlers/dataset_subscribe_button');
-
-const DATASET_SUBSCRIBE_ACTION = 'dataset_subscribe_button';
+const searchTermButtonHandler = require('./handlers/search/search_term_button');
+const moreTermsButtonHandler = require('./handlers/search/more_terms_button');
 
 const ACTIONS_HANDLER_MAP = {
-    'dataset_subscribe_button' : datasetSubscribeButtonHandler
+    'authorization_request.accept' : authorizationRequestActionButtonsHandler,
+    'authorization_request.cancel' : authorizationRequestActionButtonsHandler,
+    'authorization_request.reject' : authorizationRequestActionButtonsHandler,
+    'clear_search_results_button' : clearSearchResultsButton,
+    'dataset_subscribe_button' : datasetSubscribeButtonHandler,
+    'more_terms_button' : moreTermsButtonHandler,
+    'search_term_button' : searchTermButtonHandler,
+}
+
+const getHandler = (actionId) => {
+    return ACTIONS_HANDLER_MAP[actionId];
 }
 
 module.exports = { 
-    ACTIONS_HANDLER_MAP,
-    DATASET_SUBSCRIBE_ACTION
+    getHandler,
 };

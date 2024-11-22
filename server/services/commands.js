@@ -26,7 +26,7 @@ const lang = require('lodash/lang')
 const helper = require('../helpers/helper')
 const slack = require('../api/slack')
 const subscriptionService = require('../services/subscription')
-const { getBotAccessTokenForTeam } = require('../helpers/tokens')
+const searchService = require('../services/search')
 
 // data.world command format
 const commandText = process.env.SLASH_COMMAND
@@ -60,6 +60,14 @@ const handleDatasetorProjectSubscribeCommand = async (
   // Extract params from command
   const { id, owner } = helper.extractParamsFromCommand(command, false);
   await subscriptionService.subscribeToProjectOrDataset(userid, channelid, id, owner, responseUrl, token);
+}
+
+const handleSearchTermCommand = async (req, token) => {
+    const command = req.body.command + helper.cleanSlackLinkInput(req.body.text)
+    const query = helper.extractSearchTermFromCommand(command);
+    const responseUrl = req.body.response_url;
+    const serverBaseUrl = helper.getServerBaseUrl(req);
+    await searchService.searchTerm(token, query, 1, responseUrl, serverBaseUrl);
 }
 
 // Subscribe to a DW account
@@ -99,26 +107,6 @@ const handleListSubscriptionCommand = async (
   deleteOriginal,
 ) => {
     await subscriptionService.listSubscription(responseUrl, channelid, replaceOriginal, deleteOriginal);
-}
-
-const sendSlackMessage = async (
-  responseUrl,
-  message,
-  blocks,
-  replaceOriginal,
-  deleteOriginal,
-) => {
-  let data = { text: message }
-  if (blocks && !lang.isEmpty(blocks)) {
-    data.blocks = blocks
-  }
-  data.replace_original = replaceOriginal ? replaceOriginal : false
-  data.delete_original = deleteOriginal ? deleteOriginal : false
-  try {
-    await slack.sendResponse(responseUrl, data)
-  } catch (error) {
-    console.error('Failed to send message to slack', error.message)
-  }
 }
 
 const getType = (command, option) => {
@@ -205,15 +193,14 @@ const showHelp = async (responseUrl) => {
     })
   })
 
-  await sendSlackMessage(responseUrl, message, blocks)
+  await slack.sendResponseMessageAndBlocks(responseUrl, message, blocks)
 }
 
 const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
   // Check if bot was invited to slack channel
   // channel found, continue and process command
   const team = await Team.findOne({ where: { teamId: teamId } })
-  const token = await getBotAccessTokenForTeam(teamId)
-  const isPresent = await slack.botBelongsToChannel(channelid, token)
+  const isPresent = await slack.botBelongsToChannel(channelid, team.botAccessToken)
 
   if (isPresent) {
     // Find or create channel record in DB.(In a case where DB gets cleared, existing bot channels will be re-created in DB).
@@ -230,14 +217,14 @@ const isBotPresent = async (teamId, channelid, slackUserId, responseUrl) => {
     const message = slack.isDMChannel(channelid)
       ? `Oops! \`/${commandText}\` cannot be used here. Use it in public or private channels, or in DMs with <@${team.botUserId}>.`
       : `Sorry <@${slackUserId}>, you can't run \`/${commandText}\` until you've invited <@${team.botUserId}> to this channel. Run \`/invite <@${team.botUserId}>\`, then try again.`
-    sendSlackMessage(responseUrl, message)
+      slack.sendResponseMessageAndBlocks(responseUrl, message)
   }
   return isPresent
 }
 
 const sendErrorMessage = (payload) => {
   message = `Sorry <@${payload.user_id}>, I am unable to process command \`${payload.command}\` right now. Please, try again later.`
-  sendSlackMessage(req.body.response_url, message)
+  slack.sendResponseMessageAndBlocks(payload.response_url, message)
 }
 
 // Visible for testing
@@ -249,7 +236,7 @@ module.exports = {
   handleDatasetOrProjectUnsubscribeCommand,
   handleUnsubscribeFromAccount,
   handleListSubscriptionCommand,
-  sendSlackMessage,
+  handleSearchTermCommand,
   getType,
   subscribeOrUnsubscribe,
   showHelp,

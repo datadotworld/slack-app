@@ -1,3 +1,4 @@
+const { text } = require("body-parser");
 const slack = require("../slack");
 const axios = require("axios");
 
@@ -28,14 +29,15 @@ describe("Test slack api wrapper.", () => {
   });
 
   it("should send response to slack", done => {
-    const data = {};
+    const message = "message"
+    const blocks = [{key: "value"}];
     const responseUrl = "responseUrl";
 
     axios.post = jest.fn(() => Promise.resolve());
 
-    slack.sendResponse(responseUrl, data);
+    slack.sendResponseMessageAndBlocks(responseUrl, message, blocks);
 
-    expect(axios.post).toHaveBeenCalledWith(responseUrl, data, { headers });
+    expect(axios.post).toHaveBeenCalledWith(responseUrl, {text: message, blocks, delete_original: false, replace_original: false }, { headers });
 
     done();
   });

@@ -27,6 +27,7 @@ const Sequelize = require("sequelize");
 
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
+const tokenHelper = require("../helpers/tokens");
 
 const Op = Sequelize.Op;
 
@@ -68,9 +69,7 @@ const checkSlackAssociationStatus = async slackId => {
 const beginSlackAssociation = async (slackUserId, teamId, channelId) => {
   try {
     let nonce = uuidv1();
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const botToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-
+    const { botToken } = await tokenHelper.getBotAccessTokenForTeam(teamId);
     // create user with nonce and the slackdata
     const [user, created] = await User.findOrCreate({
       where: { slackId: slackUserId },
@@ -97,9 +96,7 @@ const beginUnfurlSlackAssociation = async (
 ) => {
   try {
     const nonce = uuidv1();
-    const team = await Team.findOne({ where: { teamId: teamId } });
-    const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-    const teamAccessToken = process.env.SLACK_TEAM_TOKEN || team.accessToken;
+    const {botToken, teamAccessToken} = await tokenHelper.getBotAccessTokenForTeam(teamId);
     // create user with nonce and the slackdata
     const [user, created] = await User.findOrCreate({
       where: { slackId: userId },
@@ -108,7 +105,7 @@ const beginUnfurlSlackAssociation = async (
 
     await slack.startUnfurlAssociation(
       user.nonce,
-      botAccessToken,
+      botToken,
       channel,
       userId,
       messageTs,

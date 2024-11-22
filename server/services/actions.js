@@ -17,92 +17,17 @@
  * This product includes software developed at
  * data.world, Inc. (http://data.world/).
  */
-const array = require('lodash/array')
-const lang = require('lodash/lang')
-
-const slack = require('../api/slack')
-const { handleDatasetRequestAction } = require('../controllers/commands/request')
-const { AUTHORIZATION_ACTIONS } = require('../helpers/requests')
+const { getHandler } = require('../services/actions/action-provider')
 
 const commandService = require('../services/commands')
 
-const sendSlackBlock = (responseUrl, block) => {
-  try {
-    //data.blocks = attachment;
-    slack.sendResponse(responseUrl, { blocks: block }).catch(console.error)
-  } catch (error) {
-    console.error('Failed to send attachment to slack', error.message)
-  }
-}
-
-const sendSlackBlocks = async (
-  responseUrl,
-  message,
-  blocks,
-  replaceOriginal,
-  deleteOriginal,
-) => {
-  let data = { text: message }
-  if (blocks && !lang.isEmpty(blocks)) {
-    data.blocks = blocks
-  }
-  data.replace_original = replaceOriginal ? replaceOriginal : false
-  data.delete_original = deleteOriginal ? deleteOriginal : false
-  try {
-    await slack.sendResponse(responseUrl, data)
-  } catch (error) {
-    console.error('Failed to send message to slack', error.message)
-  }
-}
-
 const handleButtonAction = async (payload, action, user) => {
-  if (action.action_id === 'dataset_subscribe_button') {
-    await commandService.handleDatasetorProjectSubscribeCommand(
-      payload.user.id,
-      payload.channel.id,
-      `subscribe ${action.value}`,
-      payload.response_url,
-      user.dwAccessToken,
-    )
-
-    if (payload.container.is_app_unfurl) {
-      array.remove(
-        payload.app_unfurl.blocks.find((t) => t.type === 'actions').elements,
-        (element) => {
-          return element.action_id === 'dataset_subscribe_button'
-        },
-      )
-      // update unfurl attachment
-      sendSlackBlock(payload.response_url, payload.app_unfurl.blocks)
-    } else {
-      // update message attachments
-      array.remove(
-        payload.message.blocks.find((t) => t.type === 'actions').elements,
-        (element) => {
-          return element.action_id === 'dataset_subscribe_button'
-        },
-      )
-      sendSlackBlocks(payload.response_url, '', payload.message.blocks, true)
-    }
-  } else if (Object.values(AUTHORIZATION_ACTIONS).includes(action.action_id)) {
-    const { requestid, agentid, datasetid } = JSON.parse(action.value)
-    await handleDatasetRequestAction({
-      channelid: payload.channel.id,
-      userid: payload.user.id,
-      triggerid: payload.trigger_id,
-      responseUrl: payload.response_url,
-      message: payload.message,
-      blockid: action.block_id,
-      actionid: action.action_id,
-      requestid,
-      agentid,
-      datasetid,
-      dwAccessToken: user.dwAccessToken,
-    })
+  const actionHandler = getHandler(action.action_id);
+  if (actionHandler) {
+    await actionHandler.handle(payload, action, user);
   } else {
     // unknow action
-    console.warn('Unknown action_id in button action event.')
-    return
+    console.warn(`Unknown action_id in button action event ${action.action_id}`);
   }
 }
 
@@ -141,8 +66,6 @@ const handleMenuAction = async (payload, action) => {
 
 // Visible for testing
 module.exports = {
-  sendSlackBlock,
-  sendSlackBlocks,
   handleButtonAction,
   handleMenuAction,
 }

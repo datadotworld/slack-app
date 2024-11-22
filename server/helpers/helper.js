@@ -27,6 +27,11 @@ const DW_AUTH_URL = `${process.env.DW_AUTH_BASE_URL}?client_id=${
 }&response_type=code&redirect_uri=${process.env.DW_REDIRECT_URI}&state=`;
 const DW_DOMAIN = process.env.DW_DOMAIN || "data.world";
 
+const extractSearchTermFromCommand = (command) => {
+  const parts = command.split(" ");
+  return parts[parts.length - 1];
+};
+
 const extractParamsFromCommand = (command, isAccountCommand) => {
   const params = {};
   const parts = command.split(" ");
@@ -137,6 +142,16 @@ const getServerBaseUrl = (req) => {
   });
 }
 
+const trimStringToMaxLength = (str, maxLength = 3000) => {
+  // Check if the string length exceeds the maximum length
+  if (str.length > maxLength) {
+    // Trim the string to the maximum length
+    return str.substring(0, maxLength);
+  }
+  // If the string is within the maximum length, return it as is
+  return str;
+}
+
 module.exports = {
   FILES_LIMIT,
   LINKED_DATASET_LIMIT,
@@ -148,9 +163,11 @@ module.exports = {
   extractInsightsParams,
   extractIdFromLink,
   extractQueryParams,
+  extractSearchTermFromCommand,
   cleanSlackLinkInput,
   getSubscriptionStatus,
   getDelay,
   shouldRetry,
-  getServerBaseUrl
+  getServerBaseUrl,
+  trimStringToMaxLength
 };

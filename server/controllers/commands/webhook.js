@@ -19,11 +19,9 @@ const getOrCreateWebhookForChannel = async (channelId, responseUrl) => {
     )
   }
 
-  slack.sendResponse(responseUrl, {
-    text: `The webhook URL for this channel is \`${
-      webhookHelper.buildWebhookUrl(webhookId)
-    }\``
-  })
+  slack.sendResponseMessageAndBlocks(responseUrl, `The webhook URL for this channel is \`${
+    webhookHelper.buildWebhookUrl(webhookId)
+  }\``);
 }
 
 module.exports = {
