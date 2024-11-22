@@ -80,7 +80,7 @@ const performAction = async (req, res) => {
 
     if (!isAssociated) {
       // User is not associated begin association process.
-      await auth.beginSlackAssociation(payload.user.id, payload.team.id, payload.channel.id)
+      await auth.beginSlackAssociation(payload.user.id, payload.team.id, channelId)
       return;
     }
 

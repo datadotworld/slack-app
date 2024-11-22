@@ -144,7 +144,7 @@ const getServerBaseUrl = (req) => {
 
 const trimStringToMaxLength = (str, maxLength = 3000) => {
   // Check if the string length exceeds the maximum length
-  if (str.length > maxLength) {
+  if (str && str.length > maxLength) {
     // Trim the string to the maximum length
     return str.substring(0, maxLength);
   }

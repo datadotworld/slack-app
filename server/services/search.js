@@ -42,7 +42,7 @@ const getTimestamp = time => {
 const searchTerm = async (token, query, size, responseUrl) => {
   try {
     const { data } = await dataworld.searchTerm(token, query, size);
-    if (data.records.length) {
+    if (data.records && data.records.length) {
       const term = data.records[0];
       const ownerResponse = await dataworld.getDWUser(token, term.owner);
       const owner = ownerResponse.data;
@@ -55,7 +55,7 @@ const searchTerm = async (token, query, size, responseUrl) => {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${helper.trimStringToMaxLength(term.description, 2000)}\`\`\`\n`
+            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
           },
           "fields": [
             {
@@ -134,8 +134,7 @@ const searchTerm = async (token, query, size, responseUrl) => {
 const getSearchBlocks = async (token, query, size, nextPage) => {
   try {
     const { data } = await dataworld.searchTerm(token, query, size, nextPage);
-
-    if (data.records.length) {
+    if (data.records && data.records.length) {
       const { count, records, next } = data;
 
       const blocks = [
@@ -163,7 +162,7 @@ const getSearchBlocks = async (token, query, size, nextPage) => {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${helper.trimStringToMaxLength(term.description, 2000)}\`\`\`\n`
+            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
           },
           "fields": [
             {
@@ -256,10 +255,38 @@ const getSearchBlocks = async (token, query, size, nextPage) => {
 
       blocks.push(...footerBlock);
       return blocks;
+    } else {
+      return [
+        {
+          "type": "divider"
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "plain_text",
+            "text": `No matching term(s) found.`,
+            "emoji": true
+          }
+        }
+      ];
     }
+
   } catch (error) {
     // TODO: Move to message service or slack service 
     console.warn('Search term request failure : ', error.message)
+    return [
+      {
+        "type": "divider"
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "plain_text",
+          "text": `Oops! somehting went wrong, pls tray again later.`,
+          "emoji": true
+        }
+      }
+    ];
   }
 }
 
