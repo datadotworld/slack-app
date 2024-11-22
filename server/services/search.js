@@ -44,9 +44,8 @@ const searchTerm = async (token, query, size, responseUrl) => {
     const { data } = await dataworld.searchTerm(token, query, size);
     if (data.records && data.records.length) {
       const term = data.records[0];
-      const ownerResponse = await dataworld.getDWUser(token, term.owner);
-      const owner = ownerResponse.data;
 
+      let owner = await getReourceOwner(token, term);
       const ts = getTimestamp(term.updated);
       const createdTs = getTimestamp(term.created);
 
@@ -55,7 +54,7 @@ const searchTerm = async (token, query, size, responseUrl) => {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
+            "text": buildResourceOwnerLink(owner) + `<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
           },
           "fields": [
             {
@@ -151,9 +150,8 @@ const getSearchBlocks = async (token, query, size, nextPage) => {
         }
       ];
 
-      for (const term of records) {
-        const ownerResponse = await dataworld.getDWUser(token, term.owner);
-        const owner = ownerResponse.data;  
+      for (const term of records) { 
+        let owner = await getReourceOwner(token, term);
         const ts = getTimestamp(term.updated);
         const createdTs = getTimestamp(term.created);
 
@@ -162,7 +160,7 @@ const getSearchBlocks = async (token, query, size, nextPage) => {
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
+            "text": buildResourceOwnerLink(owner) + `<${term.resourceLink}|${term.title}>\n\n\`\`\`${term.description ? helper.trimStringToMaxLength(term.description, 2000) : 'Unknown'}\`\`\`\n`
           },
           "fields": [
             {
@@ -332,4 +330,19 @@ module.exports = {
   searchTerm,
   getSearchBlocks,
   sendDefaultSearchHomeView
+}
+
+async function getReourceOwner(token, term) {
+  let owner = null;
+  try {
+    const ownerResponse = await dataworld.getDWUser(token, term.owner);
+    owner = ownerResponse.data;
+  } catch (error) {
+    console.warn(`Failed to fetch resource owner data resource : ${term.title} , owner : ${term.owner}`, error.message);
+  }
+  return owner;
+}
+
+function buildResourceOwnerLink(owner) {
+  return owner ? `*<http://${dwDomain}/${owner.id}|${owner.displayName}>*\n\n` : '';
 }
