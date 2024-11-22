@@ -21,7 +21,8 @@ const collection = require("lodash/collection");
 const dataworld = require("../../api/dataworld");
 const helper = require("../../helpers/helper");
 const slack = require("../../api/slack");
-const command = require("../command");
+const commandService = require("../../services/commands");
+const subscriptionService = require("../../services/subscription");
 const Subscription = require("../../models").Subscription;
 const User = require("../../models").User;
 const dwDomain = helper.DW_DOMAIN;
@@ -43,9 +44,9 @@ describe("Test Auth controller methods", () => {
       dataworld.subscribeToProject = jest.fn(() => Promise.resolve());
       dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
-      slack.sendResponse = jest.fn(() => Promise.resolve());
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
-      await command.subscribeToProjectOrDataset(
+      await commandService.handleDatasetorProjectSubscribeCommand(
         userid,
         channelid,
         cmd,
@@ -62,11 +63,7 @@ describe("Test Auth controller methods", () => {
         "datasetid",
         token
       );
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-        replace_original: false,
-        delete_original: false,
-        text: message
-      });
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
       done();
     },
     10000
@@ -84,11 +81,11 @@ describe("Test Auth controller methods", () => {
       const isProject = true;
 
       Subscription.findOne = jest.fn(() => Promise.resolve({}));
-      slack.sendResponse = jest.fn(() => Promise.resolve());
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
       dataworld.getDataset = jest.fn(() => Promise.resolve({ data: { isProject } }));
       dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-      await command.subscribeToProjectOrDataset(
+      await commandService.handleDatasetorProjectSubscribeCommand(
         userid,
         channelid,
         cmd,
@@ -99,11 +96,7 @@ describe("Test Auth controller methods", () => {
       expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
       expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
       expect(Subscription.findOne).toHaveBeenCalledTimes(1);
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-        replace_original: false,
-        delete_original: false,
-        text: message
-      });
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
       done();
     },
     10000
@@ -123,7 +116,7 @@ describe("Test Auth controller methods", () => {
     );
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
 
-    await command.subscribeToProjectOrDataset(
+    await commandService.handleDatasetorProjectSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -133,11 +126,8 @@ describe("Test Auth controller methods", () => {
 
     expect(dataworld.getDataset).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-      replace_original: false,
-      delete_original: false,
-      text: "Failed to subscribe to *datasetid*. Please make sure to subscribe using a valid dataset or project URL."
-    });
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl,
+       "Failed to subscribe to *datasetid*. Please make sure to subscribe using a valid dataset or project URL.");
 
     done();
   });
@@ -156,9 +146,9 @@ describe("Test Auth controller methods", () => {
     Subscription.findOrCreate = jest.fn(() => Promise.resolve([{}, true]));
     dataworld.subscribeToAccount = jest.fn(() => Promise.resolve({ data }));
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(false));
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -170,11 +160,7 @@ describe("Test Auth controller methods", () => {
     expect(Subscription.findOrCreate).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
     expect(dataworld.subscribeToAccount).toHaveBeenCalledWith("agentid", token);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-      replace_original: false,
-      delete_original: false,
-      text: message
-    });
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
     done();
   });
 
@@ -188,10 +174,10 @@ describe("Test Auth controller methods", () => {
     const message = "Subscription already exists in this channel. No further action required!";
 
     Subscription.findOne = jest.fn(() => Promise.resolve({}));
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -201,11 +187,7 @@ describe("Test Auth controller methods", () => {
 
     expect(Subscription.findOne).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-      replace_original: false,
-      delete_original: false,
-      text: message
-    });
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
     done();
   });
 
@@ -219,10 +201,10 @@ describe("Test Auth controller methods", () => {
     Subscription.findOne = jest.fn(() =>
       Promise.reject(new Error("Test - Failed to get subscription form DB"))
     );
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.subscribeToAccount(
+    await commandService.handleAccountSubscribeCommand(
       userid,
       channelid,
       cmd,
@@ -232,11 +214,8 @@ describe("Test Auth controller methods", () => {
 
     expect(Subscription.findOne).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-      replace_original: false,
-      delete_original: false,
-      text: "Failed to subscribe to *agentid*. Is that a valid data.world account ID?"
-    });
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, 
+      "Failed to subscribe to *agentid*. Is that a valid data.world account ID?");
     done();
   });
 
@@ -246,9 +225,9 @@ describe("Test Auth controller methods", () => {
     const responseUrl = "responseUrl";
 
     helper.getSubscriptionStatus = jest.fn(() => [false, false]);
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
-    await command.unsubscribeFromDatasetOrProject(
+    await commandService.handleDatasetOrProjectUnsubscribeCommand(
       channelid,
       cmd,
       responseUrl
@@ -258,12 +237,8 @@ describe("Test Auth controller methods", () => {
       "owner/datasetid",
       channelid     
     );
-    expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, {
-      replace_original: false,
-      delete_original: false,
-      text:
-        `No subscription found for *owner/datasetid* here. Use \`/${process.env.SLASH_COMMAND} list\` to list all active subscriptions.`
-    });
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, 
+      `No subscription found for *owner/datasetid* here. Use \`/${process.env.SLASH_COMMAND} list\` to list all active subscriptions.`);
     done();
   });
 
@@ -274,16 +249,10 @@ describe("Test Auth controller methods", () => {
       const cmd = "subscribe owner/datasetid";
       const responseUrl = "responseUrl";
       const error = new Error("Test - error");
-      const data = {
-        replace_original: false,
-        delete_original: false,
-        text: "Failed to unsubscribe from *datasetid*."
-      };
-
-      slack.sendResponse = jest.fn(() => Promise.resolve());
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
       helper.getSubscriptionStatus = jest.fn(() => Promise.reject(error));
 
-      await command.unsubscribeFromDatasetOrProject(
+      await commandService.handleDatasetOrProjectUnsubscribeCommand(
         channelid,
         cmd,
         responseUrl,
@@ -294,7 +263,7 @@ describe("Test Auth controller methods", () => {
         channelid,
       );
 
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, data);
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, "Failed to unsubscribe from *datasetid*.");
 
       done();
     },
@@ -305,34 +274,27 @@ describe("Test Auth controller methods", () => {
     "should unsubscribe from project",
     async done => {
       const channelId = "channelid";
-      const cmd = "subscribe owner/datasetid";
+      const owner = "owner";
+      const id = "datasetid";
       const responseUrl = "responseUrl";
       const token = "token";
       const message = "No problem! You'll no longer receive notifications about *datasetid* here.";
-      const data = { message };
-      const slackData = {
-        replace_original: false,
-        delete_original: false,
-        text: message
-      };
-
       Subscription.destroy = jest.fn(() => Promise.resolve());
       helper.getSubscriptionStatus = jest.fn(() => Promise.resolve([true, true]));
-      dataworld.unsubscribeFromProject = jest.fn(() =>
-        Promise.resolve({ data })
-      );
-      slack.sendResponse = jest.fn(() => Promise.resolve());
+      dataworld.unsubscribeFromProject = jest.fn(() =>Promise.resolve());
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
-      await command.unsubscribeFromProject(
+      await subscriptionService.unsubscribeFromProject(
         channelId,
-        cmd,
+        id,
+        owner,
         responseUrl,
         token
       );
       expect(helper.getSubscriptionStatus).toHaveBeenCalledTimes(1);
       expect(Subscription.destroy).toHaveBeenCalledTimes(1);
       expect(dataworld.unsubscribeFromProject).toHaveBeenCalledTimes(1);
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
       done();
     },
     10000
@@ -345,12 +307,6 @@ describe("Test Auth controller methods", () => {
       const responseUrl = "responseUrl";
       const channelid = "channelid";
       const message = "No problem! You'll no longer receive notifications about *agentid* here.";
-      const data = { message };
-      const slackData = {
-        replace_original: false,
-        delete_original: false,
-        text: message
-      };
       const user = { dwAccessToken: "dwAccessToken" };
       const subscription = {  slackUserId: "slackUserId" };
 
@@ -359,12 +315,10 @@ describe("Test Auth controller methods", () => {
       Subscription.destroy = jest.fn(() => Promise.resolve());
 
       helper.getSubscriptionStatus = jest.fn(() => [true, true]);
-      dataworld.unsubscribeFromAccount = jest.fn(() =>
-        Promise.resolve({ data })
-      );
-      slack.sendResponse = jest.fn(() => Promise.resolve());
+      dataworld.unsubscribeFromAccount = jest.fn(() => Promise.resolve());
+      slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
 
-      await command.unsubscribeFromAccount(
+      await commandService.handleUnsubscribeFromAccount(
         channelid,
         cmd,
         responseUrl,
@@ -374,7 +328,7 @@ describe("Test Auth controller methods", () => {
       expect(Subscription.findOne).toHaveBeenCalledTimes(1);
       expect(Subscription.destroy).toHaveBeenCalledTimes(1);
       expect(dataworld.unsubscribeFromAccount).toHaveBeenCalledTimes(1);
-      expect(slack.sendResponse).toHaveBeenCalledWith(responseUrl, slackData);
+      expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith(responseUrl, message);
       done();
     },
     10000
@@ -453,27 +407,22 @@ describe("Test Auth controller methods", () => {
     };
     const subscriptions = [subscription];
 
-    const data = {
-      text: message,
-      blocks: blocks,
-      replace_original: false,
-      delete_original: false
-    };
-
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() => subscriptions);
     User.findOne = jest.fn(() => Promise.resolve({ dwAccessToken }));
     dataworld.verifySubscriptionExists = jest.fn(() => Promise.resolve(true));
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
-      req.body.user_id
+      req.body.user_id,
+      false,
+      false
     );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
     expect(dataworld.verifySubscriptionExists).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith("response_url", message, blocks, false, false);
 
     done();
   });
@@ -487,24 +436,20 @@ describe("Test Auth controller methods", () => {
     const req = { body };
     const commandText = process.env.SLASH_COMMAND;
     const message = `No subscription found. Use \`\/${commandText} help\` to learn how to subscribe.`;
-    const data = {
-      text: message,
-      replace_original: false,
-      delete_original: false
-    };
 
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() => []);
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
       req.body.user_id,
+      false,
       false
     );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith("response_url", message, undefined, false, false);
 
     done();
   });
@@ -517,18 +462,13 @@ describe("Test Auth controller methods", () => {
     };
     const req = { body };
     const message = `Failed to get subscriptions.`;
-    const data = {
-      text: message,
-      replace_original: false,
-      delete_original: false
-    };
 
-    slack.sendResponse = jest.fn(() => Promise.resolve());
+    slack.sendResponseMessageAndBlocks = jest.fn(() => Promise.resolve());
     Subscription.findAll = jest.fn(() =>
       Promise.reject(new Error("Test error"))
     );
 
-    await command.listSubscription(
+    await commandService.handleListSubscriptionCommand(
       req.body.response_url,
       req.body.channel_id,
       req.body.user_id,
@@ -536,7 +476,7 @@ describe("Test Auth controller methods", () => {
     );
 
     expect(Subscription.findAll).toHaveBeenCalledTimes(1);
-    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith("response_url", message);
 
     done();
   });
@@ -570,16 +510,9 @@ describe("Test Auth controller methods", () => {
       });
     });
 
-    const data = {
-      text: message,
-      blocks: blocks,
-      replace_original: false,
-      delete_original: false
-    };
+    await commandService.showHelp(responseUrl);
 
-    await command.showHelp(responseUrl);
-
-    expect(slack.sendResponse).toHaveBeenCalledWith("response_url", data);
+    expect(slack.sendResponseMessageAndBlocks).toHaveBeenCalledWith("response_url", message, blocks);
 
     done();
   });

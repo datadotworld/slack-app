@@ -22,6 +22,7 @@ const Team = require("../models").Team;
 
 const dataworld = require("../api/dataworld");
 const slack = require("../api/slack");
+const tokenHelper = require('../helpers/tokens')
 
 const handleSlackAppInstallation = async (req, res) => {
   // When a user authorizes an app, a code query parameter is passed to the oAuth endpoint.
@@ -33,7 +34,6 @@ const handleSlackAppInstallation = async (req, res) => {
 
   try {
     var response = await slack.oauthAccess(req.query.code);
-
     const [team, created] = await Team.findOrCreate({
       where: { teamId: response.data.team.id },
       defaults: {
@@ -73,7 +73,7 @@ const handleSlackAppInstallation = async (req, res) => {
       // deep link to slack app or redirect to slack team in web.
       return res.redirect(
         `https://slack.com/app_redirect?app=${process.env.SLACK_APP_ID
-        }&team=${team.teamId}`
+        }&team=${team.teamId}&tab=messages`
       );
 
     } catch (error) {
@@ -121,10 +121,9 @@ const completeDataworldAccountAssociation = async (req, res) => {
             }&team=${user.teamId}`
         });
 
-        //inform user via slack that authentication was successful
-        const team = await Team.findOne({ where: { teamId: user.teamId } });
-        const botAccessToken = process.env.SLACK_BOT_TOKEN || team.botAccessToken;
-        await slack.sendCompletedAssociationMessage(botAccessToken, user.slackId);
+        // Inform user via slack that authentication was successful
+        const { botToken } = await tokenHelper.getBotAccessTokenForTeam(user.teamId);
+        await slack.sendCompletedAssociationMessage(botToken, user.slackId);
       } else {
         console.warn("Received an invalid nonce, we should ensure stale auth links are cleaned up properly.");
         return res.status(400).send("Provided nonce is invalid.");

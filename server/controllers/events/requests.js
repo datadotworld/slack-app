@@ -9,8 +9,8 @@ const { getBotAccessTokenForChannel } = require('../../helpers/tokens')
 
 const sendRequestEventToSlack = async (channelIds, blocks) => {
   await Promise.all(channelIds.map(async (channelId) => {
-    const token = await getBotAccessTokenForChannel(channelId)
-    await slack.sendMessageWithBlocks(token, channelId, blocks)
+    const { botToken } = await getBotAccessTokenForChannel(channelId);
+    await slack.postMessageWithBlocks(botToken, channelId, blocks)
   }))
 }
 
