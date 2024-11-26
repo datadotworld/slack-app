@@ -2499,8 +2499,8 @@ dotenv@^5.0.1:
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-5.0.1.tgz#a5317459bd3d79ab88cff6e44057a6a3fbb1fcef"
 
 dottie@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/dottie/-/dottie-2.0.2.tgz#cc91c0726ce3a054ebf11c55fbc92a7f266dd154"
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/dottie/-/dottie-2.0.4.tgz#9ce42965f45e577a6fa7d988d47852fac70c4e82"
 
 duplexer3@^0.1.4:
   version "0.1.4"
